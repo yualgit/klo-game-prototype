@@ -5,32 +5,32 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Playable match-3 demo for client presentation
-**Current focus:** Phase 1 - Foundation & Setup
+**Current focus:** Phase 2 - Core Grid Mechanics
 
 ## Current Position
 
-Phase: 1 of 5 (Foundation & Setup)
-Plan: 2 of 3 complete
-Status: In progress
-Last activity: 2026-02-05 - Completed 01-02-PLAN.md
+Phase: 2 of 5 (Core Grid Mechanics)
+Plan: 0 of TBD complete
+Status: Not started (needs planning)
+Last activity: 2026-02-05 - Completed Phase 1
 
-Progress: [======----] 67% (2/3 plans in Phase 1)
+Progress: [██████████] 100% Phase 1 | [----------] 0% Phase 2
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 2.5 min
-- Total execution time: 0.08 hours
+- Total plans completed: 3
+- Average duration: 3.3 min
+- Total execution time: 0.17 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation-setup | 2 | 5 min | 2.5 min |
+| 01-foundation-setup | 3 | 10 min | 3.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (3 min), 01-02 (2 min)
+- Last 5 plans: 01-01 (3 min), 01-02 (2 min), 01-03 (5 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -50,6 +50,7 @@ Recent decisions affecting current work:
 - VITE_FIREBASE_* env var naming for Vite client exposure
 - Firebase init BEFORE Phaser to avoid race conditions
 - serverTimestamp() for last_seen tracking in progress data
+- Programmatic drawing for placeholders (no PNGs until Phase 5)
 
 ### Pending Todos
 
@@ -61,8 +62,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-05T16:14:54Z
-Stopped at: Completed 01-02-PLAN.md (Firebase integration)
+Last session: 2026-02-05T16:30:00Z
+Stopped at: Completed Phase 1 - Foundation & Setup
 Resume file: None
 
 ---

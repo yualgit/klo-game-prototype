@@ -12,7 +12,7 @@ Build a playable match-3 demo for KLO gas stations in 5 phases. Start with proje
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & Setup** - Project scaffold with Firebase and Phaser
+- [x] **Phase 1: Foundation & Setup** - Project scaffold with Firebase and Phaser
 - [ ] **Phase 2: Core Grid Mechanics** - Match-3 engine with tiles, swap, gravity, cascade
 - [ ] **Phase 3: Game Features** - Boosters, obstacles, and level system
 - [ ] **Phase 4: UI & Progression** - All screens, menus, win/lose flow, coupon mock
@@ -32,9 +32,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans in 2 waves
 
 Plans:
-- [ ] 01-01-PLAN.md — Project scaffold (Phaser + Vite + TypeScript + Firebase deps)
-- [ ] 01-02-PLAN.md — Firebase integration (auth + Firestore persistence)
-- [ ] 01-03-PLAN.md — Phaser scenes (Boot, Menu, Game) with placeholder assets
+- [x] 01-01-PLAN.md — Project scaffold (Phaser + Vite + TypeScript + Firebase deps)
+- [x] 01-02-PLAN.md — Firebase integration (auth + Firestore persistence)
+- [x] 01-03-PLAN.md — Phaser scenes (Boot, Menu, Game) with placeholder assets
 
 ### Phase 2: Core Grid Mechanics
 **Goal**: Playable 8x8 grid with tiles, swap, match detection, gravity, and cascades
@@ -112,7 +112,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Setup | 0/3 | Planned | - |
+| 1. Foundation & Setup | 3/3 | ✓ Complete | 2026-02-05 |
 | 2. Core Grid Mechanics | 0/TBD | Not started | - |
 | 3. Game Features | 0/TBD | Not started | - |
 | 4. UI & Progression | 0/TBD | Not started | - |
