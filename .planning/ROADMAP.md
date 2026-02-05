@@ -65,12 +65,14 @@ Plans:
   4. Levels 1-5 load from JSON with unique goals, obstacles, and move limits
   5. Move counter decrements with each swap and level ends when moves run out
   6. Level completes with win when all goals met, or lose when moves exhausted
-**Plans**: TBD
+**Plans**: 5 plans in 2 waves
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
-- [ ] 03-03: TBD
+- [ ] 03-01-PLAN.md — Types + booster detection TDD (match patterns for 4-match, 5-match, L/T-shape)
+- [ ] 03-02-PLAN.md — Obstacle system TDD (damage, gravity, blocked cells)
+- [ ] 03-03-PLAN.md — Booster activation + combos TDD (individual effects + combo matrix)
+- [ ] 03-04-PLAN.md — Level manager TDD (goals, moves, win/lose conditions)
+- [ ] 03-05-PLAN.md — Game integration (visuals, wiring, level loading, HUD)
 
 ### Phase 4: UI & Progression
 **Goal**: Complete UI flow from level select through gameplay to win/lose/coupon screens
@@ -114,7 +116,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Foundation & Setup | 3/3 | Complete | 2026-02-05 |
 | 2. Core Grid Mechanics | 3/3 | Complete | 2026-02-06 |
-| 3. Game Features | 0/TBD | Not started | - |
+| 3. Game Features | 0/5 | In Progress | - |
 | 4. UI & Progression | 0/TBD | Not started | - |
 | 5. Assets & Polish | 0/TBD | Not started | - |
 
