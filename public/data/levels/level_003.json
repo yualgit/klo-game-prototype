@@ -1,0 +1,52 @@
+{
+  "level_id": 3,
+  "name": "Перший лід",
+  "moves": 14,
+  "grid": {
+    "width": 8,
+    "height": 8,
+    "blocked_cells": []
+  },
+  "goals": [
+    {
+      "type": "collect",
+      "item": "fuel",
+      "count": 20,
+      "description": "Зібрати 20 паливо"
+    }
+  ],
+  "spawn_rules": {
+    "fuel": 0.4,
+    "coffee": 0.2,
+    "snack": 0.2,
+    "road": 0.2
+  },
+  "obstacles": [
+    {
+      "type": "ice",
+      "layers": 1,
+      "positions": [
+        [3, 3],
+        [4, 3],
+        [3, 4]
+      ],
+      "description": "Лід зникає після одного матчу поряд"
+    }
+  ],
+  "tutorial": {
+    "enabled": true,
+    "steps": [
+      "Уваги! Тут є лід ❄️",
+      "Зроби матч поряд з льодом, щоб його розтопити",
+      "Потім збирай паливо"
+    ]
+  },
+  "rewards": {
+    "stars": 1,
+    "boosters": {
+      "bomb": 1
+    }
+  },
+  "difficulty": "easy",
+  "target_fail_rate": 0.10
+}

@@ -1,0 +1,68 @@
+{
+  "level_id": 5,
+  "name": "Перший бустер",
+  "moves": 15,
+  "grid": {
+    "width": 8,
+    "height": 8,
+    "blocked_cells": []
+  },
+  "goals": [
+    {
+      "type": "create_booster",
+      "booster_type": "linear",
+      "count": 1,
+      "description": "Створити 1 лінійний бустер"
+    },
+    {
+      "type": "collect",
+      "item": "snack",
+      "count": 20,
+      "description": "Зібрати 20 снеки"
+    }
+  ],
+  "spawn_rules": {
+    "fuel": 0.2,
+    "coffee": 0.2,
+    "snack": 0.4,
+    "road": 0.2
+  },
+  "obstacles": [
+    {
+      "type": "dirt",
+      "layers": 1,
+      "positions": [
+        [3, 3],
+        [4, 3],
+        [3, 4]
+      ],
+      "description": "Бруд блокує фішку, але зникає після матчу"
+    }
+  ],
+  "tutorial": {
+    "enabled": true,
+    "steps": [
+      "Час вчитись створювати бустери! 🚀",
+      "Зроби матч з 4 фішок в ряд → отримаєш лінійний бустер",
+      "Він знищує цілий ряд або колонку!"
+    ]
+  },
+  "rewards": {
+    "stars": 1,
+    "boosters": {
+      "bomb": 1,
+      "linear": 1
+    },
+    "coupon_chance": 0.1,
+    "possible_coupons": [
+      {
+        "id": "coffee_s_free",
+        "category": "coffee",
+        "value": "Безкоштовна кава S",
+        "expires_days": 7
+      }
+    ]
+  },
+  "difficulty": "easy",
+  "target_fail_rate": 0.15
+}

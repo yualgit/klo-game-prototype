@@ -1,0 +1,18 @@
+// Game grid constants
+export const GRID_WIDTH = 8;
+export const GRID_HEIGHT = 8;
+export const TILE_SIZE = 64;
+
+// Canvas dimensions
+export const GAME_WIDTH = 1024;
+export const GAME_HEIGHT = 768;
+
+// KLO brand colors (as hex numbers for Phaser)
+export const KLO_YELLOW = 0xffb800;
+export const KLO_BLACK = 0x1a1a1a;
+export const KLO_WHITE = 0xf9f9f9;
+
+// KLO brand colors (as CSS strings)
+export const KLO_YELLOW_CSS = '#FFB800';
+export const KLO_BLACK_CSS = '#1A1A1A';
+export const KLO_WHITE_CSS = '#F9F9F9';

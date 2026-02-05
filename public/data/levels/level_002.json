@@ -1,0 +1,46 @@
+{
+  "level_id": 2,
+  "name": "Кава в дорогу",
+  "moves": 15,
+  "grid": {
+    "width": 8,
+    "height": 8,
+    "blocked_cells": []
+  },
+  "goals": [
+    {
+      "type": "collect",
+      "item": "fuel",
+      "count": 15,
+      "description": "Зібрати 15 паливо"
+    },
+    {
+      "type": "collect",
+      "item": "coffee",
+      "count": 15,
+      "description": "Зібрати 15 кава"
+    }
+  ],
+  "spawn_rules": {
+    "fuel": 0.35,
+    "coffee": 0.35,
+    "snack": 0.15,
+    "road": 0.15
+  },
+  "obstacles": [],
+  "tutorial": {
+    "enabled": true,
+    "steps": [
+      "Тепер збери два типи фішок!",
+      "Фокусуйся на паливі та каві"
+    ]
+  },
+  "rewards": {
+    "stars": 1,
+    "boosters": {
+      "linear": 1
+    }
+  },
+  "difficulty": "tutorial",
+  "target_fail_rate": 0.05
+}
