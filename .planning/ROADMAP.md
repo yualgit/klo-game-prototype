@@ -29,11 +29,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Firebase anonymous auth connects and creates user session automatically
   3. Progress data saves to Firestore and persists across browser sessions
   4. Project structure follows TECH_SPEC.md architecture (scenes, services, logic layers)
-**Plans**: TBD
+**Plans**: 3 plans in 2 waves
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md — Project scaffold (Phaser + Vite + TypeScript + Firebase deps)
+- [ ] 01-02-PLAN.md — Firebase integration (auth + Firestore persistence)
+- [ ] 01-03-PLAN.md — Phaser scenes (Boot, Menu, Game) with placeholder assets
 
 ### Phase 2: Core Grid Mechanics
 **Goal**: Playable 8x8 grid with tiles, swap, match detection, gravity, and cascades
@@ -111,7 +112,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Setup | 0/TBD | Not started | - |
+| 1. Foundation & Setup | 0/3 | Planned | - |
 | 2. Core Grid Mechanics | 0/TBD | Not started | - |
 | 3. Game Features | 0/TBD | Not started | - |
 | 4. UI & Progression | 0/TBD | Not started | - |
