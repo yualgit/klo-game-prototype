@@ -190,8 +190,14 @@ export class Game extends Phaser.Scene {
           this.gridOffsetY
         );
 
-        // Make interactive
-        tile.setInteractive({ useHandCursor: true });
+        // Make interactive - Containers need explicit hit area
+        const hitArea = new Phaser.Geom.Rectangle(
+          -TILE_SIZE / 2,
+          -TILE_SIZE / 2,
+          TILE_SIZE,
+          TILE_SIZE
+        );
+        tile.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
 
         // Store in array
         this.tileSprites[row][col] = tile;
