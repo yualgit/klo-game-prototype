@@ -10,29 +10,29 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 2 of 5 (Core Grid Mechanics)
-Plan: 1 of TBD complete
+Plan: 2 of TBD complete
 Status: In progress
-Last activity: 2026-02-05 - Completed 02-02-PLAN.md
+Last activity: 2026-02-05 - Completed 02-01-PLAN.md
 
-Progress: [██████████] 100% Phase 1 | [██--------] 20% Phase 2
+Progress: [██████████] 100% Phase 1 | [████------] 40% Phase 2
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 2.8 min
-- Total execution time: 0.19 hours
+- Total plans completed: 5
+- Average duration: 3.0 min
+- Total execution time: 0.25 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation-setup | 3 | 10 min | 3.3 min |
-| 02-core-grid-mechanics | 1 | 1 min | 1.0 min |
+| 02-core-grid-mechanics | 2 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (3 min), 01-02 (2 min), 01-03 (5 min), 02-02 (1 min)
-- Trend: Accelerating
+- Last 5 plans: 01-02 (2 min), 01-03 (5 min), 02-02 (1 min), 02-01 (4 min)
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -55,6 +55,11 @@ Recent decisions affecting current work:
 - TileSprite: Container composition pattern over Sprite extension (02-02)
 - Four tile types with KLO-themed colors: fuel (yellow), coffee (brown), snack (blue), road (green) (02-02)
 - Selection state: dual feedback with glow + 1.1x scale (02-02)
+- TDD methodology for game logic with Jest (02-01)
+- Pure functions for game logic, separate from rendering (02-01)
+- Streaming algorithm for match detection, O(n) single pass (02-01)
+- Reshuffle via regeneration instead of Fisher-Yates (02-01)
+- Cascade depth limit of 20 iterations (02-01)
 
 ### Pending Todos
 
@@ -66,8 +71,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-05T23:02:52Z
-Stopped at: Completed 02-02-PLAN.md (TileSprite Visual Layer)
+Last session: 2026-02-05T23:05:25Z
+Stopped at: Completed 02-01-PLAN.md (Match3Engine Core Logic)
 Resume file: None
 
 ---
