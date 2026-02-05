@@ -232,20 +232,33 @@ describe('Match3Engine', () => {
     });
 
     test('returns false when no valid moves exist', () => {
-      // Create a deadlock board pattern
-      engine.generateGrid(defaultSpawnRules);
-      const grid = engine.getGrid();
+      // Create a 3x3 minimal deadlock board for easier testing
+      const smallEngine = new Match3Engine(3, 3);
+      smallEngine.generateGrid(defaultSpawnRules);
+      const grid = smallEngine.getGrid();
 
-      // Create checkerboard pattern with only 2 tile types
-      // This ensures no possible matches
-      for (let row = 0; row < 8; row++) {
-        for (let col = 0; col < 8; col++) {
-          grid[row][col].type = (row + col) % 2 === 0 ? 'fuel' : 'coffee';
+      // This specific 3x3 pattern has no valid moves:
+      // F C S
+      // C S F
+      // S F C
+      // No adjacent swap creates 3-in-a-row
+      grid[0][0].type = 'fuel';
+      grid[0][1].type = 'coffee';
+      grid[0][2].type = 'snack';
+      grid[1][0].type = 'coffee';
+      grid[1][1].type = 'snack';
+      grid[1][2].type = 'fuel';
+      grid[2][0].type = 'snack';
+      grid[2][1].type = 'fuel';
+      grid[2][2].type = 'coffee';
+
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
           grid[row][col].isEmpty = false;
         }
       }
 
-      const hasValidMoves = engine.hasValidMoves();
+      const hasValidMoves = smallEngine.hasValidMoves();
       expect(hasValidMoves).toBe(false);
     });
   });
