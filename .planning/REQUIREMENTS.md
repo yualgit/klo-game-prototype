@@ -7,19 +7,19 @@
 
 ### Core Mechanics
 
-- [ ] **CORE-01**: Гравець може обміняти місцями дві сусідні фішки (tap/swipe)
-- [ ] **CORE-02**: 3+ однакових фішки в ряд/колонку автоматично зникають
-- [ ] **CORE-03**: Після зникнення фішки падають вниз (gravity)
-- [ ] **CORE-04**: Нові фішки з'являються зверху (spawn за ймовірностями з level JSON)
-- [ ] **CORE-05**: Каскадні матчі працюють автоматично до стабілізації (з depth limit)
-- [ ] **CORE-06**: Визначення відсутності валідних ходів + автоматичне перемішування
+- [x] **CORE-01**: Гравець може обміняти місцями дві сусідні фішки (tap/swipe)
+- [x] **CORE-02**: 3+ однакових фішки в ряд/колонку автоматично зникають
+- [x] **CORE-03**: Після зникнення фішки падають вниз (gravity)
+- [x] **CORE-04**: Нові фішки з'являються зверху (spawn за ймовірностями з level JSON)
+- [x] **CORE-05**: Каскадні матчі працюють автоматично до стабілізації (з depth limit)
+- [x] **CORE-06**: Визначення відсутності валідних ходів + автоматичне перемішування
 
 ### Tile Types
 
-- [ ] **TILE-01**: Паливо (fuel) — жовта крапля
-- [ ] **TILE-02**: Кава (coffee) — коричневий стакан
-- [ ] **TILE-03**: Снеки (snack) — упаковка
-- [ ] **TILE-04**: Дорога (road) — дорожній знак
+- [x] **TILE-01**: Паливо (fuel) — жовта крапля
+- [x] **TILE-02**: Кава (coffee) — коричневий стакан
+- [x] **TILE-03**: Снеки (snack) — упаковка
+- [x] **TILE-04**: Дорога (road) — дорожній знак
 
 ### Boosters
 
@@ -106,16 +106,16 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CORE-01 | Phase 2 | Pending |
-| CORE-02 | Phase 2 | Pending |
-| CORE-03 | Phase 2 | Pending |
-| CORE-04 | Phase 2 | Pending |
-| CORE-05 | Phase 2 | Pending |
-| CORE-06 | Phase 2 | Pending |
-| TILE-01 | Phase 2 | Pending |
-| TILE-02 | Phase 2 | Pending |
-| TILE-03 | Phase 2 | Pending |
-| TILE-04 | Phase 2 | Pending |
+| CORE-01 | Phase 2 | Complete |
+| CORE-02 | Phase 2 | Complete |
+| CORE-03 | Phase 2 | Complete |
+| CORE-04 | Phase 2 | Complete |
+| CORE-05 | Phase 2 | Complete |
+| CORE-06 | Phase 2 | Complete |
+| TILE-01 | Phase 2 | Complete |
+| TILE-02 | Phase 2 | Complete |
+| TILE-03 | Phase 2 | Complete |
+| TILE-04 | Phase 2 | Complete |
 | BOOST-01 | Phase 3 | Pending |
 | BOOST-02 | Phase 3 | Pending |
 | BOOST-03 | Phase 3 | Pending |

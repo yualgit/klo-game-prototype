@@ -13,7 +13,7 @@ Build a playable match-3 demo for KLO gas stations in 5 phases. Start with proje
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Setup** - Project scaffold with Firebase and Phaser
-- [ ] **Phase 2: Core Grid Mechanics** - Match-3 engine with tiles, swap, gravity, cascade
+- [x] **Phase 2: Core Grid Mechanics** - Match-3 engine with tiles, swap, gravity, cascade
 - [ ] **Phase 3: Game Features** - Boosters, obstacles, and level system
 - [ ] **Phase 4: UI & Progression** - All screens, menus, win/lose flow, coupon mock
 - [ ] **Phase 5: Assets & Polish** - AI-generated visuals and final integration
@@ -50,9 +50,9 @@ Plans:
 **Plans**: 3 plans in 2 waves
 
 Plans:
-- [ ] 02-01-PLAN.md — Match3Engine with TDD (grid, swap, match, gravity, cascade algorithms)
-- [ ] 02-02-PLAN.md — TileSprite visual layer (programmatic drawing, object pooling support)
-- [ ] 02-03-PLAN.md — Game scene integration (input handling, animations, cascade flow)
+- [x] 02-01-PLAN.md — Match3Engine with TDD (grid, swap, match, gravity, cascade algorithms)
+- [x] 02-02-PLAN.md — TileSprite visual layer (programmatic drawing, object pooling support)
+- [x] 02-03-PLAN.md — Game scene integration (input handling, animations, cascade flow)
 
 ### Phase 3: Game Features
 **Goal**: Full match-3 mechanics with boosters, obstacles, and 5 playable levels
@@ -113,7 +113,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Setup | 3/3 | Complete | 2026-02-05 |
-| 2. Core Grid Mechanics | 0/3 | Planned | - |
+| 2. Core Grid Mechanics | 3/3 | Complete | 2026-02-06 |
 | 3. Game Features | 0/TBD | Not started | - |
 | 4. UI & Progression | 0/TBD | Not started | - |
 | 5. Assets & Polish | 0/TBD | Not started | - |
