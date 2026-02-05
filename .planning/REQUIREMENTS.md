@@ -106,13 +106,49 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (Populated during roadmap creation) | | |
+| CORE-01 | Phase 2 | Pending |
+| CORE-02 | Phase 2 | Pending |
+| CORE-03 | Phase 2 | Pending |
+| CORE-04 | Phase 2 | Pending |
+| CORE-05 | Phase 2 | Pending |
+| CORE-06 | Phase 2 | Pending |
+| TILE-01 | Phase 2 | Pending |
+| TILE-02 | Phase 2 | Pending |
+| TILE-03 | Phase 2 | Pending |
+| TILE-04 | Phase 2 | Pending |
+| BOOST-01 | Phase 3 | Pending |
+| BOOST-02 | Phase 3 | Pending |
+| BOOST-03 | Phase 3 | Pending |
+| BOOST-04 | Phase 3 | Pending |
+| BOOST-05 | Phase 3 | Pending |
+| OBST-01 | Phase 3 | Pending |
+| OBST-02 | Phase 3 | Pending |
+| OBST-03 | Phase 3 | Pending |
+| OBST-04 | Phase 3 | Pending |
+| LVL-01 | Phase 3 | Pending |
+| LVL-02 | Phase 3 | Pending |
+| LVL-03 | Phase 3 | Pending |
+| LVL-04 | Phase 3 | Pending |
+| LVL-05 | Phase 3 | Pending |
+| UI-01 | Phase 4 | Pending |
+| UI-02 | Phase 4 | Pending |
+| UI-03 | Phase 4 | Pending |
+| UI-04 | Phase 4 | Pending |
+| UI-05 | Phase 4 | Pending |
+| UI-06 | Phase 4 | Pending |
+| FB-01 | Phase 1 | Pending |
+| FB-02 | Phase 1 | Pending |
+| ASSET-01 | Phase 5 | Pending |
+| ASSET-02 | Phase 5 | Pending |
+| ASSET-03 | Phase 5 | Pending |
+| ASSET-04 | Phase 1 | Pending |
+| ASSET-05 | Phase 1 | Pending |
 
 **Coverage:**
-- v1 requirements: 30 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 30
+- v1 requirements: 37 total
+- Mapped to phases: 37 (100%)
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-05*
-*Last updated: 2026-02-05 after initial definition*
+*Last updated: 2026-02-05 after roadmap creation*
