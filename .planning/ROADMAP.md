@@ -47,12 +47,12 @@ Plans:
   4. New tiles spawn from top with correct probabilities from level config
   5. Cascading matches continue automatically until grid stabilizes (max 20 depth)
   6. Board automatically reshuffles when no valid moves remain
-**Plans**: TBD
+**Plans**: 3 plans in 2 waves
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md — Match3Engine with TDD (grid, swap, match, gravity, cascade algorithms)
+- [ ] 02-02-PLAN.md — TileSprite visual layer (programmatic drawing, object pooling support)
+- [ ] 02-03-PLAN.md — Game scene integration (input handling, animations, cascade flow)
 
 ### Phase 3: Game Features
 **Goal**: Full match-3 mechanics with boosters, obstacles, and 5 playable levels
@@ -112,12 +112,12 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Setup | 3/3 | ✓ Complete | 2026-02-05 |
-| 2. Core Grid Mechanics | 0/TBD | Not started | - |
+| 1. Foundation & Setup | 3/3 | Complete | 2026-02-05 |
+| 2. Core Grid Mechanics | 0/3 | Planned | - |
 | 3. Game Features | 0/TBD | Not started | - |
 | 4. UI & Progression | 0/TBD | Not started | - |
 | 5. Assets & Polish | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-02-05*
-*Last updated: 2026-02-05*
+*Last updated: 2026-02-06*
