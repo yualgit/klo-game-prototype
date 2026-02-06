@@ -494,4 +494,186 @@ describe('Match3Engine', () => {
       expect(result.tilesToRemove.every(t => t.row === 0)).toBe(true);
     });
   });
+
+  describe('Obstacle System', () => {
+    test('ice obstacle loses a layer when adjacent tile matches', () => {
+      engine.generateGrid(defaultSpawnRules);
+      const grid = engine.getGrid();
+
+      // Place ice obstacle (layers: 2) at (3,3)
+      grid[3][3].obstacle = { type: 'ice', layers: 2 };
+
+      // Create a match adjacent to ice at (3,2), (3,1), (3,0)
+      grid[3][0].type = 'fuel';
+      grid[3][1].type = 'fuel';
+      grid[3][2].type = 'fuel';
+
+      const matches = engine.findMatches();
+      const damaged = engine.damageObstacles(matches);
+
+      // Assert obstacle at (3,3) has layers: 1
+      expect(grid[3][3].obstacle?.layers).toBe(1);
+      expect(damaged.length).toBeGreaterThan(0);
+    });
+
+    test('ice obstacle fully destroyed when last layer removed', () => {
+      engine.generateGrid(defaultSpawnRules);
+      const grid = engine.getGrid();
+
+      // Place ice obstacle (layers: 1) at (3,3)
+      grid[3][3].obstacle = { type: 'ice', layers: 1 };
+
+      // Create adjacent match
+      grid[3][0].type = 'coffee';
+      grid[3][1].type = 'coffee';
+      grid[3][2].type = 'coffee';
+
+      const matches = engine.findMatches();
+      engine.damageObstacles(matches);
+
+      // Assert obstacle at (3,3) has type: 'none' or is removed
+      expect(grid[3][3].obstacle).toBeUndefined();
+    });
+
+    test('dirt obstacle destroyed by adjacent match (1 hit)', () => {
+      engine.generateGrid(defaultSpawnRules);
+      const grid = engine.getGrid();
+
+      // Place dirt obstacle (layers: 1) at (4,4)
+      grid[4][4].obstacle = { type: 'dirt', layers: 1 };
+
+      // Create adjacent match (vertical)
+      grid[2][4].type = 'snack';
+      grid[3][4].type = 'snack';
+      grid[5][4].type = 'snack';
+
+      const matches = engine.findMatches();
+      engine.damageObstacles(matches);
+
+      // Assert obstacle destroyed
+      expect(grid[4][4].obstacle).toBeUndefined();
+    });
+
+    test('crate obstacle takes damage from adjacent match, survives with layers > 0', () => {
+      engine.generateGrid(defaultSpawnRules);
+      const grid = engine.getGrid();
+
+      // Place crate (layers: 3) at (2,3) - adjacent to match at cols 4,5,6
+      grid[2][3].obstacle = { type: 'crate', layers: 3 };
+
+      // Create adjacent match (horizontal)
+      grid[2][4].type = 'road';
+      grid[2][5].type = 'road';
+      grid[2][6].type = 'road';
+
+      const matches = engine.findMatches();
+      engine.damageObstacles(matches);
+
+      // Assert layers: 2 after damage
+      expect(grid[2][3].obstacle?.layers).toBe(2);
+      expect(grid[2][3].obstacle?.type).toBe('crate');
+    });
+
+    test('blocked cell is not affected by matches', () => {
+      engine.generateGrid(defaultSpawnRules);
+      const grid = engine.getGrid();
+
+      // Place blocked obstacle at (5,5)
+      grid[5][5].obstacle = { type: 'blocked', layers: 1 };
+      grid[5][5].isEmpty = true;
+
+      // Create adjacent match
+      grid[5][2].type = 'fuel';
+      grid[5][3].type = 'fuel';
+      grid[5][4].type = 'fuel';
+
+      const matches = engine.findMatches();
+      engine.damageObstacles(matches);
+
+      // Assert blocked cell unchanged
+      expect(grid[5][5].obstacle?.type).toBe('blocked');
+      expect(grid[5][5].obstacle?.layers).toBe(1);
+    });
+
+    test('damageObstacles returns list of damaged obstacles for goal tracking', () => {
+      engine.generateGrid(defaultSpawnRules);
+      const grid = engine.getGrid();
+
+      // Place ice (layers: 1)
+      grid[3][3].obstacle = { type: 'ice', layers: 1 };
+
+      // Create adjacent match
+      grid[3][0].type = 'coffee';
+      grid[3][1].type = 'coffee';
+      grid[3][2].type = 'coffee';
+
+      const matches = engine.findMatches();
+      const damaged = engine.damageObstacles(matches);
+
+      // Assert return value includes the destroyed obstacle
+      expect(damaged.length).toBeGreaterThan(0);
+      expect(damaged[0].type).toBe('ice');
+    });
+
+    test('tiles with obstacles do not fall during gravity', () => {
+      engine.generateGrid(defaultSpawnRules);
+      const grid = engine.getGrid();
+
+      // Place obstacle at (5,3)
+      const tileId = grid[5][3].id;
+      grid[5][3].obstacle = { type: 'ice', layers: 2 };
+
+      // Create empty space below at (7,3)
+      grid[7][3].isEmpty = true;
+      grid[7][3].type = 'empty';
+
+      const movements = engine.applyGravity();
+
+      // Obstacle tile should stay in place (not in movements)
+      const obstacleMoved = movements.find(m => m.tileId === tileId);
+      expect(obstacleMoved).toBeUndefined();
+      expect(grid[5][3].obstacle).toBeDefined();
+    });
+
+    test('gravity skips over blocked cells', () => {
+      engine.generateGrid(defaultSpawnRules);
+      const grid = engine.getGrid();
+
+      // Place blocked cell at (5,3)
+      grid[5][3].obstacle = { type: 'blocked', layers: 1 };
+      grid[5][3].isEmpty = true;
+      grid[5][3].type = 'empty';
+
+      // Place tile above at (3,3)
+      const tileType = grid[3][3].type;
+
+      // Create empty space at (7,3)
+      grid[7][3].isEmpty = true;
+      grid[7][3].type = 'empty';
+
+      const movements = engine.applyGravity();
+
+      // Tile at (3,3) should fall to (4,3) only, not through blocked cell
+      const tileMovement = movements.find(m => m.fromRow === 3 && m.fromCol === 3);
+      expect(tileMovement).toBeDefined();
+      expect(tileMovement?.toRow).toBe(4);
+    });
+
+    test('spawnNewTiles does not spawn on blocked cells', () => {
+      engine.generateGrid(defaultSpawnRules);
+      const grid = engine.getGrid();
+
+      // Place blocked cell at (0,0)
+      grid[0][0].obstacle = { type: 'blocked', layers: 1 };
+      grid[0][0].isEmpty = true;
+      grid[0][0].type = 'empty';
+
+      const spawns = engine.spawnNewTiles(defaultSpawnRules);
+
+      // Should not spawn on (0,0)
+      const spawnedOnBlocked = spawns.find(s => s.row === 0 && s.col === 0);
+      expect(spawnedOnBlocked).toBeUndefined();
+      expect(grid[0][0].isEmpty).toBe(true);
+    });
+  });
 });
