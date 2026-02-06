@@ -117,7 +117,14 @@ describe('Match3Engine', () => {
       engine.generateGrid(defaultSpawnRules);
       const grid = engine.getGrid();
 
-      // Set pattern: fuel, road, fuel
+      // Clear grid with non-matching pattern to avoid random matches
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+          grid[row][col].type = ((row + col) % 2 === 0) ? 'fuel' : 'coffee';
+        }
+      }
+
+      // Set pattern: fuel, road, fuel (non-adjacent fuels)
       grid[0][0].type = 'fuel';
       grid[0][1].type = 'road';
       grid[0][2].type = 'fuel';
@@ -320,6 +327,171 @@ describe('Match3Engine', () => {
       expect(result.spawns).toBeDefined();
       expect(Array.isArray(result.movements)).toBe(true);
       expect(Array.isArray(result.spawns)).toBe(true);
+    });
+  });
+
+  describe('Booster Detection', () => {
+    test('4-in-a-row horizontal creates linear_horizontal booster', () => {
+      // Create clean test environment - use small engine to avoid random matches
+      const testEngine = new Match3Engine(5, 5);
+      testEngine.generateGrid(defaultSpawnRules);
+      const grid = testEngine.getGrid();
+
+      // Clear grid with non-matching pattern
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 5; col++) {
+          grid[row][col].type = ((row + col) % 2 === 0) ? 'fuel' : 'coffee';
+        }
+      }
+
+      // Set grid row 0 cols 0-3 to same type
+      grid[0][0].type = 'snack';
+      grid[0][1].type = 'snack';
+      grid[0][2].type = 'snack';
+      grid[0][3].type = 'snack';
+
+      const result = testEngine.findMatchesWithBoosters();
+
+      expect(result.boostersToSpawn.length).toBe(1);
+      expect(result.boostersToSpawn[0].boosterType).toBe('linear_horizontal');
+      expect(result.boostersToSpawn[0].row).toBe(0);
+      // Spawn position at middle (index 1 or 2 of 4 tiles)
+      expect([1, 2]).toContain(result.boostersToSpawn[0].col);
+      expect(result.boostersToSpawn[0].baseType).toBe('snack');
+    });
+
+    test('4-in-a-row vertical creates linear_vertical booster', () => {
+      const testEngine = new Match3Engine(5, 5);
+      testEngine.generateGrid(defaultSpawnRules);
+      const grid = testEngine.getGrid();
+
+      // Clear grid with non-matching pattern
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 5; col++) {
+          grid[row][col].type = ((row + col) % 2 === 0) ? 'fuel' : 'coffee';
+        }
+      }
+
+      // Set grid rows 0-3 col 0 to same type
+      grid[0][0].type = 'road';
+      grid[1][0].type = 'road';
+      grid[2][0].type = 'road';
+      grid[3][0].type = 'road';
+
+      const result = testEngine.findMatchesWithBoosters();
+
+      expect(result.boostersToSpawn.length).toBe(1);
+      expect(result.boostersToSpawn[0].boosterType).toBe('linear_vertical');
+      expect(result.boostersToSpawn[0].col).toBe(0);
+      // Spawn position at middle (row 1 or 2 of 4 tiles)
+      expect([1, 2]).toContain(result.boostersToSpawn[0].row);
+      expect(result.boostersToSpawn[0].baseType).toBe('road');
+    });
+
+    test('5-in-a-row creates klo_sphere booster', () => {
+      const testEngine = new Match3Engine(5, 6);
+      testEngine.generateGrid(defaultSpawnRules);
+      const grid = testEngine.getGrid();
+
+      // Clear grid with non-matching pattern
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 6; col++) {
+          grid[row][col].type = ((row + col) % 2 === 0) ? 'fuel' : 'coffee';
+        }
+      }
+
+      // Set grid row 0 cols 0-4 to same type
+      grid[0][0].type = 'snack';
+      grid[0][1].type = 'snack';
+      grid[0][2].type = 'snack';
+      grid[0][3].type = 'snack';
+      grid[0][4].type = 'snack';
+
+      const result = testEngine.findMatchesWithBoosters();
+
+      expect(result.boostersToSpawn.length).toBe(1);
+      expect(result.boostersToSpawn[0].boosterType).toBe('klo_sphere');
+      expect(result.boostersToSpawn[0].row).toBe(0);
+      expect(result.boostersToSpawn[0].col).toBe(2); // Middle position (index 2 of 5)
+      expect(result.boostersToSpawn[0].baseType).toBe('snack');
+    });
+
+    test('L/T-shape creates bomb booster', () => {
+      const testEngine = new Match3Engine(6, 6);
+      testEngine.generateGrid(defaultSpawnRules);
+      const grid = testEngine.getGrid();
+
+      // Clear grid with non-matching pattern
+      for (let row = 0; row < 6; row++) {
+        for (let col = 0; col < 6; col++) {
+          grid[row][col].type = ((row + col) % 2 === 0) ? 'fuel' : 'coffee';
+        }
+      }
+
+      // Set up horizontal match (row 2, cols 2-4)
+      grid[2][2].type = 'road';
+      grid[2][3].type = 'road';
+      grid[2][4].type = 'road';
+
+      // Set up vertical match (rows 2-4, col 2)
+      grid[3][2].type = 'road';
+      grid[4][2].type = 'road';
+
+      const result = testEngine.findMatchesWithBoosters();
+
+      expect(result.boostersToSpawn.length).toBe(1);
+      expect(result.boostersToSpawn[0].boosterType).toBe('bomb');
+      expect(result.boostersToSpawn[0].row).toBe(2);
+      expect(result.boostersToSpawn[0].col).toBe(2); // Intersection position
+      expect(result.boostersToSpawn[0].baseType).toBe('road');
+    });
+
+    test('3-in-a-row creates no booster', () => {
+      const testEngine = new Match3Engine(5, 5);
+      testEngine.generateGrid(defaultSpawnRules);
+      const grid = testEngine.getGrid();
+
+      // Clear grid with non-matching pattern
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 5; col++) {
+          grid[row][col].type = ((row + col) % 2 === 0) ? 'fuel' : 'coffee';
+        }
+      }
+
+      // Set grid row 0 cols 0-2 to same type
+      grid[0][0].type = 'snack';
+      grid[0][1].type = 'snack';
+      grid[0][2].type = 'snack';
+
+      const result = testEngine.findMatchesWithBoosters();
+
+      expect(result.boostersToSpawn.length).toBe(0);
+      expect(result.tilesToRemove.length).toBe(3);
+    });
+
+    test('tilesToRemove contains all matched tiles', () => {
+      const testEngine = new Match3Engine(5, 5);
+      testEngine.generateGrid(defaultSpawnRules);
+      const grid = testEngine.getGrid();
+
+      // Clear grid with non-matching pattern
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 5; col++) {
+          grid[row][col].type = ((row + col) % 2 === 0) ? 'fuel' : 'snack';
+        }
+      }
+
+      // Set 4-in-a-row
+      grid[0][0].type = 'coffee';
+      grid[0][1].type = 'coffee';
+      grid[0][2].type = 'coffee';
+      grid[0][3].type = 'coffee';
+
+      const result = testEngine.findMatchesWithBoosters();
+
+      expect(result.tilesToRemove.length).toBe(4);
+      expect(result.tilesToRemove.every(t => t.type === 'coffee')).toBe(true);
+      expect(result.tilesToRemove.every(t => t.row === 0)).toBe(true);
     });
   });
 });
