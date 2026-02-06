@@ -19,6 +19,7 @@ export interface UserProgress {
   current_level: number;
   completed_levels: number[];
   stars: number;
+  level_stars: Record<string, number>;  // e.g. {"1": 3, "2": 2}
   last_seen: Date | Timestamp;
 }
 

@@ -404,28 +404,31 @@ export class Match3Engine {
    * A valid move is a swap that creates at least one match
    */
   hasValidMoves(): boolean {
-    // Try all possible adjacent swaps
+    // Try all possible adjacent swaps (skip tiles with obstacles - not swappable)
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
+        const tile = this.grid[row][col];
+        if (tile.obstacle && tile.obstacle.layers > 0) continue;
+
         // Try swapping with right neighbor
         if (col < this.cols - 1) {
-          this.swapTiles(row, col, row, col + 1);
-          const matches = this.findMatches();
-          this.swapTiles(row, col + 1, row, col); // Swap back
-
-          if (matches.length > 0) {
-            return true;
+          const rightNeighbor = this.grid[row][col + 1];
+          if (!(rightNeighbor.obstacle && rightNeighbor.obstacle.layers > 0)) {
+            this.swapTiles(row, col, row, col + 1);
+            const matches = this.findMatches();
+            this.swapTiles(row, col + 1, row, col);
+            if (matches.length > 0) return true;
           }
         }
 
         // Try swapping with bottom neighbor
         if (row < this.rows - 1) {
-          this.swapTiles(row, col, row + 1, col);
-          const matches = this.findMatches();
-          this.swapTiles(row + 1, col, row, col); // Swap back
-
-          if (matches.length > 0) {
-            return true;
+          const bottomNeighbor = this.grid[row + 1][col];
+          if (!(bottomNeighbor.obstacle && bottomNeighbor.obstacle.layers > 0)) {
+            this.swapTiles(row, col, row + 1, col);
+            const matches = this.findMatches();
+            this.swapTiles(row + 1, col, row, col);
+            if (matches.length > 0) return true;
           }
         }
       }

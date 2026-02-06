@@ -87,8 +87,8 @@ export class Menu extends Phaser.Scene {
     });
 
     this.playButton.on('pointerup', () => {
-      console.log('[Menu] Play button clicked, starting Game');
-      this.scene.start('Game');
+      console.log('[Menu] Play button clicked, starting LevelSelect');
+      this.scene.start('LevelSelect');
     });
   }
 }

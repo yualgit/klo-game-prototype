@@ -10,6 +10,7 @@ import { TileData, SpawnRules, LevelGoal, LevelEvent, MatchResult, TileType } fr
 import { TILE_SIZE } from '../utils/constants';
 import { LevelManager } from '../game/LevelManager';
 import { BoosterActivator } from '../game/BoosterActivator';
+import { ProgressManager } from '../game/ProgressManager';
 
 // Design constants from STYLE_GUIDE.md
 const KLO_YELLOW = 0xffb800;
@@ -19,6 +20,8 @@ const KLO_WHITE = 0xf9f9f9;
 // Grid constants from TECH_SPEC.md
 const GRID_WIDTH = 8;
 const GRID_HEIGHT = 8;
+
+const MAX_LEVELS = 5;
 
 export class Game extends Phaser.Scene {
   // UI elements
@@ -35,6 +38,7 @@ export class Game extends Phaser.Scene {
   private levelManager: LevelManager;
   private boosterActivator: BoosterActivator;
   private currentLevel: number;
+  private totalMoves: number;
 
   // Grid positioning
   private gridOffsetX: number;
@@ -69,6 +73,9 @@ export class Game extends Phaser.Scene {
     this.levelData = this.cache.json.get(levelKey);
     console.log('[Game] Level data loaded:', this.levelData);
 
+    // Store total moves for star calculation
+    this.totalMoves = this.levelData.moves;
+
     // Calculate grid offsets (center on screen with HUD offset)
     const gridPixelWidth = GRID_WIDTH * TILE_SIZE;
     const gridPixelHeight = GRID_HEIGHT * TILE_SIZE;
@@ -85,9 +92,14 @@ export class Game extends Phaser.Scene {
       this.engine.initializeObstacles(this.levelData.obstacles);
     }
 
-    // Initialize level manager
+    // Initialize level manager - normalize goal format from JSON
     const levelGoals: LevelGoal[] = this.levelData.goals.map((g: any) => ({
-      ...g,
+      type: g.type === 'destroy' ? 'destroy_obstacle' : g.type,
+      item: g.item,
+      obstacleType: g.obstacleType || g.obstacle,
+      boosterType: g.boosterType,
+      count: g.count,
+      description: g.description,
       current: 0,
     }));
     this.levelManager = new LevelManager({
@@ -184,29 +196,193 @@ export class Game extends Phaser.Scene {
       case 'level_won':
         console.log('[Game] Level won!');
         this.isProcessing = true;
-        // Simple text overlay for now
-        const winText = this.add.text(width / 2, this.cameras.main.height / 2, 'Level Complete!', {
-          fontFamily: 'Arial, sans-serif',
-          fontSize: '48px',
-          color: '#FFB800',
-          fontStyle: 'bold',
-        });
-        winText.setOrigin(0.5);
+        this.showWinOverlay();
         break;
 
       case 'level_lost':
         console.log('[Game] Level lost!');
         this.isProcessing = true;
-        // Simple text overlay for now
-        const loseText = this.add.text(width / 2, this.cameras.main.height / 2, 'No Moves Left!', {
-          fontFamily: 'Arial, sans-serif',
-          fontSize: '48px',
-          color: '#FF0000',
-          fontStyle: 'bold',
-        });
-        loseText.setOrigin(0.5);
+        this.showLoseOverlay();
         break;
     }
+  }
+
+  /**
+   * Show win overlay with stars, progress save, and navigation buttons
+   */
+  private showWinOverlay(): void {
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+    const progress = this.registry.get('progress') as ProgressManager;
+
+    // Calculate stars and save progress
+    const movesUsed = this.totalMoves - this.levelManager.getMovesRemaining();
+    const { stars } = progress.completeLevel(this.currentLevel, movesUsed, this.totalMoves);
+    progress.saveProgress();
+
+    // Dark backdrop
+    const backdrop = this.add.graphics();
+    backdrop.fillStyle(0x000000, 0.6);
+    backdrop.fillRect(0, 0, width, height);
+
+    // Panel background
+    const panelW = 400;
+    const panelH = this.currentLevel === 5 ? 380 : 300;
+    const panelX = (width - panelW) / 2;
+    const panelY = (height - panelH) / 2;
+
+    const panel = this.add.graphics();
+    panel.fillStyle(KLO_WHITE, 1);
+    panel.fillRoundedRect(panelX, panelY, panelW, panelH, 16);
+
+    // Title
+    const titleText = this.add.text(width / 2, panelY + 40, 'Рівень пройдено!', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '32px',
+      color: '#1A1A1A',
+      fontStyle: 'bold',
+    });
+    titleText.setOrigin(0.5);
+
+    // Star display
+    let starString = '';
+    for (let i = 0; i < 3; i++) {
+      starString += i < stars ? '★' : '☆';
+    }
+    const starText = this.add.text(width / 2, panelY + 90, starString, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '48px',
+      color: '#FFB800',
+    });
+    starText.setOrigin(0.5);
+
+    let nextButtonY = panelY + 150;
+
+    // Coupon display for level 5
+    if (this.currentLevel === 5) {
+      const couponBg = this.add.graphics();
+      couponBg.fillStyle(KLO_YELLOW, 1);
+      couponBg.fillRoundedRect(panelX + 40, panelY + 130, panelW - 80, 80, 12);
+
+      const couponTitle = this.add.text(width / 2, panelY + 150, 'Ваш купон:', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '16px',
+        color: '#1A1A1A',
+      });
+      couponTitle.setOrigin(0.5);
+
+      const couponText = this.add.text(width / 2, panelY + 180, 'Безкоштовна кава S', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '22px',
+        color: '#1A1A1A',
+        fontStyle: 'bold',
+      });
+      couponText.setOrigin(0.5);
+
+      nextButtonY = panelY + 240;
+    }
+
+    // "Далі" button → next level or LevelSelect
+    const isLastLevel = this.currentLevel >= MAX_LEVELS;
+    const nextLabel = isLastLevel ? 'Меню' : 'Далі';
+
+    this.createOverlayButton(width / 2, nextButtonY, nextLabel, () => {
+      if (isLastLevel) {
+        this.scene.start('LevelSelect');
+      } else {
+        this.scene.start('Game', { levelId: this.currentLevel + 1 });
+      }
+    });
+
+    // "Рівні" button → LevelSelect (only when not last level)
+    if (!isLastLevel) {
+      this.createOverlayButton(width / 2, nextButtonY + 60, 'Рівні', () => {
+        this.scene.start('LevelSelect');
+      }, true);
+    }
+  }
+
+  /**
+   * Show lose overlay with retry and menu buttons
+   */
+  private showLoseOverlay(): void {
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+
+    // Dark backdrop
+    const backdrop = this.add.graphics();
+    backdrop.fillStyle(0x000000, 0.6);
+    backdrop.fillRect(0, 0, width, height);
+
+    // Panel background
+    const panelW = 400;
+    const panelH = 250;
+    const panelX = (width - panelW) / 2;
+    const panelY = (height - panelH) / 2;
+
+    const panel = this.add.graphics();
+    panel.fillStyle(KLO_WHITE, 1);
+    panel.fillRoundedRect(panelX, panelY, panelW, panelH, 16);
+
+    // Title
+    const titleText = this.add.text(width / 2, panelY + 50, 'Ходи закінчились!', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '32px',
+      color: '#1A1A1A',
+      fontStyle: 'bold',
+    });
+    titleText.setOrigin(0.5);
+
+    // "Повторити" button → restart same level
+    this.createOverlayButton(width / 2, panelY + 120, 'Повторити', () => {
+      this.scene.start('Game', { levelId: this.currentLevel });
+    });
+
+    // "Меню" button → LevelSelect
+    this.createOverlayButton(width / 2, panelY + 180, 'Меню', () => {
+      this.scene.start('LevelSelect');
+    }, true);
+  }
+
+  /**
+   * Create a styled button for overlays
+   */
+  private createOverlayButton(
+    x: number,
+    y: number,
+    label: string,
+    onClick: () => void,
+    secondary: boolean = false
+  ): Phaser.GameObjects.Container {
+    const buttonWidth = 200;
+    const buttonHeight = 50;
+
+    const bg = this.add.graphics();
+    bg.fillStyle(secondary ? KLO_WHITE : KLO_YELLOW, 1);
+    if (secondary) {
+      bg.lineStyle(2, KLO_BLACK, 1);
+      bg.strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 10);
+    }
+    bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 10);
+
+    const text = this.add.text(0, 0, label, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '22px',
+      color: '#1A1A1A',
+      fontStyle: 'bold',
+    });
+    text.setOrigin(0.5);
+
+    const container = this.add.container(x, y, [bg, text]);
+    container.setSize(buttonWidth, buttonHeight);
+    container.setInteractive({ useHandCursor: true });
+
+    container.on('pointerover', () => container.setScale(1.05));
+    container.on('pointerout', () => container.setScale(1));
+    container.on('pointerdown', () => container.setScale(0.95));
+    container.on('pointerup', onClick);
+
+    return container;
   }
 
   private createBackButton(): void {
@@ -243,8 +419,8 @@ export class Game extends Phaser.Scene {
     });
 
     this.backButton.on('pointerup', () => {
-      console.log('[Game] Back button clicked, returning to Menu');
-      this.scene.start('Menu');
+      console.log('[Game] Back button clicked, returning to LevelSelect');
+      this.scene.start('LevelSelect');
     });
   }
 
@@ -412,10 +588,25 @@ export class Game extends Phaser.Scene {
   }
 
   /**
+   * Check if a tile has an obstacle that prevents it from being moved
+   */
+  private tileIsLocked(tile: TileSprite): boolean {
+    const grid = this.engine.getGrid();
+    const tileData = grid[tile.row][tile.col];
+    return !!(tileData.obstacle && tileData.obstacle.layers > 0);
+  }
+
+  /**
    * Handle tile swap with animation and cascade
    */
   private async onTileSwap(tile1: TileSprite, tile2: TileSprite): Promise<void> {
     if (this.isProcessing) return;
+
+    // Prevent swapping tiles with obstacles (ice, dirt, crate)
+    if (this.tileIsLocked(tile1) || this.tileIsLocked(tile2)) {
+      console.log('[Game] Swap blocked - tile has obstacle');
+      return;
+    }
 
     this.isProcessing = true;
 
@@ -464,25 +655,25 @@ export class Game extends Phaser.Scene {
     if (tile1Data.booster && tile2Data.booster) {
       console.log('[Game] Booster combo detected');
       const tilesToRemove = this.boosterActivator.activateBoosterCombo(tile1Data, tile2Data);
+      this.levelManager.onTilesMatched(tilesToRemove);
       await this.animateMatchRemoval([{ tiles: tilesToRemove, type: tile1Data.type, direction: 'horizontal' }]);
       this.engine.removeMatches([{ tiles: tilesToRemove, type: tile1Data.type, direction: 'horizontal' }]);
-      this.levelManager.onTilesMatched(tilesToRemove);
       validSwap = true;
     }
     // Check if one tile is KLO-sphere being swapped with regular tile
     else if (tile1Data.booster === 'klo_sphere' && !tile2Data.booster) {
       console.log('[Game] KLO-sphere swap with regular tile');
       const tilesToRemove = this.engine.getTilesByType(tile2Data.type);
+      this.levelManager.onTilesMatched(tilesToRemove);
       await this.animateMatchRemoval([{ tiles: tilesToRemove, type: tile2Data.type, direction: 'horizontal' }]);
       this.engine.removeMatches([{ tiles: tilesToRemove, type: tile2Data.type, direction: 'horizontal' }]);
-      this.levelManager.onTilesMatched(tilesToRemove);
       validSwap = true;
     } else if (tile2Data.booster === 'klo_sphere' && !tile1Data.booster) {
       console.log('[Game] KLO-sphere swap with regular tile');
       const tilesToRemove = this.engine.getTilesByType(tile1Data.type);
+      this.levelManager.onTilesMatched(tilesToRemove);
       await this.animateMatchRemoval([{ tiles: tilesToRemove, type: tile1Data.type, direction: 'horizontal' }]);
       this.engine.removeMatches([{ tiles: tilesToRemove, type: tile1Data.type, direction: 'horizontal' }]);
-      this.levelManager.onTilesMatched(tilesToRemove);
       validSwap = true;
     }
     // Otherwise check for normal matches
@@ -529,12 +720,20 @@ export class Game extends Phaser.Scene {
 
       this.isProcessing = false;
     } else {
-      // Valid swap - decrement moves BEFORE cascade
+      // Valid swap - decrement moves
       this.levelManager.decrementMoves();
 
       // Process cascade
       console.log('[Game] Valid swap, processing cascade');
       await this.processCascade();
+
+      // Check lose condition AFTER cascade (cascade may complete goals)
+      this.levelManager.checkLoseCondition();
+
+      // Only unlock input if level is still active
+      if (this.levelManager.isLevelComplete()) {
+        return;
+      }
 
       // Check for valid moves, reshuffle if needed
       if (!this.engine.hasValidMoves()) {
@@ -573,6 +772,9 @@ export class Game extends Phaser.Scene {
       depth++;
       console.log('[Game] Cascade depth:', depth, 'Tiles to remove:', matchResult.tilesToRemove.length);
 
+      // Track matched tiles for goals BEFORE removeMatches mutates types to 'empty'
+      this.levelManager.onTilesMatched(matchResult.tilesToRemove);
+
       // Animate tile removal
       await this.animateMatchRemoval([{ tiles: matchResult.tilesToRemove, type: 'fuel', direction: 'horizontal' }]);
 
@@ -588,40 +790,41 @@ export class Game extends Phaser.Scene {
         }
       }
 
-      // Remove matched tiles from engine
+      // Damage obstacles from matches BEFORE removeMatches
       const matches = [{ tiles: matchResult.tilesToRemove, type: 'fuel' as TileType, direction: 'horizontal' as const }];
+      const damagedObstacles = this.engine.damageObstacles(matches);
+      if (damagedObstacles.length > 0) {
+        console.log('[Game] Damaged', damagedObstacles.length, 'obstacles');
+        this.levelManager.onObstaclesDestroyed(damagedObstacles);
+        this.syncSpritesToEngine();
+      }
+
+      // Remove matched tiles from engine
       this.engine.removeMatches(matches);
 
-      // Track matched tiles for goals (EVERY cascade iteration)
-      this.levelManager.onTilesMatched(matchResult.tilesToRemove);
-
-      // Handle booster spawns
+      // Handle booster spawns - restore tile at spawn position so it's not overwritten
       for (const boosterSpawn of matchResult.boostersToSpawn) {
         console.log('[Game] Creating booster:', boosterSpawn.boosterType, 'at', boosterSpawn.row, boosterSpawn.col);
-        // Set booster in engine
+        // Restore tile at booster position (was just marked empty by removeMatches)
         const tile = grid[boosterSpawn.row][boosterSpawn.col];
+        tile.type = boosterSpawn.baseType;
+        tile.isEmpty = false;
         tile.booster = boosterSpawn.boosterType;
         // Update visual
         const sprite = this.tileSprites[boosterSpawn.row][boosterSpawn.col];
+        sprite.setType(boosterSpawn.baseType as 'fuel' | 'coffee' | 'snack' | 'road');
         sprite.setBooster(boosterSpawn.boosterType);
+        sprite.setScale(1);
+        sprite.setAlpha(1);
         // Notify level manager
         this.levelManager.onBoosterCreated(boosterSpawn.boosterType);
       }
 
       // Remove booster-activated tiles if any
       if (activatedTiles.length > 0) {
+        this.levelManager.onTilesMatched(activatedTiles);
         await this.animateMatchRemoval([{ tiles: activatedTiles, type: 'fuel', direction: 'horizontal' }]);
         this.engine.removeMatches([{ tiles: activatedTiles, type: 'fuel', direction: 'horizontal' }]);
-        this.levelManager.onTilesMatched(activatedTiles);
-      }
-
-      // Damage obstacles from matches
-      const damagedObstacles = this.engine.damageObstacles(matches);
-      if (damagedObstacles.length > 0) {
-        console.log('[Game] Damaged', damagedObstacles.length, 'obstacles');
-        this.levelManager.onObstaclesDestroyed(damagedObstacles);
-        // Update obstacle visuals
-        this.syncSpritesToEngine();
       }
 
       // Apply gravity and get movements

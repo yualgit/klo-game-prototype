@@ -46,15 +46,22 @@ export class LevelManager {
   }
 
   /**
-   * Decrement move counter and check for lose condition
+   * Decrement move counter (lose check deferred to after cascade)
    */
   decrementMoves(): void {
     if (this.levelComplete) return;
 
     this.movesRemaining--;
     this.notify({ type: 'moves_changed', movesRemaining: this.movesRemaining });
+  }
 
-    // Check lose condition: moves exhausted with incomplete goals
+  /**
+   * Check lose condition - called AFTER cascade completes
+   * so that cascade matches can still fulfill goals
+   */
+  checkLoseCondition(): void {
+    if (this.levelComplete) return;
+
     if (this.movesRemaining <= 0 && !this.allGoalsComplete()) {
       this.levelComplete = true;
       this.notify({ type: 'level_lost' });
@@ -62,7 +69,15 @@ export class LevelManager {
   }
 
   /**
+   * Whether the level is complete (won or lost)
+   */
+  isLevelComplete(): boolean {
+    return this.levelComplete;
+  }
+
+  /**
    * Handle tiles matched - updates collect goals
+   * IMPORTANT: tiles must be passed BEFORE removeMatches mutates them to 'empty'
    */
   onTilesMatched(tiles: TileData[]): void {
     if (this.levelComplete) return;
@@ -76,42 +91,54 @@ export class LevelManager {
     }
 
     // Update collect goals
+    let updated = false;
     for (const goal of this.goals) {
       if (goal.type === 'collect' && goal.item) {
         const matchedCount = tileCounts.get(goal.item) || 0;
         if (matchedCount > 0) {
-          // Cap progress at goal count
           goal.current = Math.min(goal.current + matchedCount, goal.count);
+          updated = true;
         }
       }
+    }
+
+    if (updated) {
+      this.notify({ type: 'goals_updated', goals: this.getGoals() });
     }
 
     this.checkWin();
   }
 
   /**
-   * Handle obstacles destroyed - updates destroy_obstacle goals
+   * Handle obstacles damaged/destroyed - updates destroy goals
+   * Each obstacle hit counts as progress (layer removed)
    */
   onObstaclesDestroyed(obstacles: ObstacleData[]): void {
     if (this.levelComplete) return;
 
-    // Count fully destroyed obstacles by type (layers === 0)
-    const destroyedCounts = new Map<string, number>();
+    // Count damaged obstacles by type (every hit counts)
+    const damagedCounts = new Map<string, number>();
     for (const obstacle of obstacles) {
-      if (obstacle.layers === 0) {
-        destroyedCounts.set(obstacle.type, (destroyedCounts.get(obstacle.type) || 0) + 1);
+      damagedCounts.set(obstacle.type, (damagedCounts.get(obstacle.type) || 0) + 1);
+    }
+
+    // Update destroy/destroy_obstacle goals
+    // Support both "destroy" (level JSON) and "destroy_obstacle" (legacy) goal types
+    let updated = false;
+    for (const goal of this.goals) {
+      const isDestroyGoal = goal.type === 'destroy_obstacle' || (goal as any).type === 'destroy';
+      const obstacleType = goal.obstacleType || (goal as any).obstacle;
+      if (isDestroyGoal && obstacleType) {
+        const count = damagedCounts.get(obstacleType) || 0;
+        if (count > 0) {
+          goal.current = Math.min(goal.current + count, goal.count);
+          updated = true;
+        }
       }
     }
 
-    // Update destroy_obstacle goals
-    for (const goal of this.goals) {
-      if (goal.type === 'destroy_obstacle' && goal.obstacleType) {
-        const destroyedCount = destroyedCounts.get(goal.obstacleType) || 0;
-        if (destroyedCount > 0) {
-          // Cap progress at goal count
-          goal.current = Math.min(goal.current + destroyedCount, goal.count);
-        }
-      }
+    if (updated) {
+      this.notify({ type: 'goals_updated', goals: this.getGoals() });
     }
 
     this.checkWin();
