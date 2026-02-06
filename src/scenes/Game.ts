@@ -6,8 +6,10 @@
 import Phaser from 'phaser';
 import { Match3Engine } from '../game/Match3Engine';
 import { TileSprite } from '../game/TileSprite';
-import { TileData, SpawnRules } from '../game/types';
+import { TileData, SpawnRules, LevelGoal, LevelEvent, MatchResult, TileType } from '../game/types';
 import { TILE_SIZE } from '../utils/constants';
+import { LevelManager } from '../game/LevelManager';
+import { BoosterActivator } from '../game/BoosterActivator';
 
 // Design constants from STYLE_GUIDE.md
 const KLO_YELLOW = 0xffb800;
@@ -28,6 +30,11 @@ export class Game extends Phaser.Scene {
   private tileSprites: TileSprite[][] = [];
   private isProcessing: boolean = false;
   private selectedTile: TileSprite | null = null;
+
+  // Level management
+  private levelManager: LevelManager;
+  private boosterActivator: BoosterActivator;
+  private currentLevel: number;
 
   // Grid positioning
   private gridOffsetX: number;
@@ -53,8 +60,13 @@ export class Game extends Phaser.Scene {
     // Reset scene state for restarts
     this.resetState();
 
+    // Get level ID from scene data
+    const data = this.scene.settings.data as { levelId?: number };
+    this.currentLevel = data?.levelId || 1;
+
     // Load level data
-    this.levelData = this.cache.json.get('level_001');
+    const levelKey = `level_${String(this.currentLevel).padStart(3, '0')}`;
+    this.levelData = this.cache.json.get(levelKey);
     console.log('[Game] Level data loaded:', this.levelData);
 
     // Calculate grid offsets (center on screen with HUD offset)
@@ -67,6 +79,29 @@ export class Game extends Phaser.Scene {
     this.engine = new Match3Engine(GRID_HEIGHT, GRID_WIDTH);
     const spawnRules: SpawnRules = this.levelData.spawn_rules;
     this.engine.generateGrid(spawnRules);
+
+    // Initialize obstacles if any
+    if (this.levelData.obstacles && this.levelData.obstacles.length > 0) {
+      this.engine.initializeObstacles(this.levelData.obstacles);
+    }
+
+    // Initialize level manager
+    const levelGoals: LevelGoal[] = this.levelData.goals.map((g: any) => ({
+      ...g,
+      current: 0,
+    }));
+    this.levelManager = new LevelManager({
+      moves: this.levelData.moves,
+      goals: levelGoals,
+    });
+
+    // Subscribe to level events
+    this.levelManager.subscribe((event: LevelEvent) => {
+      this.handleLevelEvent(event);
+    });
+
+    // Initialize booster activator
+    this.boosterActivator = new BoosterActivator(this.engine);
 
     // Create HUD at top
     this.createHUD(width);
@@ -97,15 +132,81 @@ export class Game extends Phaser.Scene {
     hudBg.fillStyle(KLO_BLACK, 0.1);
     hudBg.fillRect(0, 0, width, 60);
 
-    // Level and moves text
-    const moves = this.levelData?.moves || 20;
-    this.hudText = this.add.text(width / 2, 30, `Level 1  -  Moves: ${moves}`, {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '24px',
-      color: '#1A1A1A',
-      fontStyle: 'bold',
-    });
-    this.hudText.setOrigin(0.5);
+    // Initial HUD text
+    this.updateHUDText(width);
+  }
+
+  /**
+   * Update HUD text with current level state
+   */
+  private updateHUDText(width: number): void {
+    const moves = this.levelManager.getMovesRemaining();
+    const goals = this.levelManager.getGoals();
+
+    // Format goals for display
+    const goalText = goals
+      .map((g) => {
+        const item = g.item || g.obstacleType || g.boosterType || '';
+        return `${item}: ${g.current}/${g.count}`;
+      })
+      .join(' | ');
+
+    const text = `Level ${this.currentLevel}  -  Moves: ${moves}  -  ${goalText}`;
+
+    if (!this.hudText) {
+      this.hudText = this.add.text(width / 2, 30, text, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '18px',
+        color: '#1A1A1A',
+        fontStyle: 'bold',
+      });
+      this.hudText.setOrigin(0.5);
+    } else {
+      this.hudText.setText(text);
+    }
+  }
+
+  /**
+   * Handle level events from LevelManager
+   */
+  private handleLevelEvent(event: LevelEvent): void {
+    const width = this.cameras.main.width;
+
+    switch (event.type) {
+      case 'moves_changed':
+        this.updateHUDText(width);
+        break;
+
+      case 'goals_updated':
+        this.updateHUDText(width);
+        break;
+
+      case 'level_won':
+        console.log('[Game] Level won!');
+        this.isProcessing = true;
+        // Simple text overlay for now
+        const winText = this.add.text(width / 2, this.cameras.main.height / 2, 'Level Complete!', {
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '48px',
+          color: '#FFB800',
+          fontStyle: 'bold',
+        });
+        winText.setOrigin(0.5);
+        break;
+
+      case 'level_lost':
+        console.log('[Game] Level lost!');
+        this.isProcessing = true;
+        // Simple text overlay for now
+        const loseText = this.add.text(width / 2, this.cameras.main.height / 2, 'No Moves Left!', {
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '48px',
+          color: '#FF0000',
+          fontStyle: 'bold',
+        });
+        loseText.setOrigin(0.5);
+        break;
+    }
   }
 
   private createBackButton(): void {
@@ -189,6 +290,10 @@ export class Game extends Phaser.Scene {
           this.gridOffsetX,
           this.gridOffsetY
         );
+
+        // Set initial booster and obstacle visuals
+        tile.setBooster(tileData.booster);
+        tile.setObstacle(tileData.obstacle);
 
         // Make interactive - Containers need explicit hit area
         const hitArea = new Phaser.Geom.Rectangle(
@@ -348,10 +453,47 @@ export class Game extends Phaser.Scene {
     this.tileSprites[tile1.row][tile1.col] = tile1;
     this.tileSprites[tile2.row][tile2.col] = tile2;
 
-    // Check for matches
-    const matches = this.engine.findMatches();
+    // Get grid data for booster checks
+    const grid = this.engine.getGrid();
+    const tile1Data = grid[tile1.row][tile1.col];
+    const tile2Data = grid[tile2.row][tile2.col];
 
-    if (matches.length === 0) {
+    let validSwap = false;
+
+    // Check if both tiles have boosters -> combo
+    if (tile1Data.booster && tile2Data.booster) {
+      console.log('[Game] Booster combo detected');
+      const tilesToRemove = this.boosterActivator.activateBoosterCombo(tile1Data, tile2Data);
+      await this.animateMatchRemoval([{ tiles: tilesToRemove, type: tile1Data.type, direction: 'horizontal' }]);
+      this.engine.removeMatches([{ tiles: tilesToRemove, type: tile1Data.type, direction: 'horizontal' }]);
+      this.levelManager.onTilesMatched(tilesToRemove);
+      validSwap = true;
+    }
+    // Check if one tile is KLO-sphere being swapped with regular tile
+    else if (tile1Data.booster === 'klo_sphere' && !tile2Data.booster) {
+      console.log('[Game] KLO-sphere swap with regular tile');
+      const tilesToRemove = this.engine.getTilesByType(tile2Data.type);
+      await this.animateMatchRemoval([{ tiles: tilesToRemove, type: tile2Data.type, direction: 'horizontal' }]);
+      this.engine.removeMatches([{ tiles: tilesToRemove, type: tile2Data.type, direction: 'horizontal' }]);
+      this.levelManager.onTilesMatched(tilesToRemove);
+      validSwap = true;
+    } else if (tile2Data.booster === 'klo_sphere' && !tile1Data.booster) {
+      console.log('[Game] KLO-sphere swap with regular tile');
+      const tilesToRemove = this.engine.getTilesByType(tile1Data.type);
+      await this.animateMatchRemoval([{ tiles: tilesToRemove, type: tile1Data.type, direction: 'horizontal' }]);
+      this.engine.removeMatches([{ tiles: tilesToRemove, type: tile1Data.type, direction: 'horizontal' }]);
+      this.levelManager.onTilesMatched(tilesToRemove);
+      validSwap = true;
+    }
+    // Otherwise check for normal matches
+    else {
+      const matchResult = this.engine.findMatchesWithBoosters();
+      if (matchResult.tilesToRemove.length > 0) {
+        validSwap = true;
+      }
+    }
+
+    if (!validSwap) {
       // Invalid swap - revert
       console.log('[Game] No matches, reverting swap');
 
@@ -387,7 +529,10 @@ export class Game extends Phaser.Scene {
 
       this.isProcessing = false;
     } else {
-      // Valid swap - process cascade
+      // Valid swap - decrement moves BEFORE cascade
+      this.levelManager.decrementMoves();
+
+      // Process cascade
       console.log('[Game] Valid swap, processing cascade');
       await this.processCascade();
 
@@ -422,17 +567,62 @@ export class Game extends Phaser.Scene {
     const MAX_DEPTH = 20;
 
     while (depth < MAX_DEPTH) {
-      const matches = this.engine.findMatches();
-      if (matches.length === 0) break;
+      const matchResult: MatchResult = this.engine.findMatchesWithBoosters();
+      if (matchResult.tilesToRemove.length === 0) break;
 
       depth++;
-      console.log('[Game] Cascade depth:', depth, 'Matches:', matches.length);
+      console.log('[Game] Cascade depth:', depth, 'Tiles to remove:', matchResult.tilesToRemove.length);
 
-      // Animate match removal
-      await this.animateMatchRemoval(matches);
+      // Animate tile removal
+      await this.animateMatchRemoval([{ tiles: matchResult.tilesToRemove, type: 'fuel', direction: 'horizontal' }]);
 
-      // Remove matches in engine
+      // Check for boosters in removed tiles and activate them
+      const grid = this.engine.getGrid();
+      const activatedTiles: TileData[] = [];
+      for (const tile of matchResult.tilesToRemove) {
+        const tileData = grid[tile.row][tile.col];
+        if (tileData.booster) {
+          console.log('[Game] Activating booster at', tile.row, tile.col, ':', tileData.booster);
+          const boosterTargets = this.boosterActivator.activateBooster(tileData);
+          activatedTiles.push(...boosterTargets);
+        }
+      }
+
+      // Remove matched tiles from engine
+      const matches = [{ tiles: matchResult.tilesToRemove, type: 'fuel' as TileType, direction: 'horizontal' as const }];
       this.engine.removeMatches(matches);
+
+      // Track matched tiles for goals (EVERY cascade iteration)
+      this.levelManager.onTilesMatched(matchResult.tilesToRemove);
+
+      // Handle booster spawns
+      for (const boosterSpawn of matchResult.boostersToSpawn) {
+        console.log('[Game] Creating booster:', boosterSpawn.boosterType, 'at', boosterSpawn.row, boosterSpawn.col);
+        // Set booster in engine
+        const tile = grid[boosterSpawn.row][boosterSpawn.col];
+        tile.booster = boosterSpawn.boosterType;
+        // Update visual
+        const sprite = this.tileSprites[boosterSpawn.row][boosterSpawn.col];
+        sprite.setBooster(boosterSpawn.boosterType);
+        // Notify level manager
+        this.levelManager.onBoosterCreated(boosterSpawn.boosterType);
+      }
+
+      // Remove booster-activated tiles if any
+      if (activatedTiles.length > 0) {
+        await this.animateMatchRemoval([{ tiles: activatedTiles, type: 'fuel', direction: 'horizontal' }]);
+        this.engine.removeMatches([{ tiles: activatedTiles, type: 'fuel', direction: 'horizontal' }]);
+        this.levelManager.onTilesMatched(activatedTiles);
+      }
+
+      // Damage obstacles from matches
+      const damagedObstacles = this.engine.damageObstacles(matches);
+      if (damagedObstacles.length > 0) {
+        console.log('[Game] Damaged', damagedObstacles.length, 'obstacles');
+        this.levelManager.onObstaclesDestroyed(damagedObstacles);
+        // Update obstacle visuals
+        this.syncSpritesToEngine();
+      }
 
       // Apply gravity and get movements
       const movements = this.engine.applyGravity();
@@ -552,6 +742,8 @@ export class Game extends Phaser.Scene {
         const tileType = tileData.type === 'empty' ? 'fuel' : tileData.type;
 
         sprite.setType(tileType as 'fuel' | 'coffee' | 'snack' | 'road');
+        sprite.setBooster(tileData.booster);
+        sprite.setObstacle(tileData.obstacle);
         sprite.row = row;
         sprite.col = col;
         sprite.x = this.gridOffsetX + col * TILE_SIZE + TILE_SIZE / 2;

@@ -15,8 +15,8 @@
       "description": "Зібрати 15 кава"
     },
     {
-      "type": "destroy",
-      "obstacle": "ice",
+      "type": "destroy_obstacle",
+      "obstacleType": "ice",
       "count": 5,
       "description": "Знищити 5 льоду"
     }

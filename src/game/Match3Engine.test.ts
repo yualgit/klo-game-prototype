@@ -542,10 +542,12 @@ describe('Match3Engine', () => {
       // Place dirt obstacle (layers: 1) at (4,4)
       grid[4][4].obstacle = { type: 'dirt', layers: 1 };
 
-      // Create adjacent match (vertical)
-      grid[2][4].type = 'snack';
-      grid[3][4].type = 'snack';
-      grid[5][4].type = 'snack';
+      // Create adjacent horizontal match at row 4, cols 1-3 (adjacent to col 4)
+      grid[4][1].type = 'snack';
+      grid[4][2].type = 'snack';
+      grid[4][3].type = 'snack';
+      // Ensure cols 0 and 4 are NOT snack to keep match exactly 3
+      grid[4][0].type = 'fuel';
 
       const matches = engine.findMatches();
       engine.damageObstacles(matches);
