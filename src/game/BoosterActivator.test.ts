@@ -136,4 +136,83 @@ describe('BoosterActivator', () => {
       });
     });
   });
+
+  describe('Booster Combos', () => {
+    test('two linear boosters create rocket effect (cross clear)', () => {
+      engine.generateGrid({ fuel: 1, coffee: 1, snack: 1, road: 1 });
+      const grid = engine.getGrid();
+      const booster1: TileData = { ...grid[3][3], booster: 'linear_horizontal' };
+      const booster2: TileData = { ...grid[3][4], booster: 'linear_vertical' };
+      const tilesToRemove = activator.activateBoosterCombo(booster1, booster2);
+      expect(tilesToRemove.length).toBe(15);
+      const rowTiles = tilesToRemove.filter(t => t.row === 3);
+      expect(rowTiles.length).toBe(8);
+      const colTiles = tilesToRemove.filter(t => t.col === 3);
+      expect(colTiles.length).toBe(8);
+    });
+
+    test('two bombs create mega bomb (5x5)', () => {
+      engine.generateGrid({ fuel: 1, coffee: 1, snack: 1, road: 1 });
+      const grid = engine.getGrid();
+      const booster1: TileData = { ...grid[4][4], booster: 'bomb' };
+      const booster2: TileData = { ...grid[4][5], booster: 'bomb' };
+      const tilesToRemove = activator.activateBoosterCombo(booster1, booster2);
+      expect(tilesToRemove.length).toBe(25);
+      tilesToRemove.forEach(tile => {
+        expect(tile.row).toBeGreaterThanOrEqual(2);
+        expect(tile.row).toBeLessThanOrEqual(6);
+        expect(tile.col).toBeGreaterThanOrEqual(2);
+        expect(tile.col).toBeLessThanOrEqual(6);
+      });
+    });
+
+    test('linear + bomb clears 3 rows or columns', () => {
+      engine.generateGrid({ fuel: 1, coffee: 1, snack: 1, road: 1 });
+      const grid = engine.getGrid();
+      const booster1: TileData = { ...grid[3][3], booster: 'linear_horizontal' };
+      const booster2: TileData = { ...grid[3][4], booster: 'bomb' };
+      const tilesToRemove = activator.activateBoosterCombo(booster1, booster2);
+      expect(tilesToRemove.length).toBe(24);
+      const rows = new Set(tilesToRemove.map(t => t.row));
+      expect(rows.has(2)).toBe(true);
+      expect(rows.has(3)).toBe(true);
+      expect(rows.has(4)).toBe(true);
+    });
+
+    test('klo_sphere + linear converts all same-type to linear', () => {
+      engine.generateGrid({ fuel: 1, coffee: 1, snack: 1, road: 1 });
+      const grid = engine.getGrid();
+      let coffeeCount = 0;
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          if (grid[r][c].type === 'coffee') coffeeCount++;
+        }
+      }
+      const booster1: TileData = { ...grid[3][3], booster: 'klo_sphere' };
+      const booster2: TileData = { ...grid[3][4], type: 'coffee', booster: 'linear_horizontal' };
+      const tilesToRemove = activator.activateBoosterCombo(booster1, booster2);
+      expect(tilesToRemove.length).toBe(coffeeCount);
+      tilesToRemove.forEach(tile => {
+        expect(tile.type).toBe('coffee');
+      });
+    });
+
+    test('two klo_spheres clear entire board', () => {
+      engine.generateGrid({ fuel: 1, coffee: 1, snack: 1, road: 1 });
+      const grid = engine.getGrid();
+      const booster1: TileData = { ...grid[3][3], booster: 'klo_sphere' };
+      const booster2: TileData = { ...grid[3][4], booster: 'klo_sphere' };
+      const tilesToRemove = activator.activateBoosterCombo(booster1, booster2);
+      expect(tilesToRemove.length).toBe(64);
+    });
+
+    test('no combo just activates both', () => {
+      engine.generateGrid({ fuel: 1, coffee: 1, snack: 1, road: 1 });
+      const grid = engine.getGrid();
+      const booster1: TileData = { ...grid[3][3], booster: 'linear_horizontal' };
+      const booster2: TileData = { ...grid[5][5], booster: 'linear_vertical' };
+      const tilesToRemove = activator.activateBoosterCombo(booster1, booster2);
+      expect(tilesToRemove.length).toBe(15);
+    });
+  });
 });
