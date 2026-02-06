@@ -6,6 +6,10 @@ import {
   SpawnRules,
   CascadeResult,
   TileType,
+  MatchResult,
+  BoosterSpawn,
+  ObstacleData,
+  ObstacleType,
 } from './types';
 
 /**
@@ -286,6 +290,7 @@ export class Match3Engine {
    * Apply gravity: tiles fall down to fill empty spaces
    * Returns movement data for animation
    * Processes columns independently (bottom-to-top)
+   * Obstacle-aware: tiles with obstacles stay in place, blocked cells don't accept tiles
    */
   applyGravity(): Movement[] {
     const movements: Movement[] = [];
@@ -294,8 +299,30 @@ export class Match3Engine {
       // Process column from bottom to top
       let writeRow = this.rows - 1;
 
+      // Find the lowest valid landing spot (skip blocked cells)
+      while (writeRow >= 0 && this.grid[writeRow][col].obstacle?.type === 'blocked') {
+        writeRow--;
+      }
+
       for (let readRow = this.rows - 1; readRow >= 0; readRow--) {
         const tile = this.grid[readRow][col];
+
+        // Skip blocked cells when reading
+        if (tile.obstacle?.type === 'blocked') {
+          continue;
+        }
+
+        // Tiles with active obstacles (not 'blocked') stay in place
+        if (tile.obstacle && tile.obstacle.layers > 0) {
+          if (readRow <= writeRow) {
+            writeRow = readRow - 1;
+            // Skip any blocked cells above
+            while (writeRow >= 0 && this.grid[writeRow][col].obstacle?.type === 'blocked') {
+              writeRow--;
+            }
+          }
+          continue;
+        }
 
         if (!tile.isEmpty) {
           if (readRow !== writeRow) {
@@ -319,6 +346,10 @@ export class Match3Engine {
             };
           }
           writeRow--;
+          // Skip any blocked cells above
+          while (writeRow >= 0 && this.grid[writeRow][col].obstacle?.type === 'blocked') {
+            writeRow--;
+          }
         }
       }
     }
@@ -329,13 +360,21 @@ export class Match3Engine {
   /**
    * Spawn new tiles to fill empty cells
    * Fills from top of each column
+   * Does not spawn on blocked cells
    */
   spawnNewTiles(spawnRules: SpawnRules): SpawnData[] {
     const spawns: SpawnData[] = [];
 
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
-        if (this.grid[row][col].isEmpty) {
+        const tile = this.grid[row][col];
+
+        // Do not spawn on blocked cells
+        if (tile.obstacle?.type === 'blocked') {
+          continue;
+        }
+
+        if (tile.isEmpty) {
           const type = this.getRandomTileType(spawnRules);
           const tileId = this.generateTileId();
 
@@ -493,5 +532,297 @@ export class Match3Engine {
       snack: counts.snack / total || 0.1,
       road: counts.road / total || 0.1,
     };
+  }
+
+  /**
+   * Find matches and detect booster creation opportunities
+   * Returns tiles to remove and boosters to spawn
+   */
+  findMatchesWithBoosters(): MatchResult {
+    const matches = this.findMatches();
+    const tilesToRemove: TileData[] = [];
+    const boostersToSpawn: BoosterSpawn[] = [];
+    const processedMatches = new Set<number>();
+
+    // Build position sets for L/T detection
+    const horizontalMatches: Match[] = [];
+    const verticalMatches: Match[] = [];
+
+    matches.forEach((match) => {
+      if (match.direction === 'horizontal') {
+        horizontalMatches.push(match);
+      } else {
+        verticalMatches.push(match);
+      }
+    });
+
+    // Find L/T-shape intersections (horizontal and vertical matches of same type)
+    for (let hIdx = 0; hIdx < horizontalMatches.length; hIdx++) {
+      for (let vIdx = 0; vIdx < verticalMatches.length; vIdx++) {
+        const hMatch = horizontalMatches[hIdx];
+        const vMatch = verticalMatches[vIdx];
+
+        // Must be same type
+        if (hMatch.type !== vMatch.type) continue;
+
+        // Find intersection
+        const hPositions = new Set(hMatch.tiles.map((t) => `${t.row},${t.col}`));
+        const vPositions = new Set(vMatch.tiles.map((t) => `${t.row},${t.col}`));
+
+        let intersection: { row: number; col: number } | null = null;
+        for (const pos of hPositions) {
+          if (vPositions.has(pos)) {
+            const [row, col] = pos.split(',').map(Number);
+            intersection = { row, col };
+            break;
+          }
+        }
+
+        if (intersection) {
+          // Found L/T-shape - spawn bomb at intersection
+          boostersToSpawn.push({
+            row: intersection.row,
+            col: intersection.col,
+            boosterType: 'bomb',
+            baseType: hMatch.type,
+          });
+
+          // Add all tiles from both matches to tilesToRemove
+          hMatch.tiles.forEach((t) => {
+            if (!tilesToRemove.find((tile) => tile.id === t.id)) {
+              tilesToRemove.push(t);
+            }
+          });
+          vMatch.tiles.forEach((t) => {
+            if (!tilesToRemove.find((tile) => tile.id === t.id)) {
+              tilesToRemove.push(t);
+            }
+          });
+
+          // Mark both matches as processed
+          processedMatches.add(hIdx);
+          processedMatches.add(horizontalMatches.length + vIdx);
+        }
+      }
+    }
+
+    // Process remaining matches (non-L/T)
+    matches.forEach((match, idx) => {
+      const matchIdx =
+        match.direction === 'horizontal'
+          ? horizontalMatches.indexOf(match)
+          : horizontalMatches.length + verticalMatches.indexOf(match);
+
+      if (processedMatches.has(matchIdx)) {
+        return; // Already processed as part of L/T
+      }
+
+      const matchLength = match.tiles.length;
+      const middleIdx = Math.floor(matchLength / 2);
+      const middleTile = match.tiles[middleIdx];
+
+      if (matchLength >= 5) {
+        // KLO-sphere
+        boostersToSpawn.push({
+          row: middleTile.row,
+          col: middleTile.col,
+          boosterType: 'klo_sphere',
+          baseType: match.type,
+        });
+      } else if (matchLength === 4) {
+        // Linear booster
+        boostersToSpawn.push({
+          row: middleTile.row,
+          col: middleTile.col,
+          boosterType:
+            match.direction === 'horizontal'
+              ? 'linear_horizontal'
+              : 'linear_vertical',
+          baseType: match.type,
+        });
+      }
+      // matchLength === 3: no booster
+
+      // Add tiles to remove
+      match.tiles.forEach((t) => {
+        if (!tilesToRemove.find((tile) => tile.id === t.id)) {
+          tilesToRemove.push(t);
+        }
+      });
+    });
+
+    return { tilesToRemove, boostersToSpawn };
+  }
+
+  /**
+   * Get tile at specific position
+   */
+  getTileAt(row: number, col: number): TileData {
+    return this.grid[row][col];
+  }
+
+  /**
+   * Set tile at specific position (merge partial data)
+   */
+  setTileAt(row: number, col: number, tile: Partial<TileData>): void {
+    this.grid[row][col] = { ...this.grid[row][col], ...tile };
+  }
+
+  /**
+   * Get all tiles in a row
+   */
+  getTilesInRow(row: number): TileData[] {
+    return this.grid[row];
+  }
+
+  /**
+   * Get all tiles in a column
+   */
+  getTilesInColumn(col: number): TileData[] {
+    const tiles: TileData[] = [];
+    for (let row = 0; row < this.rows; row++) {
+      tiles.push(this.grid[row][col]);
+    }
+    return tiles;
+  }
+
+  /**
+   * Get tiles in radius around a position (square area)
+   */
+  getTilesInRadius(row: number, col: number, radius: number): TileData[] {
+    const tiles: TileData[] = [];
+    const minRow = Math.max(0, row - radius);
+    const maxRow = Math.min(this.rows - 1, row + radius);
+    const minCol = Math.max(0, col - radius);
+    const maxCol = Math.min(this.cols - 1, col + radius);
+
+    for (let r = minRow; r <= maxRow; r++) {
+      for (let c = minCol; c <= maxCol; c++) {
+        tiles.push(this.grid[r][c]);
+      }
+    }
+    return tiles;
+  }
+
+  /**
+   * Get all tiles of a specific type
+   */
+  getTilesByType(type: TileType): TileData[] {
+    const tiles: TileData[] = [];
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.cols; col++) {
+        const tile = this.grid[row][col];
+        if (tile.type === type && !tile.isEmpty) {
+          tiles.push(tile);
+        }
+      }
+    }
+    return tiles;
+  }
+
+  /**
+   * Get adjacent tiles (up to 4: up, down, left, right)
+   */
+  getAdjacentTiles(row: number, col: number): TileData[] {
+    const tiles: TileData[] = [];
+
+    // Up
+    if (row > 0) {
+      tiles.push(this.grid[row - 1][col]);
+    }
+    // Down
+    if (row < this.rows - 1) {
+      tiles.push(this.grid[row + 1][col]);
+    }
+    // Left
+    if (col > 0) {
+      tiles.push(this.grid[row][col - 1]);
+    }
+    // Right
+    if (col < this.cols - 1) {
+      tiles.push(this.grid[row][col + 1]);
+    }
+
+    return tiles;
+  }
+
+  /**
+   * Damage obstacles adjacent to matched tiles
+   * Returns list of damaged/destroyed obstacles for goal tracking
+   */
+  damageObstacles(matches: Match[]): ObstacleData[] {
+    const damagedObstacles: ObstacleData[] = [];
+    const processedPositions = new Set<string>();
+
+    // For each match, get each matched tile
+    matches.forEach((match) => {
+      match.tiles.forEach((matchedTile) => {
+        // Get adjacent tiles
+        const adjacentTiles = this.getAdjacentTiles(matchedTile.row, matchedTile.col);
+
+        adjacentTiles.forEach((adjTile) => {
+          const posKey = `${adjTile.row},${adjTile.col}`;
+
+          // Skip if already processed this position
+          if (processedPositions.has(posKey)) {
+            return;
+          }
+
+          // Check if tile has an obstacle
+          if (adjTile.obstacle && adjTile.obstacle.layers > 0) {
+            // Skip 'blocked' type (permanent, takes no damage)
+            if (adjTile.obstacle.type === 'blocked') {
+              return;
+            }
+
+            // Store obstacle data before damage for goal tracking
+            const obstacleBeforeDamage = { ...adjTile.obstacle };
+
+            // Decrement obstacle layers
+            this.grid[adjTile.row][adjTile.col].obstacle!.layers--;
+
+            // If layers reaches 0, remove obstacle
+            if (this.grid[adjTile.row][adjTile.col].obstacle!.layers === 0) {
+              delete this.grid[adjTile.row][adjTile.col].obstacle;
+            }
+
+            // Add to damaged list
+            damagedObstacles.push(obstacleBeforeDamage);
+
+            // Mark position as processed
+            processedPositions.add(posKey);
+          }
+        });
+      });
+    });
+
+    return damagedObstacles;
+  }
+
+  /**
+   * Initialize obstacles on the grid
+   * Used for level setup
+   */
+  initializeObstacles(
+    obstacles: Array<{
+      type: ObstacleType;
+      layers: number;
+      positions: [number, number][];
+    }>
+  ): void {
+    obstacles.forEach((obstacleConfig) => {
+      obstacleConfig.positions.forEach(([row, col]) => {
+        this.grid[row][col].obstacle = {
+          type: obstacleConfig.type,
+          layers: obstacleConfig.layers,
+        };
+
+        // For 'blocked' type: mark cell as empty (no tile can exist here)
+        if (obstacleConfig.type === 'blocked') {
+          this.grid[row][col].isEmpty = true;
+          this.grid[row][col].type = 'empty';
+        }
+      });
+    });
   }
 }
