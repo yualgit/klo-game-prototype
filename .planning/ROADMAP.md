@@ -14,8 +14,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Setup** - Project scaffold with Firebase and Phaser
 - [x] **Phase 2: Core Grid Mechanics** - Match-3 engine with tiles, swap, gravity, cascade
-- [ ] **Phase 3: Game Features** - Boosters, obstacles, and level system
-- [ ] **Phase 4: UI & Progression** - All screens, menus, win/lose flow, coupon mock
+- [x] **Phase 3: Game Features** - Boosters, obstacles, and level system
+- [x] **Phase 4: UI & Progression** - All screens, menus, win/lose flow, coupon mock
 - [ ] **Phase 5: Assets & Polish** - AI-generated visuals and final integration
 
 ## Phase Details
@@ -68,11 +68,11 @@ Plans:
 **Plans**: 5 plans in 2 waves
 
 Plans:
-- [ ] 03-01-PLAN.md — Types + booster detection TDD (match patterns for 4-match, 5-match, L/T-shape)
-- [ ] 03-02-PLAN.md — Obstacle system TDD (damage, gravity, blocked cells)
-- [ ] 03-03-PLAN.md — Booster activation + combos TDD (individual effects + combo matrix)
-- [ ] 03-04-PLAN.md — Level manager TDD (goals, moves, win/lose conditions)
-- [ ] 03-05-PLAN.md — Game integration (visuals, wiring, level loading, HUD)
+- [x] 03-01-PLAN.md — Types + booster detection TDD (match patterns for 4-match, 5-match, L/T-shape)
+- [x] 03-02-PLAN.md — Obstacle system TDD (damage, gravity, blocked cells)
+- [x] 03-03-PLAN.md — Booster activation + combos TDD (individual effects + combo matrix)
+- [x] 03-04-PLAN.md — Level manager TDD (goals, moves, win/lose conditions)
+- [x] 03-05-PLAN.md — Game integration (visuals, wiring, level loading, HUD)
 
 ### Phase 4: UI & Progression
 **Goal**: Complete UI flow from level select through gameplay to win/lose/coupon screens
@@ -85,11 +85,10 @@ Plans:
   4. Lose screen appears when moves run out with "Retry" button
   5. After beating Level 5, coupon mock UI displays "Free Coffee" reward
   6. Level progress saves to Firebase and persists across sessions
-**Plans**: TBD
+**Plans**: 1 plan in 1 wave
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [x] 04-01-PLAN.md — Full UI & progression (ProgressManager, LevelSelect, win/lose overlays, Firebase persistence)
 
 ### Phase 5: Assets & Polish
 **Goal**: Professional-looking demo with KLO-branded AI-generated assets
@@ -101,11 +100,12 @@ Plans:
   3. All 4 obstacle types show appropriate AI-generated graphics (ice, dirt, crate, blocked)
   4. Animations are smooth at 60fps on mobile browsers
   5. Demo feels polished with consistent KLO yellow/black branding throughout
-**Plans**: TBD
+**Plans**: 3 plans in 3 waves
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md — Asset foundation (Boot preloading, texture constants, TileSprite PNG sprites, obstacle sprites, AudioManager)
+- [ ] 05-02-PLAN.md — VFX + audio (particle system, match/booster effects, sound integration into Game cascade)
+- [ ] 05-03-PLAN.md — Scene polish (animated Menu, road map LevelSelect, win/lose overlays, transitions, GUI sprites)
 
 ## Progress
 
@@ -116,10 +116,10 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Foundation & Setup | 3/3 | Complete | 2026-02-05 |
 | 2. Core Grid Mechanics | 3/3 | Complete | 2026-02-06 |
-| 3. Game Features | 0/5 | In Progress | - |
-| 4. UI & Progression | 0/TBD | Not started | - |
-| 5. Assets & Polish | 0/TBD | Not started | - |
+| 3. Game Features | 5/5 | Complete | 2026-02-06 |
+| 4. UI & Progression | 1/1 | Complete | 2026-02-06 |
+| 5. Assets & Polish | 0/3 | In progress | - |
 
 ---
 *Roadmap created: 2026-02-05*
-*Last updated: 2026-02-06*
+*Last updated: 2026-02-09*
