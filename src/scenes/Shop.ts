@@ -36,6 +36,7 @@ export class Shop extends Phaser.Scene {
 
     // Launch UIScene with shop tab active
     this.scene.launch('UIScene', { currentTab: 'shop', showBottomNav: true, showHeader: true });
+    this.scene.bringToTop('UIScene');
 
     // Listen for navigation
     eventsCenter.on('navigate-to', this.handleNavigation, this);

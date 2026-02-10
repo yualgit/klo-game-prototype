@@ -50,6 +50,7 @@ export class Collections extends Phaser.Scene {
       showBottomNav: true,
       showHeader: true,
     });
+    this.scene.bringToTop('UIScene');
 
     // Listen for navigation
     eventsCenter.on('navigate-to', this.handleNavigation, this);
@@ -79,12 +80,15 @@ export class Collections extends Phaser.Scene {
     // Layout constants
     const headerOffset = cssToGame(60); // UIScene header height
     const bottomNavSafeArea = cssToGame(70); // UIScene bottom nav
-    const collectionBlockHeight = cssToGame(350); // Space for each collection
-    const cardSize = cssToGame(80);
+    const cardWidth = cssToGame(80);
+    const cardAspect = 1158 / 696; // card images are 696x1158 (portrait)
+    const cardHeight = cardWidth * cardAspect;
     const cardGap = cssToGame(12);
 
+    // Each collection block: title(30) + description(30) + 2 rows of cards + gap + progress(50) + spacing(50)
+    const collectionBlockHeight = cssToGame(30) + cssToGame(30) + 2 * cardHeight + cardGap + cssToGame(20) + cssToGame(50) + cssToGame(50);
     // Calculate world height: header + 3 collections + bottom nav + viewport padding
-    const worldHeight = headerOffset + 3 * collectionBlockHeight + bottomNavSafeArea + height;
+    const worldHeight = headerOffset + cssToGame(20) + 3 * collectionBlockHeight + bottomNavSafeArea + height;
     this.cameras.main.setBounds(0, 0, width, worldHeight);
 
     // Background - covers full world height
@@ -126,36 +130,36 @@ export class Collections extends Phaser.Scene {
       currentY += cssToGame(30);
 
       // Card grid (2 rows x 3 columns)
-      const gridWidth = 3 * cardSize + 2 * cardGap;
+      const gridWidth = 3 * cardWidth + 2 * cardGap;
       const gridStartX = (width - gridWidth) / 2;
 
       for (let i = 0; i < cards.length; i++) {
         const card = cards[i];
         const col = i % 3;
         const row = Math.floor(i / 3);
-        const cardX = gridStartX + col * (cardSize + cardGap) + cardSize / 2;
-        const cardY = currentY + row * (cardSize + cardGap) + cardSize / 2;
+        const cardX = gridStartX + col * (cardWidth + cardGap) + cardWidth / 2;
+        const cardY = currentY + row * (cardHeight + cardGap) + cardHeight / 2;
 
         const isOwned = collectionsManager.isCardOwned(collectionId, card.id);
 
         if (isOwned) {
-          // Owned card: full color
+          // Owned card: full color, preserve aspect ratio
           const cardImage = this.add.image(cardX, cardY, card.textureKey);
-          cardImage.setDisplaySize(cardSize, cardSize);
+          cardImage.setDisplaySize(cardWidth, cardHeight);
           this.allElements.push(cardImage);
 
           // Rarity badge (small colored dot at bottom-right)
           const badgeRadius = cssToGame(4);
-          const badgeX = cardX + cardSize / 2 - badgeRadius * 2;
-          const badgeY = cardY + cardSize / 2 - badgeRadius * 2;
+          const badgeX = cardX + cardWidth / 2 - badgeRadius * 2;
+          const badgeY = cardY + cardHeight / 2 - badgeRadius * 2;
           const badge = this.add.graphics();
           badge.fillStyle(RARITY_COLORS[card.rarity], 1);
           badge.fillCircle(badgeX, badgeY, badgeRadius);
           this.allElements.push(badge);
         } else {
-          // Unowned card: grayscale with "?" overlay
+          // Unowned card: grayscale with "?" overlay, preserve aspect ratio
           const cardImage = this.add.image(cardX, cardY, card.textureKey);
-          cardImage.setDisplaySize(cardSize, cardSize);
+          cardImage.setDisplaySize(cardWidth, cardHeight);
           cardImage.setTint(0x808080);
           cardImage.setAlpha(0.4);
           this.allElements.push(cardImage);
@@ -172,7 +176,7 @@ export class Collections extends Phaser.Scene {
         }
       }
 
-      currentY += 2 * (cardSize + cardGap) + cssToGame(20);
+      currentY += 2 * (cardHeight + cardGap) + cssToGame(20);
 
       // Progress text
       const progressText = this.add.text(
