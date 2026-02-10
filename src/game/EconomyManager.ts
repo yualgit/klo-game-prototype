@@ -1,12 +1,17 @@
 /**
  * EconomyManager - Singleton managing lives and bonuses with regeneration logic.
  * Loaded once in main.ts, stored in Phaser registry for scene access.
+ *
+ * Extends Phaser.Events.EventEmitter to emit reactive economy updates:
+ * - 'lives-changed' (lives: number) - emitted whenever lives count changes
+ * - 'bonuses-changed' (bonuses: number) - emitted whenever bonuses count changes
  */
 
+import Phaser from 'phaser';
 import { Timestamp } from 'firebase/firestore';
 import { FirestoreService, EconomyState } from '../firebase/firestore';
 
-export class EconomyManager {
+export class EconomyManager extends Phaser.Events.EventEmitter {
   private static readonly MAX_LIVES = 5;
   private static readonly REGEN_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
   private static readonly REFILL_COST = 15;
@@ -19,6 +24,8 @@ export class EconomyManager {
   private lastRecalcTime: number;
 
   constructor(firestoreService: FirestoreService, uid: string, initialState: EconomyState) {
+    super(); // EventEmitter constructor
+
     this.firestoreService = firestoreService;
     this.uid = uid;
     this.state = initialState;
@@ -80,6 +87,9 @@ export class EconomyManager {
     this.state.lives--;
     console.log('[EconomyManager] Lost life. Lives remaining:', this.state.lives);
 
+    // Emit lives changed event for reactive UI updates
+    this.emit('lives-changed', this.state.lives);
+
     // Start regeneration timer if just dropped below max
     if (this.state.lives < EconomyManager.MAX_LIVES && !this.state.lives_regen_start) {
       this.state.lives_regen_start = Timestamp.now();
@@ -106,8 +116,26 @@ export class EconomyManager {
 
     console.log('[EconomyManager] Refilled lives to max. Bonuses remaining:', this.state.bonuses);
 
+    // Emit both events for reactive UI updates
+    this.emit('lives-changed', this.state.lives);
+    this.emit('bonuses-changed', this.state.bonuses);
+
     await this.save();
     return true;
+  }
+
+  /**
+   * Add bonuses (e.g., from collection exchange).
+   * Emits 'bonuses-changed' event for reactive UI updates.
+   */
+  async addBonuses(amount: number): Promise<void> {
+    this.state.bonuses += amount;
+    console.log('[EconomyManager] Added', amount, 'bonuses. Total:', this.state.bonuses);
+
+    // Emit bonuses changed event for reactive UI updates
+    this.emit('bonuses-changed', this.state.bonuses);
+
+    await this.save();
   }
 
   /**
@@ -145,6 +173,9 @@ export class EconomyManager {
       );
 
       console.log('[EconomyManager] Regenerated', livesGained, 'lives. Current:', this.state.lives);
+
+      // Emit lives changed event for reactive UI updates
+      this.emit('lives-changed', this.state.lives);
 
       if (this.state.lives >= EconomyManager.MAX_LIVES) {
         // Reached max - stop regeneration
