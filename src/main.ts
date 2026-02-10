@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { initFirebase } from './firebase';
 import { Boot, Menu, LevelSelect, Game } from './scenes';
 import { ProgressManager } from './game/ProgressManager';
+import { EconomyManager } from './game/EconomyManager';
 
 // Phaser game configuration
 const config: Phaser.Types.Core.GameConfig = {
@@ -51,11 +52,32 @@ async function main() {
     // Create ProgressManager singleton
     const progressManager = new ProgressManager(firestoreService, uid, existingProgress!);
 
+    // Load or create economy state
+    let economyState = await firestoreService.loadEconomy(uid);
+
+    if (!economyState) {
+      // New user: set defaults
+      await firestoreService.saveEconomy(uid, {
+        lives: 5,
+        bonuses: 500,
+        lives_regen_start: null,
+      });
+      economyState = await firestoreService.loadEconomy(uid);
+    }
+
+    console.log('[Main] Economy loaded:', economyState);
+
+    // Create EconomyManager singleton
+    const economyManager = new EconomyManager(firestoreService, uid, economyState!);
+
+    console.log('[Main] EconomyManager initialized');
+
     // Start Phaser
     const game = new Phaser.Game(config);
 
     // Store ProgressManager in registry for scene access
     game.registry.set('progress', progressManager);
+    game.registry.set('economy', economyManager);
 
     // Expose game to window for debugging
     (window as unknown as { game: Phaser.Game }).game = game;
