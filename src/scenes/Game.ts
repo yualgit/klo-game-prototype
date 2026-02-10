@@ -8,9 +8,12 @@ import { Match3Engine } from '../game/Match3Engine';
 import { TileSprite } from '../game/TileSprite';
 import { TileData, SpawnRules, LevelGoal, LevelEvent, MatchResult, TileType } from '../game/types';
 import { TILE_SIZE } from '../utils/constants';
+import { TILE_COLORS } from '../game/constants';
 import { LevelManager } from '../game/LevelManager';
 import { BoosterActivator } from '../game/BoosterActivator';
 import { ProgressManager } from '../game/ProgressManager';
+import { AudioManager } from '../game/AudioManager';
+import { VFXManager } from '../game/VFXManager';
 
 // Design constants from STYLE_GUIDE.md
 const KLO_YELLOW = 0xffb800;
@@ -43,6 +46,10 @@ export class Game extends Phaser.Scene {
   // Grid positioning
   private gridOffsetX: number;
   private gridOffsetY: number;
+
+  // VFX and Audio
+  private audioManager: AudioManager;
+  private vfxManager: VFXManager;
 
   // Level data
   private levelData: any;
@@ -114,6 +121,10 @@ export class Game extends Phaser.Scene {
 
     // Initialize booster activator
     this.boosterActivator = new BoosterActivator(this.engine);
+
+    // Initialize audio and VFX managers
+    this.audioManager = new AudioManager(this);
+    this.vfxManager = new VFXManager(this);
 
     // Create HUD at top
     this.createHUD(width);
@@ -215,6 +226,10 @@ export class Game extends Phaser.Scene {
     const height = this.cameras.main.height;
     const progress = this.registry.get('progress') as ProgressManager;
 
+    // Play win sound and confetti VFX
+    this.audioManager.playWin();
+    this.vfxManager.confettiBurst(width / 2, 0);
+
     // Calculate stars and save progress
     const movesUsed = this.totalMoves - this.levelManager.getMovesRemaining();
     const { stars } = progress.completeLevel(this.currentLevel, movesUsed, this.totalMoves);
@@ -308,6 +323,9 @@ export class Game extends Phaser.Scene {
   private showLoseOverlay(): void {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
+
+    // Play lose sound
+    this.audioManager.playLose();
 
     // Dark backdrop
     const backdrop = this.add.graphics();
@@ -615,21 +633,21 @@ export class Game extends Phaser.Scene {
     // Swap in engine
     this.engine.swapTiles(tile1.row, tile1.col, tile2.row, tile2.col);
 
-    // Animate the swap
+    // Animate the swap with bounce ease
     await Promise.all([
       this.tweenAsync({
         targets: tile1,
         x: this.gridOffsetX + tile2.col * TILE_SIZE + TILE_SIZE / 2,
         y: this.gridOffsetY + tile2.row * TILE_SIZE + TILE_SIZE / 2,
         duration: 150,
-        ease: 'Power2',
+        ease: 'Back.Out',
       }),
       this.tweenAsync({
         targets: tile2,
         x: this.gridOffsetX + tile1.col * TILE_SIZE + TILE_SIZE / 2,
         y: this.gridOffsetY + tile1.row * TILE_SIZE + TILE_SIZE / 2,
         duration: 150,
-        ease: 'Power2',
+        ease: 'Back.Out',
       }),
     ]);
 
@@ -654,6 +672,13 @@ export class Game extends Phaser.Scene {
     // Check if both tiles have boosters -> combo
     if (tile1Data.booster && tile2Data.booster) {
       console.log('[Game] Booster combo detected');
+
+      // Add booster combo VFX (use sphere wave for dramatic effect)
+      const comboX = this.gridOffsetX + tile1.col * TILE_SIZE + TILE_SIZE / 2;
+      const comboY = this.gridOffsetY + tile1.row * TILE_SIZE + TILE_SIZE / 2;
+      this.vfxManager.boosterSphereWave(comboX, comboY);
+      this.audioManager.playSphere();
+
       const tilesToRemove = this.boosterActivator.activateBoosterCombo(tile1Data, tile2Data);
       this.levelManager.onTilesMatched(tilesToRemove);
       await this.animateMatchRemoval([{ tiles: tilesToRemove, type: tile1Data.type, direction: 'horizontal' }]);
@@ -663,6 +688,13 @@ export class Game extends Phaser.Scene {
     // Check if one tile is KLO-sphere being swapped with regular tile
     else if (tile1Data.booster === 'klo_sphere' && !tile2Data.booster) {
       console.log('[Game] KLO-sphere swap with regular tile');
+
+      // Add sphere wave VFX and sound
+      const sphereX = this.gridOffsetX + tile1.col * TILE_SIZE + TILE_SIZE / 2;
+      const sphereY = this.gridOffsetY + tile1.row * TILE_SIZE + TILE_SIZE / 2;
+      this.vfxManager.boosterSphereWave(sphereX, sphereY);
+      this.audioManager.playSphere();
+
       const tilesToRemove = this.engine.getTilesByType(tile2Data.type);
       this.levelManager.onTilesMatched(tilesToRemove);
       await this.animateMatchRemoval([{ tiles: tilesToRemove, type: tile2Data.type, direction: 'horizontal' }]);
@@ -670,6 +702,13 @@ export class Game extends Phaser.Scene {
       validSwap = true;
     } else if (tile2Data.booster === 'klo_sphere' && !tile1Data.booster) {
       console.log('[Game] KLO-sphere swap with regular tile');
+
+      // Add sphere wave VFX and sound
+      const sphereX = this.gridOffsetX + tile2.col * TILE_SIZE + TILE_SIZE / 2;
+      const sphereY = this.gridOffsetY + tile2.row * TILE_SIZE + TILE_SIZE / 2;
+      this.vfxManager.boosterSphereWave(sphereX, sphereY);
+      this.audioManager.playSphere();
+
       const tilesToRemove = this.engine.getTilesByType(tile1Data.type);
       this.levelManager.onTilesMatched(tilesToRemove);
       await this.animateMatchRemoval([{ tiles: tilesToRemove, type: tile1Data.type, direction: 'horizontal' }]);
@@ -772,6 +811,11 @@ export class Game extends Phaser.Scene {
       depth++;
       console.log('[Game] Cascade depth:', depth, 'Tiles to remove:', matchResult.tilesToRemove.length);
 
+      // Add cascade combo escalation VFX
+      const worldX = this.gridOffsetX + GRID_WIDTH * TILE_SIZE / 2;
+      const worldY = this.gridOffsetY + GRID_HEIGHT * TILE_SIZE / 2;
+      this.vfxManager.cascadeCombo(worldX, worldY, depth);
+
       // Track matched tiles for goals BEFORE removeMatches mutates types to 'empty'
       this.levelManager.onTilesMatched(matchResult.tilesToRemove);
 
@@ -785,6 +829,27 @@ export class Game extends Phaser.Scene {
         const tileData = grid[tile.row][tile.col];
         if (tileData.booster) {
           console.log('[Game] Activating booster at', tile.row, tile.col, ':', tileData.booster);
+
+          // Add booster activation VFX and sound
+          const bx = this.gridOffsetX + tileData.col * TILE_SIZE + TILE_SIZE / 2;
+          const by = this.gridOffsetY + tileData.row * TILE_SIZE + TILE_SIZE / 2;
+
+          if (tileData.booster === 'linear_horizontal') {
+            const length = GRID_WIDTH * TILE_SIZE;
+            this.vfxManager.boosterLineSweep(bx, by, 'horizontal', length);
+            this.audioManager.playLineClear();
+          } else if (tileData.booster === 'linear_vertical') {
+            const length = GRID_HEIGHT * TILE_SIZE;
+            this.vfxManager.boosterLineSweep(bx, by, 'vertical', length);
+            this.audioManager.playLineClear();
+          } else if (tileData.booster === 'bomb') {
+            this.vfxManager.boosterBombExplosion(bx, by);
+            this.audioManager.playBomb();
+          } else if (tileData.booster === 'klo_sphere') {
+            this.vfxManager.boosterSphereWave(bx, by);
+            this.audioManager.playSphere();
+          }
+
           const boosterTargets = this.boosterActivator.activateBooster(tileData);
           activatedTiles.push(...boosterTargets);
         }
@@ -846,6 +911,9 @@ export class Game extends Phaser.Scene {
 
       // Sync sprites with engine state
       this.syncSpritesToEngine();
+
+      // Performance safeguard: small delay between cascade iterations
+      await new Promise<void>(resolve => this.time.delayedCall(50, resolve));
     }
 
     console.log('[Game] Cascade complete, depth:', depth);
@@ -857,9 +925,18 @@ export class Game extends Phaser.Scene {
   private async animateMatchRemoval(matches: any[]): Promise<void> {
     const tweens: Promise<void>[] = [];
 
+    // Play match sound once per batch
+    this.audioManager.playMatch();
+
     matches.forEach((match) => {
       match.tiles.forEach((tileData: TileData) => {
         const sprite = this.tileSprites[tileData.row][tileData.col];
+
+        // Add particle pop VFX at each tile position
+        const worldX = this.gridOffsetX + tileData.col * TILE_SIZE + TILE_SIZE / 2;
+        const worldY = this.gridOffsetY + tileData.row * TILE_SIZE + TILE_SIZE / 2;
+        const color = (tileData.type in TILE_COLORS ? TILE_COLORS[tileData.type as keyof typeof TILE_COLORS] : 0xffffff);
+        this.vfxManager.matchPop(worldX, worldY, color);
 
         tweens.push(
           this.tweenAsync({
@@ -916,13 +993,13 @@ export class Game extends Phaser.Scene {
       sprite.setScale(1);
       sprite.setAlpha(1);
 
-      // Tween to final position
+      // Tween to final position with bounce ease
       tweens.push(
         this.tweenAsync({
           targets: sprite,
           y: this.gridOffsetY + spawn.row * TILE_SIZE + TILE_SIZE / 2,
           duration: 150,
-          ease: 'Bounce.easeOut',
+          ease: 'Bounce.Out',
         })
       );
     });
