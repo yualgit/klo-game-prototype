@@ -22,11 +22,11 @@
   3. Light tile type no longer appears in any level or codebase
   4. All 4 booster types show dedicated sprite art instead of procedural indicators
   5. Variable board inactive cells display distinct dark/grey non-playable visual
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 11-01: TBD
-- [ ] 11-02: TBD
+- [ ] 11-01-PLAN.md — Core type system, engine, asset loading, and level data migration
+- [ ] 11-02-PLAN.md — Booster sprite rendering, inactive cell styling, and test updates
 
 ### Phase 12: Responsive Layout Foundation
 **Goal**: Proper responsive scaling across all mobile viewports
