@@ -2,7 +2,7 @@
 
 **Milestone:** v1.1 Kyiv Journey
 **Last Updated:** 2026-02-10
-**State:** Phase 6 complete, Phase 7 pending
+**State:** Phase 7 complete, Phase 8 pending
 
 ## Project Reference
 
@@ -14,14 +14,14 @@ Transform v1.0 MVP (5 levels, basic mechanics) into deeper experience with lives
 
 ## Current Position
 
-**Phase:** 7 - Settings (complete)
-**Plan:** 02/02 (07-01 complete, 07-02 complete)
-**Status:** Phase 6 verified ✓, Phase 7 complete ✓
-**Progress:** 2/5 phases complete, 4/12 plans complete
+**Phase:** 8 - Advanced Level Mechanics (next)
+**Plan:** None (awaiting `/gsd:plan-phase 8`)
+**Status:** Phase 7 verified ✓, Phase 8 pending
+**Progress:** 2/5 phases complete
 
 ```
-[████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 33%
-Phase 6: Economy System ✓ | Phase 7: Settings ✓
+[████████████████░░░░░░░░░░░░░░░░░░░░░░░░] 40%
+Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics (Pending)
 ```
 
 ## Performance Metrics
@@ -69,12 +69,14 @@ Phase 6: Economy System ✓ | Phase 7: Settings ✓
 | Toggle state mutable variables | Use local let variables for toggle state vs reading from settings on each click | 07-02 | Prevents stale state bug |
 | Backdrop click closes overlay | Intuitive dismiss behavior for mobile/desktop users | 07-02 | Better UX |
 | Gear icon positioning | x=width-200 avoids overlap with back button and economy HUD | 07-02 | Visual balance |
+| setAlpha(0.001) for invisible hit areas | Phaser skips invisible objects in hit testing — setVisible(false) breaks input | 07-02 | Fix: toggles now respond |
+| Panel interactive to block backdrop | Without it, clicks on panel pass through to backdrop close handler | 07-02 | Fix: dialog stays open |
 
 ### Open TODOs
 
 **Phase Planning:**
 - [x] Create Phase 6 plan (Economy System) — DONE, executed & verified 2026-02-10
-- [ ] Create Phase 7 plan (Settings) via `/gsd:plan-phase 7`
+- [x] Create Phase 7 plan (Settings) — DONE, executed & verified 2026-02-10
 - [ ] Create Phase 8 plan (Advanced Level Mechanics) via `/gsd:plan-phase 8`
 - [ ] Create Phase 9 plan (Kyiv Map Experience) via `/gsd:plan-phase 9`
 - [ ] Create Phase 10 plan (Mobile Polish) via `/gsd:plan-phase 10`
@@ -107,18 +109,18 @@ None. All phases ready for planning.
 ## Session Continuity
 
 **Last Session:** 2026-02-10
-**Stopped At:** Phase 7 complete — Settings system fully integrated
+**Stopped At:** Phase 7 complete — verified and approved by user
 
-**Next Action:** Plan Phase 8 via `/gsd:plan-phase 8` for advanced level mechanics
+**Next Action:** Run `/gsd:plan-phase 8` to begin Phase 8: Advanced Level Mechanics planning
 
 **Context for Next Session:**
-- Phase 07 complete ✓: Settings system with data layer and UI overlay
-- Phase 7 Plan 01 (07-01): SettingsManager with localStorage persistence integrated
-- Phase 7 Plan 02 (07-02): Settings UI overlay in LevelSelect scene
-- Settings overlay: gear icon button, modal with SFX toggle, volume slider, animation toggle
-- All settings persist via localStorage and affect AudioManager/VFXManager reactively
-- Phase 7 deliverables: 3 tasks, 5 files, 3 commits (46bf7e4, fa973a9, b9f5920)
-- Next: Phase 8 — Advanced Level Mechanics (variable boards, 3-state obstacles)
+- Phase 07 complete ✓: Settings system with data layer and UI overlay, human-verified
+- SettingsManager: localStorage persistence, reactive subscriptions, version migration
+- Settings UI: gear icon, modal overlay with SFX toggle, volume slider, animation toggle
+- Bugfix applied: setVisible(false) breaks Phaser hit testing — use setAlpha(0.001) instead
+- Bugfix applied: panel must be interactive to block backdrop close on dialog clicks
+- Phase 7 deliverables: 2 plans, 3 tasks, 5 files, 6 commits
+- Next: Phase 8 — Advanced Level Mechanics (variable boards, 3-state obstacles, L6-L10)
 
 **Files to Reference:**
 - `.planning/ROADMAP.md` — Phase structure, success criteria, dependencies
@@ -130,4 +132,4 @@ None. All phases ready for planning.
 ---
 
 *State initialized: 2026-02-05*
-*Last checkpoint: 2026-02-10 — v1.1 roadmap created, ready for phase planning*
+*Last checkpoint: 2026-02-10 — Phase 7 complete, Phase 8 pending*
