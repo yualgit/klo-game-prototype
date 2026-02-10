@@ -21,11 +21,7 @@ const KLO_YELLOW = 0xffb800;
 const KLO_BLACK = 0x1a1a1a;
 const KLO_WHITE = 0xf9f9f9;
 
-// Grid constants from TECH_SPEC.md
-const GRID_WIDTH = 8;
-const GRID_HEIGHT = 8;
-
-const MAX_LEVELS = 5;
+const MAX_LEVELS = 10;
 
 export class Game extends Phaser.Scene {
   // UI elements
@@ -34,7 +30,7 @@ export class Game extends Phaser.Scene {
 
   // Game engine and state
   private engine: Match3Engine;
-  private tileSprites: TileSprite[][] = [];
+  private tileSprites: (TileSprite | null)[][] = [];
   private isProcessing: boolean = false;
   private selectedTile: TileSprite | null = null;
 
@@ -47,6 +43,10 @@ export class Game extends Phaser.Scene {
   // Grid positioning
   private gridOffsetX: number;
   private gridOffsetY: number;
+
+  // Grid dimensions (read from level data)
+  private gridWidth: number;
+  private gridHeight: number;
 
   // VFX and Audio
   private audioManager: AudioManager;
@@ -100,20 +100,43 @@ export class Game extends Phaser.Scene {
     // Store total moves for star calculation
     this.totalMoves = this.levelData.moves;
 
+    // Read grid dimensions from level data
+    this.gridWidth = this.levelData.grid.width;
+    this.gridHeight = this.levelData.grid.height;
+
     // Calculate grid offsets (center on screen with HUD offset)
-    const gridPixelWidth = GRID_WIDTH * TILE_SIZE;
-    const gridPixelHeight = GRID_HEIGHT * TILE_SIZE;
+    const gridPixelWidth = this.gridWidth * TILE_SIZE;
+    const gridPixelHeight = this.gridHeight * TILE_SIZE;
     this.gridOffsetX = (width - gridPixelWidth) / 2;
     this.gridOffsetY = (height - gridPixelHeight) / 2 + 30; // Offset for HUD
 
     // Initialize engine and generate grid
-    this.engine = new Match3Engine(GRID_HEIGHT, GRID_WIDTH);
+    this.engine = new Match3Engine(this.gridHeight, this.gridWidth);
     const spawnRules: SpawnRules = this.levelData.spawn_rules;
     this.engine.generateGrid(spawnRules);
+
+    // Apply cell map if present
+    if (this.levelData.grid.cell_map) {
+      this.engine.setCellMap(this.levelData.grid.cell_map);
+    }
 
     // Initialize obstacles if any
     if (this.levelData.obstacles && this.levelData.obstacles.length > 0) {
       this.engine.initializeObstacles(this.levelData.obstacles);
+    }
+
+    // Apply pre-placed tiles if any
+    if (this.levelData.pre_placed_tiles) {
+      for (const prePlaced of this.levelData.pre_placed_tiles) {
+        if (this.engine.isCellActive(prePlaced.row, prePlaced.col)) {
+          this.engine.setTileAt(prePlaced.row, prePlaced.col, {
+            type: prePlaced.type,
+            isEmpty: false,
+            booster: prePlaced.booster,
+            obstacle: prePlaced.obstacle,
+          });
+        }
+      }
     }
 
     // Initialize level manager - normalize goal format from JSON
@@ -270,7 +293,7 @@ export class Game extends Phaser.Scene {
 
     // Panel background
     const panelW = 400;
-    const panelH = this.currentLevel === 5 ? 400 : 320;
+    const panelH = this.currentLevel === 10 ? 400 : 320;
     const panelX = (width - panelW) / 2;
     const panelY = (height - panelH) / 2;
 
@@ -351,8 +374,8 @@ export class Game extends Phaser.Scene {
 
     let nextButtonY = 200;
 
-    // Coupon display for level 5
-    if (this.currentLevel === 5) {
+    // Coupon display for level 10
+    if (this.currentLevel === 10) {
       const couponBg = this.add.graphics();
       couponBg.fillStyle(KLO_YELLOW, 1);
       couponBg.lineStyle(3, 0xFFD700, 1);
@@ -604,8 +627,8 @@ export class Game extends Phaser.Scene {
   }
 
   private drawGridBackground(): void {
-    const gridPixelWidth = GRID_WIDTH * TILE_SIZE;
-    const gridPixelHeight = GRID_HEIGHT * TILE_SIZE;
+    const gridPixelWidth = this.gridWidth * TILE_SIZE;
+    const gridPixelHeight = this.gridHeight * TILE_SIZE;
 
     // Board background with shadow and polished style
     const shadow = this.add.graphics();
@@ -627,6 +650,22 @@ export class Game extends Phaser.Scene {
       gridPixelHeight + 16,
       14
     );
+
+    // Mask out inactive cells with scene background color
+    const mask = this.add.graphics();
+    mask.fillStyle(0xFFFBF0, 1); // Scene background color
+    for (let row = 0; row < this.gridHeight; row++) {
+      for (let col = 0; col < this.gridWidth; col++) {
+        if (!this.engine.isCellActive(row, col)) {
+          mask.fillRect(
+            this.gridOffsetX + col * TILE_SIZE,
+            this.gridOffsetY + row * TILE_SIZE,
+            TILE_SIZE,
+            TILE_SIZE
+          );
+        }
+      }
+    }
   }
 
   /**
@@ -638,9 +677,17 @@ export class Game extends Phaser.Scene {
     // Initialize 2D array
     this.tileSprites = [];
 
-    for (let row = 0; row < GRID_HEIGHT; row++) {
+    let activeTileCount = 0;
+
+    for (let row = 0; row < this.gridHeight; row++) {
       this.tileSprites[row] = [];
-      for (let col = 0; col < GRID_WIDTH; col++) {
+      for (let col = 0; col < this.gridWidth; col++) {
+        // Skip inactive cells
+        if (!this.engine.isCellActive(row, col)) {
+          this.tileSprites[row][col] = null;
+          continue;
+        }
+
         const tileData = grid[row][col];
 
         // Engine should never generate empty tiles, but safeguard
@@ -671,10 +718,11 @@ export class Game extends Phaser.Scene {
 
         // Store in array
         this.tileSprites[row][col] = tile;
+        activeTileCount++;
       }
     }
 
-    console.log('[Game] Created', GRID_HEIGHT * GRID_WIDTH, 'tiles from engine state');
+    console.log('[Game] Created', activeTileCount, 'active tiles from engine state');
   }
 
   /**
@@ -712,21 +760,32 @@ export class Game extends Phaser.Scene {
       if (Math.abs(dx) > SWIPE_THRESHOLD || Math.abs(dy) > SWIPE_THRESHOLD) {
         // Swipe detected - determine direction
         let targetTile: TileSprite | null = null;
+        let targetRow = this.selectedTile.row;
+        let targetCol = this.selectedTile.col;
 
         if (Math.abs(dx) > Math.abs(dy)) {
           // Horizontal swipe
-          if (dx > 0 && this.selectedTile.col < GRID_WIDTH - 1) {
-            targetTile = this.tileSprites[this.selectedTile.row][this.selectedTile.col + 1];
+          if (dx > 0 && this.selectedTile.col < this.gridWidth - 1) {
+            targetRow = this.selectedTile.row;
+            targetCol = this.selectedTile.col + 1;
           } else if (dx < 0 && this.selectedTile.col > 0) {
-            targetTile = this.tileSprites[this.selectedTile.row][this.selectedTile.col - 1];
+            targetRow = this.selectedTile.row;
+            targetCol = this.selectedTile.col - 1;
           }
         } else {
           // Vertical swipe
-          if (dy > 0 && this.selectedTile.row < GRID_HEIGHT - 1) {
-            targetTile = this.tileSprites[this.selectedTile.row + 1][this.selectedTile.col];
+          if (dy > 0 && this.selectedTile.row < this.gridHeight - 1) {
+            targetRow = this.selectedTile.row + 1;
+            targetCol = this.selectedTile.col;
           } else if (dy < 0 && this.selectedTile.row > 0) {
-            targetTile = this.tileSprites[this.selectedTile.row - 1][this.selectedTile.col];
+            targetRow = this.selectedTile.row - 1;
+            targetCol = this.selectedTile.col;
           }
+        }
+
+        // Check if target cell is active before accessing sprite
+        if (this.engine.isCellActive(targetRow, targetCol)) {
+          targetTile = this.tileSprites[targetRow][targetCol];
         }
 
         if (targetTile) {
@@ -760,7 +819,10 @@ export class Game extends Phaser.Scene {
     const col = Math.floor((pointer.x - this.gridOffsetX) / TILE_SIZE);
     const row = Math.floor((pointer.y - this.gridOffsetY) / TILE_SIZE);
 
-    if (row >= 0 && row < GRID_HEIGHT && col >= 0 && col < GRID_WIDTH) {
+    if (row >= 0 && row < this.gridHeight && col >= 0 && col < this.gridWidth) {
+      // Skip inactive cells
+      if (!this.engine.isCellActive(row, col)) return null;
+
       return this.tileSprites[row][col];
     }
 
@@ -990,8 +1052,8 @@ export class Game extends Phaser.Scene {
       console.log('[Game] Cascade depth:', depth, 'Tiles to remove:', matchResult.tilesToRemove.length);
 
       // Add cascade combo escalation VFX
-      const worldX = this.gridOffsetX + GRID_WIDTH * TILE_SIZE / 2;
-      const worldY = this.gridOffsetY + GRID_HEIGHT * TILE_SIZE / 2;
+      const worldX = this.gridOffsetX + this.gridWidth * TILE_SIZE / 2;
+      const worldY = this.gridOffsetY + this.gridHeight * TILE_SIZE / 2;
       this.vfxManager.cascadeCombo(worldX, worldY, depth);
 
       // Track matched tiles for goals BEFORE removeMatches mutates types to 'empty'
@@ -1014,11 +1076,11 @@ export class Game extends Phaser.Scene {
           const by = this.gridOffsetY + tileData.row * TILE_SIZE + TILE_SIZE / 2;
 
           if (tileData.booster === 'linear_horizontal') {
-            const length = GRID_WIDTH * TILE_SIZE;
+            const length = this.gridWidth * TILE_SIZE;
             this.vfxManager.boosterLineSweep(bx, by, 'horizontal', length);
             this.audioManager.playLineClear();
           } else if (tileData.booster === 'linear_vertical') {
-            const length = GRID_HEIGHT * TILE_SIZE;
+            const length = this.gridHeight * TILE_SIZE;
             this.vfxManager.boosterLineSweep(bx, by, 'vertical', length);
             this.audioManager.playLineClear();
           } else if (tileData.booster === 'bomb') {
@@ -1055,11 +1117,13 @@ export class Game extends Phaser.Scene {
         tile.isEmpty = false;
         tile.booster = boosterSpawn.boosterType;
         // Update visual
-        const sprite = this.tileSprites[boosterSpawn.row][boosterSpawn.col];
-        sprite.setType(boosterSpawn.baseType as 'fuel' | 'coffee' | 'snack' | 'road');
-        sprite.setBooster(boosterSpawn.boosterType);
-        sprite.setScale(1);
-        sprite.setAlpha(1);
+        const sprite = this.tileSprites[boosterSpawn.row]?.[boosterSpawn.col];
+        if (sprite) {
+          sprite.setType(boosterSpawn.baseType as 'fuel' | 'coffee' | 'snack' | 'road');
+          sprite.setBooster(boosterSpawn.boosterType);
+          sprite.setScale(1);
+          sprite.setAlpha(1);
+        }
         // Notify level manager
         this.levelManager.onBoosterCreated(boosterSpawn.boosterType);
       }
@@ -1113,7 +1177,9 @@ export class Game extends Phaser.Scene {
 
     matches.forEach((match) => {
       match.tiles.forEach((tileData: TileData) => {
-        const sprite = this.tileSprites[tileData.row][tileData.col];
+        // Skip inactive cells
+        const sprite = this.tileSprites[tileData.row]?.[tileData.col];
+        if (!sprite) return;
 
         // Add particle pop VFX at each tile position
         const worldX = this.gridOffsetX + tileData.col * TILE_SIZE + TILE_SIZE / 2;
@@ -1143,7 +1209,9 @@ export class Game extends Phaser.Scene {
     const tweens: Promise<void>[] = [];
 
     movements.forEach((movement) => {
-      const sprite = this.tileSprites[movement.fromRow][movement.fromCol];
+      // Skip inactive cells
+      const sprite = this.tileSprites[movement.fromRow]?.[movement.fromCol];
+      if (!sprite) return;
 
       tweens.push(
         this.tweenAsync({
@@ -1166,7 +1234,9 @@ export class Game extends Phaser.Scene {
     const tweens: Promise<void>[] = [];
 
     spawns.forEach((spawn, index) => {
-      const sprite = this.tileSprites[spawn.row][spawn.col];
+      // Skip inactive cells
+      const sprite = this.tileSprites[spawn.row]?.[spawn.col];
+      if (!sprite) return;
 
       // Set type and position above screen (safeguard against empty type)
       const tileType = spawn.type === 'empty' ? 'fuel' : spawn.type;
@@ -1196,10 +1266,13 @@ export class Game extends Phaser.Scene {
   private syncSpritesToEngine(): void {
     const grid: TileData[][] = this.engine.getGrid();
 
-    for (let row = 0; row < GRID_HEIGHT; row++) {
-      for (let col = 0; col < GRID_WIDTH; col++) {
-        const tileData = grid[row][col];
+    for (let row = 0; row < this.gridHeight; row++) {
+      for (let col = 0; col < this.gridWidth; col++) {
+        // Skip inactive cells
         const sprite = this.tileSprites[row][col];
+        if (!sprite) continue;
+
+        const tileData = grid[row][col];
 
         // Engine should never have empty tiles after spawn, but safeguard
         const tileType = tileData.type === 'empty' ? 'fuel' : tileData.type;
