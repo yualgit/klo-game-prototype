@@ -3,7 +3,7 @@ export const GRID_WIDTH = 8;
 export const GRID_HEIGHT = 8;
 export const TILE_SIZE = 64;
 
-// Canvas dimensions
+// Canvas dimensions (reference design dimensions only — canvas is now dynamic with Scale.RESIZE)
 export const GAME_WIDTH = 1024;
 export const GAME_HEIGHT = 768;
 

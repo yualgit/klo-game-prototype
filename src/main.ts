@@ -5,16 +5,24 @@ import { ProgressManager } from './game/ProgressManager';
 import { EconomyManager } from './game/EconomyManager';
 import { SettingsManager } from './game/SettingsManager';
 
+// Compute DPR capped at 2x for crisp retina rendering without performance issues
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
 // Phaser game configuration
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
-  width: 1024,
-  height: 768,
+  width: window.innerWidth * dpr,
+  height: window.innerHeight * dpr,
   parent: 'game-container',
   backgroundColor: '#F9F9F9',
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+    zoom: 1 / dpr,
+  },
+  render: {
+    pixelArt: false,
+    roundPixels: true,
   },
   scene: [Boot, Menu, LevelSelect, Game],
 };
@@ -86,6 +94,7 @@ async function main() {
     game.registry.set('progress', progressManager);
     game.registry.set('economy', economyManager);
     game.registry.set('settings', settingsManager);
+    game.registry.set('dpr', dpr);
 
     // Expose game to window for debugging
     (window as unknown as { game: Phaser.Game }).game = game;
