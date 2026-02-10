@@ -69,12 +69,11 @@ Plans:
   3. Uncollected cards shown as grayscale silhouette with "?", collected cards in full color
   4. Each collection has 6 cards with correct rarity (2 common, 2 rare, 1 epic, 1 legendary)
   5. Collection progress persists after app refresh (Firestore restores state correctly)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 14-01: TBD
-- [ ] 14-02: TBD
-- [ ] 14-03: TBD
+- [ ] 14-01-PLAN.md — CollectionsManager singleton + card config + Firestore persistence
+- [ ] 14-02-PLAN.md — Collections scene UI with scrollable card grid + visual verification
 
 ### Phase 15: Card Acquisition Flow
 **Goal**: Card drop mechanics with pick-1-of-2 UX, weighted rarity, and pity system
