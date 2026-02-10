@@ -75,35 +75,42 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ECON-01 | — | Pending |
-| ECON-02 | — | Pending |
-| ECON-03 | — | Pending |
-| ECON-04 | — | Pending |
-| ECON-05 | — | Pending |
-| ECON-06 | — | Pending |
-| ECON-07 | — | Pending |
-| SETT-01 | — | Pending |
-| SETT-02 | — | Pending |
-| SETT-03 | — | Pending |
-| SETT-04 | — | Pending |
-| OBST-05 | — | Pending |
-| OBST-06 | — | Pending |
-| OBST-07 | — | Pending |
-| LVLD-01 | — | Pending |
-| LVLD-02 | — | Pending |
-| LVLD-03 | — | Pending |
-| LVLD-04 | — | Pending |
-| VISL-01 | — | Pending |
-| VISL-02 | — | Pending |
-| VISL-03 | — | Pending |
-| VISL-04 | — | Pending |
-| VISL-05 | — | Pending |
+| ECON-01 | Phase 6 | Pending |
+| ECON-02 | Phase 6 | Pending |
+| ECON-03 | Phase 6 | Pending |
+| ECON-04 | Phase 6 | Pending |
+| ECON-05 | Phase 6 | Pending |
+| ECON-06 | Phase 6 | Pending |
+| ECON-07 | Phase 6 | Pending |
+| SETT-01 | Phase 7 | Pending |
+| SETT-02 | Phase 7 | Pending |
+| SETT-03 | Phase 7 | Pending |
+| SETT-04 | Phase 7 | Pending |
+| OBST-05 | Phase 8 | Pending |
+| OBST-06 | Phase 8 | Pending |
+| OBST-07 | Phase 8 | Pending |
+| LVLD-01 | Phase 8 | Pending |
+| LVLD-02 | Phase 8 | Pending |
+| LVLD-03 | Phase 8 | Pending |
+| LVLD-04 | Phase 8 | Pending |
+| VISL-01 | Phase 9 | Pending |
+| VISL-02 | Phase 9 | Pending |
+| VISL-03 | Phase 9 | Pending |
+| VISL-04 | Phase 10 | Pending |
+| VISL-05 | Phase 10 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 23 total
-- Mapped to phases: 0
-- Unmapped: 23 (pending roadmap creation)
+- Mapped to phases: 23
+- Unmapped: 0 ✓
+
+**Phase Mapping:**
+- Phase 6 (Economy System): 7 requirements (ECON-01..07)
+- Phase 7 (Settings): 4 requirements (SETT-01..04)
+- Phase 8 (Advanced Level Mechanics): 7 requirements (OBST-05..07, LVLD-01..04)
+- Phase 9 (Kyiv Map Experience): 3 requirements (VISL-01..03)
+- Phase 10 (Mobile Polish): 2 requirements (VISL-04..05)
 
 ---
 *Requirements defined: 2026-02-10*
-*Last updated: 2026-02-10 after initial definition*
+*Traceability updated: 2026-02-10 after roadmap creation*
