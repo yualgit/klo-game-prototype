@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Клієнт має побачити і відчути gameplay — як гра буде сприйматись реальними користувачами. Демо має передати "смак" механіки та KLO-бренд.
-**Current focus:** Phase 13 - Persistent UI Navigation Shell
+**Current focus:** Phase 14 - Collection Data Model & Viewing
 
 ## Current Position
 
 Phase: 14 of 16 (Collection Data Model and Viewing)
-Plan: 1 of 2 complete
-Status: Phase 14 in progress — Collection data model and Firestore persistence complete
-Last activity: 2026-02-10 — Phase 14-01 complete (Collection data model with Firestore persistence)
+Plan: 2 of 2 complete
+Status: Phase 14 complete — Collection data model + viewing UI implemented
+Last activity: 2026-02-10 — Phase 14-02 complete (Collections scene UI with scrollable card grid)
 
-Progress: [█████████████████░░░░░░░░░░] 56% (13 of 16 phases complete, Phase 14: 1/2 plans)
+Progress: [██████████████████░░░░░░░░░] 62% (14 of 16 phases complete, Phase 14: 2/2 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 30 (25 from v1.0 + v1.1, 5 from v1.2)
+- Total plans completed: 32 (25 from v1.0 + v1.1, 7 from v1.2)
 - Average duration: ~5 minutes per plan
-- Total execution time: ~6 days across 13 phases
+- Total execution time: ~6 days across 14 phases
 
 **By Phase:**
 
@@ -32,12 +32,13 @@ Progress: [█████████████████░░░░░░
 | 11 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
 | 12 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
 | 13 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
-| 14-16 | TBD | v1.2 Collections | Not started |
+| 14 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
+| 15-16 | TBD | v1.2 Collections | Not started |
 
 **Recent Trend:**
 - v1.0 completed: 5 phases, 15 plans (Feb 5-10)
 - v1.1 completed: 5 phases, 10 plans (Feb 10)
-- v1.2 progress: 3 phases, 5 plans (Feb 10)
+- v1.2 progress: 4 phases, 7 plans (Feb 10)
 - Trend: Stable velocity with increasing phase complexity
 
 *Plan metrics:*
@@ -48,6 +49,7 @@ Progress: [█████████████████░░░░░░
 | Phase 13 P01 | 154 | 2 tasks | 3 files |
 | Phase 13 P02 | 250 | 3 tasks | 6 files |
 | Phase 14 P01 | 156 | 2 tasks | 4 files |
+| Phase 14 P02 | ~180 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -57,7 +59,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - **Phaser 3.90 + TypeScript + Vite + Firebase**: Core stack validated through v1.0 + v1.1
-- **Registry pattern for managers**: ProgressManager/EconomyManager/SettingsManager proven
+- **Registry pattern for managers**: ProgressManager/EconomyManager/SettingsManager/CollectionsManager proven
 - **DPR via zoom: 1/dpr pattern**: Retina rendering works on all devices (basis for Phase 11 art upgrade)
 - **setAlpha(0.001) for invisible hit areas**: Phaser gotcha documented (relevant for Phase 13 UI overlays)
 - [Phase 11]: Generic Object.entries approach for spawn rules iteration (supports any tile types)
@@ -72,11 +74,13 @@ Recent decisions affecting current work:
 - [Phase 13]: EventsCenter singleton pattern (not game.events) for cross-scene communication
 - [Phase 13]: Interactive graphics backgrounds required to block click-through (Phaser gotcha)
 - [Phase 13-02]: UIScene integrated across all scenes with conditional nav visibility (full nav on LevelSelect/Collections/Shop, header-only on Game)
-- [Phase 13-02]: Collections and Shop stub scenes created with navigation wiring, full implementation deferred to phases 14-15
 - [Phase 14-01]: CollectionsManager does NOT extend EventEmitter yet (Phase 16 will add notification dot events)
 - [Phase 14-01]: Collection state stored as nested map in existing user document (not subcollection)
 - [Phase 14-01]: Default state uses empty owned_cards arrays with pity_streak: 0
 - [Phase 14-01]: Card rarity distribution: 2 common + 2 rare + 1 epic + 1 legendary per collection
+- [Phase 14-02]: Card images preserve natural aspect ratio (696:1158 portrait) instead of forced square
+- [Phase 14-02]: scene.bringToTop('UIScene') needed after launch to ensure header/nav render above content
+- [Phase 14-02]: Camera scroll for collections — no Rex UI plugins needed
 
 ### Pending Todos
 
@@ -90,13 +94,12 @@ None yet — v1.2 milestone continuing.
 - Verified across iPhone SE, iPhone 14 Pro, Android 360x740, desktop
 
 **Known considerations for v1.2:**
-- Phase 13: rexUI learning curve (4-6 hour budget for experimentation)
 - Phase 15: Pity system math validation (unit test with fixed seeds)
 
 ## Session Continuity
 
 Last session: 2026-02-10
-Stopped at: Completed 14-01-PLAN.md - Collection data model with Firestore persistence
+Stopped at: Phase 14 complete — Collection data model & viewing UI
 Resume file: None
 
-**Next action:** Execute Phase 14 Plan 02 (Collections UI scene)
+**Next action:** Verify Phase 14 goal achievement, then `/gsd:plan-phase 15`
