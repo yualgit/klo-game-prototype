@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed AI-generated assets, 10 levels, boosters, obstacles, lives/bonus economy, and Firebase persistence. Built for client presentation to demonstrate gameplay feel, progression depth, and KLO brand integration.
+Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed AI-generated assets, 10 levels with variable board shapes and progressive obstacles, boosters with combo matrix, lives/bonus economy, settings, scrollable Kyiv map journey, and mobile-responsive rendering. Built for client presentation to demonstrate gameplay feel, progression depth, and KLO brand integration.
 
 ## Core Value
 
@@ -20,19 +20,16 @@ Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed 
 - ✓ UI-01..06: Full UI flow (level select, HUD, win/lose overlays, coupon mock) — v1.0
 - ✓ FB-01..02: Firebase anonymous auth + Firestore progress persistence — v1.0
 - ✓ ASSET-01..05: AI-generated tiles, boosters, obstacles, UI elements, backgrounds — v1.0
+- ✓ ECON-01..07: Lives system with regeneration + bonus economy + Firestore persistence — v1.1
+- ✓ SETT-01..04: Settings menu with SFX toggle, animation toggle, localStorage persistence — v1.1
+- ✓ OBST-05..07: 3-state progressive ice and grass obstacles — v1.1
+- ✓ LVLD-01..04: Variable board shapes, pre-placed tiles, 5 new levels (L6-L10) — v1.1
+- ✓ VISL-01..03: Scrollable Kyiv map with parallax and winding path level nodes — v1.1
+- ✓ VISL-04..05: Mobile-responsive layout with DPR-aware rendering (capped at 2x) — v1.1
 
 ### Active
 
-- [ ] Lives system (max 5, progressive regen, buy with bonuses)
-- [ ] Bonus balance (500 test, shop to refill lives)
-- [ ] Settings menu (volume, booster animation toggle)
-- [ ] 3-state ice & grass obstacles (progressive destruction)
-- [ ] Variable board sizes/shapes (non-8x8, per-row cell masks)
-- [ ] Pre-placed tiles in level JSON (blockers, boosters at fixed positions)
-- [ ] 5 new harder levels (L6-L10) using new mechanics
-- [ ] Scrollable level select with stylized Kyiv map background
-- [ ] Mobile-responsive game screen
-- [ ] Canvas resolution / DPI fix for crisp rendering
+(None — planning next milestone)
 
 ### Out of Scope
 
@@ -41,27 +38,15 @@ Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed 
 - Remote Config — статичні JSON достатні
 - Real-time multiplayer — не в скоупі
 - In-app purchases — бонуси тестові, не реальні гроші
-- Рівні L11-20 — 10 рівнів достатньо для демо v1.1
-
-## Current Milestone: v1.1 Kyiv Journey
-
-**Goal:** Додати глибину гри — життя, бонуси, налаштування, просунуті рівні зі змінними полями та 3-стадійними блокерами, скролабельна карта Києва як level select.
-
-**Target features:**
-- Lives system з прогресивною регенерацією та купівлею за бонуси
-- Settings menu (гучність, анімації)
-- Просунута механіка рівнів (pre-placed tiles, variable board shapes, 3-state ice/grass)
-- 5 нових складних рівнів (L6-L10)
-- Стилізована карта Києва як скролабельний level select
-- Mobile-responsive layout та canvas DPI fix
+- Рівні L11-20 — 10 рівнів достатньо для демо
+- Progressive lives regen (30→45→60→90→120 min) — unvalidated, defer to experiment
 
 ## Context
 
-Shipped v1.0 MVP with 5,490 LOC TypeScript.
+Shipped v1.1 Kyiv Journey with 7,274 LOC TypeScript.
 Tech stack: Phaser 3.90 + TypeScript + Vite + Firebase (Auth, Firestore).
-68 commits across 5 phases in 6 days.
-Demo is fully playable with 5 levels, all mechanics, and KLO-branded visuals.
-v1.1 extends with economy (lives/bonuses), settings, advanced level mechanics, and visual overhaul of level select.
+~112 commits across 10 phases in 6 days (v1.0 + v1.1).
+Demo is fully playable with 10 levels, all mechanics, economy system, settings, Kyiv map journey, and mobile-responsive rendering.
 
 ## Key Decisions
 
@@ -70,18 +55,23 @@ v1.1 extends with economy (lives/bonuses), settings, advanced level mechanics, a
 | Phaser 3 замість pixi.js | Більше готових рішень для match-3, краща документація | ✓ Good — scene system, tweens, input handling worked well |
 | Firebase замість custom backend | Швидкий старт, готові SDK для auth/analytics/firestore | ✓ Good — anonymous auth + Firestore persistence seamless |
 | AI-generated assets | Немає дизайнера, STYLE_GUIDE.md має детальні промпти | ✓ Good — consistent KLO-branded look achieved |
-| L1-5 для демо | JSON вже готовий, достатньо для показу всіх механік | ✓ Good — showcases all mechanics adequately |
-| Всі 4 бустери в демо | Показати клієнту повний потенціал | ✓ Good — combo matrix adds depth |
 | ProgressManager singleton in registry | Global access for Firebase persistence across scenes | ✓ Good — clean scene communication |
 | Direct scene.start() from overlays | Avoid tween/shutdown race conditions | ✓ Good — fixed crash on scene restart |
 | Runtime particle textures | Avoid external PNG dependencies for VFX | ✓ Good — self-contained particle system |
+| Firebase Timestamp for lives regen | Prevents multi-device desync and local time exploits | ✓ Good — server-side time accuracy |
+| EconomyManager + SettingsManager singletons | Registry pattern like ProgressManager — consistent architecture | ✓ Good — reactive subscriptions work cleanly |
+| Cell map (number[][]) for variable boards | Backward compatible, reuses gravity/spawn skip for inactive cells | ✓ Good — L6-L10 showcase shapes |
+| Procedural textures for Kyiv map | Avoids missing PNG assets, rapid iteration for demo | ✓ Good — replaced with real PNGs later |
+| Camera bounds for scrollable map | Built-in Phaser enforcement vs manual clamping | ✓ Good — clean scroll with parallax |
+| DPR via zoom: 1/dpr pattern | Avoids deprecated resolution property, crisp retina rendering | ✓ Good — works on all devices |
+| setAlpha(0.001) for invisible hit areas | Phaser skips invisible objects in hit testing | ✓ Good — documented gotcha |
 
 ## Constraints
 
 - **Stack**: Phaser 3 + TypeScript + Vite + Firebase — визначено в TECH_SPEC.md
 - **Platform**: PWA для мобільних браузерів (також працює на desktop)
 - **Assets**: AI-generated на основі STYLE_GUIDE.md (немає дизайнера)
-- **Scope**: L1-10 з просунутими механіками та economy
+- **Scope**: L1-10 з просунутими механіками та economy (демо)
 
 ---
-*Last updated: 2026-02-10 after v1.1 milestone started*
+*Last updated: 2026-02-10 after v1.1 Kyiv Journey milestone completed*

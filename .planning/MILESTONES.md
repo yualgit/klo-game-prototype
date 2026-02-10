@@ -17,3 +17,13 @@
 **Archives:** [Roadmap](milestones/v1.0-ROADMAP.md) | [Requirements](milestones/v1.0-REQUIREMENTS.md)
 
 ---
+
+## v1.1 Kyiv Journey (Shipped: 2026-02-10)
+
+**Phases completed:** 10 phases, 25 plans, 11 tasks
+
+**Key accomplishments:**
+- Individual booster effects and combo matrix with cross-clear rocket, 5x5 mega-bomb, triple-line, and KLO-sphere combos
+
+---
+
