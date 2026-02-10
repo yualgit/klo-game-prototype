@@ -23,6 +23,15 @@ export interface UserProgress {
   last_seen: Date | Timestamp;
 }
 
+/**
+ * Economy state data structure stored in Firestore.
+ */
+export interface EconomyState {
+  lives: number;
+  bonuses: number;
+  lives_regen_start: Timestamp | null;
+}
+
 export class FirestoreService {
   private db: Firestore;
 
@@ -73,5 +82,56 @@ export class FirestoreService {
     const data = docSnap.data() as UserProgress;
     console.log(`[FirestoreService] Loaded progress for ${uid}:`, data);
     return data;
+  }
+
+  /**
+   * Save economy state to Firestore.
+   * Uses merge to update only provided fields.
+   *
+   * @param uid User's Firebase UID
+   * @param economy Economy data to save (partial update supported)
+   */
+  async saveEconomy(uid: string, economy: Partial<EconomyState>): Promise<void> {
+    console.log(`[FirestoreService] Saving economy for ${uid}`);
+
+    const userDocRef = doc(this.db, 'users', uid);
+    await setDoc(
+      userDocRef,
+      {
+        ...economy,
+        last_seen: serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    console.log(`[FirestoreService] Economy saved for ${uid}`);
+  }
+
+  /**
+   * Load economy state from Firestore.
+   *
+   * @param uid User's Firebase UID
+   * @returns Economy state or null if no document exists
+   */
+  async loadEconomy(uid: string): Promise<EconomyState | null> {
+    console.log(`[FirestoreService] Loading economy for ${uid}`);
+
+    const userDocRef = doc(this.db, 'users', uid);
+    const docSnap = await getDoc(userDocRef);
+
+    if (!docSnap.exists()) {
+      console.log(`[FirestoreService] No economy found for ${uid}`);
+      return null;
+    }
+
+    const data = docSnap.data();
+    const economy: EconomyState = {
+      lives: data.lives ?? 5,
+      bonuses: data.bonuses ?? 500,
+      lives_regen_start: data.lives_regen_start ?? null,
+    };
+
+    console.log(`[FirestoreService] Loaded economy for ${uid}:`, economy);
+    return economy;
   }
 }
