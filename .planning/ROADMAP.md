@@ -41,6 +41,12 @@ Transform the v1.0 MVP into a deeper game experience with player progression (li
 4. User sees lives automatically regenerate from 0→5 over 150 minutes (30 min per life)
 5. User can spend 15 bonuses to instantly refill all lives from any count
 
+**Plans:** 2 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — EconomyManager singleton + Firestore persistence + app startup wiring
+- [ ] 06-02-PLAN.md — Lives HUD in LevelSelect + life loss/refill in Game scene
+
 **Research Flags:** None (standard Phaser timer + Firestore pattern)
 
 ---
@@ -139,7 +145,7 @@ Transform the v1.0 MVP into a deeper game experience with player progression (li
 
 | Phase | Status | Requirements | Plans | Completion |
 |-------|--------|--------------|-------|------------|
-| 6 - Economy System | Pending | 7 (ECON-01..07) | 0/? | 0% |
+| 6 - Economy System | Planned | 7 (ECON-01..07) | 0/2 | 0% |
 | 7 - Settings | Pending | 4 (SETT-01..04) | 0/? | 0% |
 | 8 - Advanced Level Mechanics | Pending | 7 (OBST-05..07, LVLD-01..04) | 0/? | 0% |
 | 9 - Kyiv Map Experience | Pending | 3 (VISL-01..03) | 0/? | 0% |
