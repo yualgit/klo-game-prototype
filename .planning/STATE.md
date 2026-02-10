@@ -14,14 +14,14 @@ Transform v1.0 MVP (5 levels, basic mechanics) into deeper experience with lives
 
 ## Current Position
 
-**Phase:** 9 - Kyiv Map Experience (next)
-**Plan:** None (awaiting `/gsd:plan-phase 9`)
-**Status:** Phase 8 verified ✓, Phase 9 pending
-**Progress:** 3/5 phases complete
+**Phase:** 9 - Kyiv Map Experience (in progress)
+**Plan:** 1/2 complete
+**Status:** Plan 09-01 complete ✓, Plan 09-02 pending
+**Progress:** 3/5 phases complete (Phase 9: 50%)
 
 ```
-[████████████████████████░░░░░░░░░░░░░░░░] 60%
-Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Phase 9: Kyiv Map (Pending)
+[████████████████████████████░░░░░░░░░░░░] 70%
+Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Phase 9: Kyiv Map (50%)
 ```
 
 ## Performance Metrics
@@ -32,15 +32,16 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Ph
 - 6 days (Feb 5 — Feb 10, 2026)
 
 **v1.1 Progress:**
-- Velocity: 4 min/plan (6 plans completed)
-- Phase Completion Rate: 3/5 phases complete (Phase 6 done, Phase 7 done, Phase 8 done)
-- Plans Completed: 6/12 total (06-01, 06-02, 07-01, 07-02, 08-01, 08-02)
+- Velocity: 4 min/plan (7 plans completed)
+- Phase Completion Rate: 3/5 phases complete (Phase 6 done, Phase 7 done, Phase 8 done, Phase 9 in progress)
+- Plans Completed: 7/14 total (06-01, 06-02, 07-01, 07-02, 08-01, 08-02, 09-01)
 - Requirement Coverage: 23/23 mapped (100%)
 - Active Blockers: 0
 
 **Recent Completions:**
 | Phase-Plan | Duration | Tasks | Files | Completed |
 |------------|----------|-------|-------|-----------|
+| 09-01 | 5min | 2 | 3 | 2026-02-10 |
 | 08-02 | 4min | 2 | 8 | 2026-02-10 |
 | 08-01 | 5min | 2 | 6 | 2026-02-10 |
 | 07-02 | 1min | 1 | 1 | 2026-02-10 |
@@ -80,6 +81,10 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Ph
 | Inactive cells masked with scene background | Creates clean visual holes in variable boards (0xFFFBF0 fill) | 08-02 | Diamond/hourglass shapes visible |
 | Coupon trigger moved to level 10 | Final challenge reward for completing all levels (was level 5) | 08-02 | Better progression feel |
 | Obstacle-protected tiles skip removeMatches | Tiles under ice/grass stay in place — obstacle layer decreases via damageObstacles | 08 | Fix: ice properly reduces per hit |
+| Procedural texture generation for Kyiv map | Generate placeholder backgrounds in Boot vs loading PNGs | 09-01 | Avoids missing assets, rapid iteration |
+| Camera bounds for scrolling | Use Phaser setBounds vs manual scroll clamping | 09-01 | Built-in enforcement, cleaner code |
+| ScrollFactor(0) for HUD pinning | Pin HUD to camera vs separate overlay scene | 09-01 | Simpler single-scene architecture |
+| Depth-based layering (0-100+) | Explicit depth values vs add order | 09-01 | Prevents accidental occlusion |
 
 ### Open TODOs
 
@@ -118,20 +123,22 @@ None. All phases ready for planning.
 ## Session Continuity
 
 **Last Session:** 2026-02-10
-**Stopped At:** Phase 8 complete — verified and approved by user
+**Stopped At:** Phase 9 Plan 01 complete — scrollable Kyiv map infrastructure
 
-**Next Action:** Run `/gsd:plan-phase 9` to begin Phase 9: Kyiv Map Experience planning
+**Next Action:** Execute Plan 09-02 to wire level interactions and camera scrolling
 
 **Context for Next Session:**
-- Phase 08 complete ✓: Variable board shapes, 3-layer obstacles, pre-placed tiles, L6-L10 levels
-- Bugfix applied: obstacle-protected tiles now stay in place during matches — ice/grass reduces by 1 layer instead of tile disappearing (removeMatches skips obstacle tiles, damageObstacles handles layer reduction)
-- Game scene fully dynamic: gridWidth/gridHeight from level data, cell_map integration, pre-placed tile spawning
-- TileSprites array changed to (TileSprite | null)[][] with null guards in all rendering methods
-- 5 new levels: L6 (diamond), L7 (hourglass), L8 (cross + pre-placed boosters), L9 (wide-center + mixed obstacles), L10 (L-shape + all mechanics)
-- Boot loads all 10 levels, LevelSelect displays 10 checkpoints with Ukrainian names
-- MAX_LEVELS = 10, coupon trigger moved to level 10
-- Phase 8 deliverables: 2 plans, 4 tasks, 14 files, 7 commits
-- Next: Phase 9 (Kyiv Map Experience) — scrollable map, Kyiv landmarks, winding path level nodes
+- Phase 09 Plan 01 complete ✓: Scrollable Kyiv map with parallax, camera drag, 10 level nodes
+- LevelSelect transformed into 2200px tall scrollable world with camera bounds
+- 3 parallax background layers generated procedurally (kyiv_sky, kyiv_far, kyiv_mid)
+- MAP_CONFIG centralizes map layout: dimensions, parallax factors, 10 Kyiv node positions
+- Level nodes positioned along winding path (Оболонь → Печерська Лавра) with landmark labels
+- HUD elements pinned to camera with scrollFactor(0) and depth 11
+- Depth layering: 0-2 backgrounds, 3 path, 5 nodes, 11 HUD, 100+ overlays
+- Drag scrolling with 10px threshold (distinguishes taps from drags)
+- Level tap handler removed — Plan 02 will re-add with tap/drag logic
+- Phase 9 Plan 01 deliverables: 2 tasks, 3 files, 2 commits, 5 min duration
+- Next: Plan 09-02 — wire level node taps, smooth camera scroll to level, visual polish
 
 **Files to Reference:**
 - `.planning/ROADMAP.md` — Phase structure, success criteria, dependencies
