@@ -14,14 +14,14 @@ Transform v1.0 MVP (5 levels, basic mechanics) into deeper experience with lives
 
 ## Current Position
 
-**Phase:** 10 - Mobile Polish (in progress)
-**Plan:** 1/2 complete
-**Status:** Plan 10-01 complete ✓
-**Progress:** [█████░░░░░] 50%
+**Phase:** 10 - Mobile Polish (complete)
+**Plan:** 2/2 complete
+**Status:** Plan 10-02 complete ✓
+**Progress:** [██████████] 100%
 
 ```
-[████████████████████████████████████████] 90%
-Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Phase 9: Kyiv Map ✓ | Phase 10: Mobile Polish [▰▱]
+[████████████████████████████████████████] 100%
+Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Phase 9: Kyiv Map ✓ | Phase 10: Mobile Polish ✓
 ```
 
 ## Performance Metrics
@@ -32,15 +32,16 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Ph
 - 6 days (Feb 5 — Feb 10, 2026)
 
 **v1.1 Progress:**
-- Velocity: 12 min/plan (9 plans completed)
-- Phase Completion Rate: 4/5 phases complete (Phase 6 done, Phase 7 done, Phase 8 done, Phase 9 done, Phase 10 in progress)
-- Plans Completed: 9/10 total (06-01, 06-02, 07-01, 07-02, 08-01, 08-02, 09-01, 09-02, 10-01)
+- Velocity: 11 min/plan (10 plans completed)
+- Phase Completion Rate: 5/5 phases complete (Phase 6 done, Phase 7 done, Phase 8 done, Phase 9 done, Phase 10 done)
+- Plans Completed: 10/10 total (06-01, 06-02, 07-01, 07-02, 08-01, 08-02, 09-01, 09-02, 10-01, 10-02)
 - Requirement Coverage: 23/23 mapped (100%)
 - Active Blockers: 0
 
 **Recent Completions:**
 | Phase-Plan | Duration | Tasks | Files | Completed |
 |------------|----------|-------|-------|-----------|
+| 10-02 | 3min | 2 | 2 | 2026-02-10 |
 | 10-01 | 2min | 2 | 4 | 2026-02-10 |
 | 09-02 | 101min | 2 | 1 | 2026-02-10 |
 | 09-01 | 5min | 2 | 3 | 2026-02-10 |
@@ -48,7 +49,6 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Ph
 | 08-01 | 5min | 2 | 6 | 2026-02-10 |
 | 07-02 | 1min | 1 | 1 | 2026-02-10 |
 | 07-01 | 2min | 2 | 4 | 2026-02-10 |
-| 06-02 | 2min | 2 | 2 | 2026-02-10 |
 
 ## Accumulated Context
 
@@ -95,6 +95,11 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Ph
 | zoom: 1/dpr pattern | Phaser 3.60+ best practice vs deprecated resolution config | 10-01 | Future-proof scale config |
 | Percentage-based tile positions | Store {xPct, yPct} for proportional repositioning on resize | 10-01 | Responsive UI element handling |
 | Camera viewport update on resize | Critical for input hit testing after canvas size changes | 10-01 | Fix: clicks hit elements correctly |
+| Store UI references as properties | Enables efficient repositioning without re-querying scene graph | 10-02 | Performance optimization |
+| Maintain world coordinates | MAP_CONFIG stays fixed, only camera viewport changes in LevelSelect | 10-02 | Avoids recomputing node positions |
+| Recalculate grid offset | Game scene re-centers grid by updating gridOffsetX/gridOffsetY | 10-02 | Clean responsive grid centering |
+| Clear and redraw Graphics | More reliable than scaling for crisp rendering at new dimensions | 10-02 | Better visual quality |
+| TileSprite.setOffset() pattern | Repositions tiles using existing method to update x/y from row/col | 10-02 | Reuses existing tile logic |
 
 ### Open TODOs
 
@@ -133,22 +138,23 @@ None. All phases ready for planning.
 ## Session Continuity
 
 **Last Session:** 2026-02-10
-**Stopped At:** Phase 10 Plan 01 complete — Responsive Canvas Foundation
+**Stopped At:** Phase 10 Plan 02 complete — All responsive layout work finished
 
-**Next Action:** Execute Plan 10-02 (remaining mobile polish tasks)
+**Next Action:** Milestone v1.1 complete ✓ - All 23 requirements satisfied across 5 phases
 
 **Context for Next Session:**
-- Phase 10 in progress: Mobile Polish (1/2 plans complete)
-- Plan 10-01 complete ✓: Responsive canvas foundation (DPR-aware RESIZE mode, Menu scene resize handlers)
-- Canvas now renders at device pixel ratio (capped at 2x) with Phaser.Scale.RESIZE mode
-- Menu scene repositions all UI elements (title, subtitle, play button, floating tiles) on window resize
-- Viewport meta prevents user pinch-zoom on mobile
-- Boot scene already compatible (uses dynamic camera dimensions)
-- LevelSelect and Game scenes still need resize handlers (Plan 10-02)
-- All VISL requirements met in Phase 9, now addressing RESP requirements in Phase 10
-- Phase 10-01 deliverables: 2 tasks, 4 files, 2 commits, 2 min duration
-- 4/5 phases complete (Phase 6, 7, 8, 9 done), Phase 10 halfway (1/2 plans)
-- Next: Plan 10-02 for remaining responsive layout work
+- Phase 10 complete ✓: Mobile Polish (2/2 plans complete)
+- Plan 10-02 complete ✓: Responsive layout for LevelSelect and Game scenes
+- All scenes now respond to viewport resize (Boot, Menu, LevelSelect, Game)
+- LevelSelect maintains world coordinates, camera bounds, repositions HUD/economy elements
+- Game scene re-centers grid, repositions tiles, redraws graphics on resize
+- Tile input hit testing works at any viewport size (dynamic gridOffsetX/gridOffsetY)
+- Scrollable Kyiv map maintains correct drag scrolling after resize
+- Overlays auto-center using dynamic camera dimensions
+- Phase 10-02 deliverables: 2 tasks, 2 files, 2 commits, 3 min duration
+- **v1.1 Milestone Complete:** 5/5 phases done, 10/10 plans complete, 23/23 requirements satisfied
+- All mobile-responsive layout requirements (VISL-04, RESP-*) fully implemented
+- Ready for client presentation and mobile device testing
 
 **Files to Reference:**
 - `.planning/ROADMAP.md` — Phase structure, success criteria, dependencies
