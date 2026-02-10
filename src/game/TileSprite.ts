@@ -5,7 +5,7 @@
  */
 
 import Phaser from 'phaser';
-import { TILE_COLORS, TILE_SIZE, TILE_GAP, TileType } from './constants';
+import { TILE_COLORS, TILE_SIZE, TILE_GAP, TileType, TEXTURE_KEYS, OBSTACLE_TEXTURE_KEYS } from './constants';
 import { BoosterType, ObstacleData } from './types';
 
 // Grid offset configuration (can be set per-instance or use defaults)
@@ -18,8 +18,8 @@ export class TileSprite extends Phaser.GameObjects.Container {
   public col: number;
   public type: TileType;
 
-  // Private graphics object for tile rendering
-  private graphics: Phaser.GameObjects.Graphics;
+  // Private image object for tile rendering
+  private tileImage: Phaser.GameObjects.Image;
   private selected: boolean = false;
 
   // Booster and obstacle state
@@ -27,6 +27,7 @@ export class TileSprite extends Phaser.GameObjects.Container {
   private obstacleData?: ObstacleData;
   private boosterGraphics: Phaser.GameObjects.Graphics;
   private obstacleGraphics: Phaser.GameObjects.Graphics;
+  private obstacleImage?: Phaser.GameObjects.Image;
   private layerCountText?: Phaser.GameObjects.Text;
 
   // Grid offset for positioning
@@ -49,12 +50,18 @@ export class TileSprite extends Phaser.GameObjects.Container {
     this.offsetX = offsetX;
     this.offsetY = offsetY;
 
-    // Create graphics objects for drawing
-    this.graphics = scene.add.graphics();
+    // Create tile image using texture from TEXTURE_KEYS
+    const textureKey = TEXTURE_KEYS[type];
+    this.tileImage = scene.add.image(0, 0, textureKey);
+    // Scale image to fit tile size (assets are large, ~400-500px, need to fit ~60px tile)
+    const targetSize = TILE_SIZE - TILE_GAP;
+    this.tileImage.setDisplaySize(targetSize, targetSize);
+    this.add(this.tileImage);
+
+    // Create graphics objects for drawing overlays
     this.obstacleGraphics = scene.add.graphics();
     this.boosterGraphics = scene.add.graphics();
 
-    this.add(this.graphics);
     this.add(this.obstacleGraphics);
     this.add(this.boosterGraphics);
 
@@ -68,39 +75,28 @@ export class TileSprite extends Phaser.GameObjects.Container {
 
   /**
    * Draw the tile with current type and selected state.
-   * Uses rounded rectangle with color from TILE_COLORS and highlight effect.
+   * Uses PNG Image sprites instead of programmatic Graphics drawing.
    */
   private draw(): void {
-    this.graphics.clear();
+    // Update tile image texture
+    const textureKey = TEXTURE_KEYS[this.type];
+    if (this.scene.textures.exists(textureKey)) {
+      this.tileImage.setTexture(textureKey);
+    }
+    const targetSize = TILE_SIZE - TILE_GAP;
+    this.tileImage.setDisplaySize(targetSize, targetSize);
 
-    const tileSize = TILE_SIZE - TILE_GAP;
-    const halfSize = tileSize / 2;
-    const color = TILE_COLORS[this.type];
-
-    // Main tile background with rounded corners
-    this.graphics.fillStyle(color, 1);
-    this.graphics.fillRoundedRect(-halfSize, -halfSize, tileSize, tileSize, 8);
-
-    // Subtle highlight at top for depth effect
-    this.graphics.fillStyle(0xffffff, 0.2);
-    this.graphics.fillRoundedRect(
-      -halfSize + 4,
-      -halfSize + 4,
-      tileSize - 8,
-      tileSize / 3,
-      4
-    );
-
-    // Selection state: add glow effect
+    // Selection state: add glow effect via tint
     if (this.selected) {
-      this.graphics.lineStyle(4, 0xffffff, 0.8);
-      this.graphics.strokeRoundedRect(-halfSize, -halfSize, tileSize, tileSize, 8);
+      this.tileImage.setTint(0xffffcc); // Slight yellow tint for selection
+    } else {
+      this.tileImage.clearTint();
     }
 
     // Draw obstacle overlay
     this.drawObstacle();
 
-    // Draw booster overlay
+    // Draw booster overlay (keep Graphics-based for booster overlays - arrows, stars, circles)
     this.drawBooster();
   }
 
@@ -143,13 +139,7 @@ export class TileSprite extends Phaser.GameObjects.Container {
   public setSelected(selected: boolean): void {
     this.selected = selected;
     this.draw();
-
-    // Add scale effect for better visual feedback
-    if (selected) {
-      this.setScale(1.1);
-    } else {
-      this.setScale(1.0);
-    }
+    this.setScale(selected ? 1.1 : 1.0);
   }
 
   /**
@@ -166,6 +156,10 @@ export class TileSprite extends Phaser.GameObjects.Container {
     this.setScale(1.0);
     this.boosterGraphics.clear();
     this.obstacleGraphics.clear();
+    if (this.obstacleImage) {
+      this.obstacleImage.destroy();
+      this.obstacleImage = undefined;
+    }
     if (this.layerCountText) {
       this.layerCountText.destroy();
       this.layerCountText = undefined;
@@ -271,12 +265,19 @@ export class TileSprite extends Phaser.GameObjects.Container {
 
   /**
    * Draw obstacle overlay on tile.
+   * Uses PNG sprites for ice, dirt, and crate obstacles.
    */
   private drawObstacle(): void {
+    // Clear old graphics-based obstacle
     this.obstacleGraphics.clear();
 
+    // Remove old obstacle image if exists
+    if (this.obstacleImage) {
+      this.obstacleImage.destroy();
+      this.obstacleImage = undefined;
+    }
+
     if (!this.obstacleData) {
-      // Clean up layer count text if no obstacle
       if (this.layerCountText) {
         this.layerCountText.destroy();
         this.layerCountText = undefined;
@@ -284,43 +285,52 @@ export class TileSprite extends Phaser.GameObjects.Container {
       return;
     }
 
-    const tileSize = TILE_SIZE - TILE_GAP;
-    const halfSize = tileSize / 2;
+    const targetSize = TILE_SIZE - TILE_GAP;
+    const halfSize = targetSize / 2;
 
     switch (this.obstacleData.type) {
-      case 'ice':
-        // Semi-transparent light blue overlay
-        this.obstacleGraphics.fillStyle(0x87ceeb, 0.5);
-        this.obstacleGraphics.fillRoundedRect(-halfSize, -halfSize, tileSize, tileSize, 8);
-        // White highlight in top-left corner
-        this.obstacleGraphics.fillStyle(0xffffff, 0.6);
-        this.obstacleGraphics.fillCircle(-halfSize + 10, -halfSize + 10, 8);
+      case 'ice': {
+        // Use ice01/02/03 based on layers remaining (3=ice01 full, 2=ice02 cracked, 1=ice03 broken)
+        const iceKeys = OBSTACLE_TEXTURE_KEYS.ice;
+        // layers 3->ice01 (full), 2->ice02 (cracked), 1->ice03 (most broken)
+        const idx = Math.max(0, Math.min(2, 3 - this.obstacleData.layers));
+        const key = iceKeys[idx];
+        this.obstacleImage = this.scene.add.image(0, 0, key);
+        this.obstacleImage.setDisplaySize(targetSize, targetSize);
+        this.obstacleImage.setAlpha(0.85);
+        this.add(this.obstacleImage);
         break;
-
-      case 'dirt':
-        // Semi-transparent brown overlay
-        this.obstacleGraphics.fillStyle(0x8b4513, 0.7);
-        this.obstacleGraphics.fillRoundedRect(-halfSize, -halfSize, tileSize, tileSize, 8);
+      }
+      case 'dirt': {
+        // Use grass sprites for dirt (grss01/02/03 based on layers)
+        const grassKeys = OBSTACLE_TEXTURE_KEYS.grass;
+        const idx = Math.max(0, Math.min(2, 3 - this.obstacleData.layers));
+        const key = grassKeys[idx];
+        this.obstacleImage = this.scene.add.image(0, 0, key);
+        this.obstacleImage.setDisplaySize(targetSize, targetSize);
+        this.obstacleImage.setAlpha(0.85);
+        this.add(this.obstacleImage);
         break;
-
-      case 'crate':
-        // Brown stroke border with cross lines
-        this.obstacleGraphics.lineStyle(3, 0x8b4513, 0.8);
-        this.obstacleGraphics.strokeRoundedRect(-halfSize, -halfSize, tileSize, tileSize, 8);
-        // Cross lines
-        this.obstacleGraphics.lineBetween(-halfSize, 0, halfSize, 0); // Horizontal
-        this.obstacleGraphics.lineBetween(0, -halfSize, 0, halfSize); // Vertical
+      }
+      case 'crate': {
+        // Per user decision: bubble.png = 1-hit blocker. 'crate' IS the 1-hit blocker type.
+        // Display bubble.png sprite for crate obstacles.
+        const crateKey = OBSTACLE_TEXTURE_KEYS.crate; // 'obstacle_bubble'
+        this.obstacleImage = this.scene.add.image(0, 0, crateKey);
+        this.obstacleImage.setDisplaySize(targetSize, targetSize);
+        this.obstacleImage.setAlpha(0.9);
+        this.add(this.obstacleImage);
         break;
-
-      case 'blocked':
-        // Dark gray fill
+      }
+      case 'blocked': {
+        // Keep programmatic blocked cell (dark gray with red X) — no asset available
         this.obstacleGraphics.fillStyle(0x333333, 0.9);
-        this.obstacleGraphics.fillRoundedRect(-halfSize, -halfSize, tileSize, tileSize, 8);
-        // Red X diagonal lines
+        this.obstacleGraphics.fillRoundedRect(-halfSize, -halfSize, targetSize, targetSize, 8);
         this.obstacleGraphics.lineStyle(4, 0xff0000, 0.8);
         this.obstacleGraphics.lineBetween(-halfSize + 10, -halfSize + 10, halfSize - 10, halfSize - 10);
         this.obstacleGraphics.lineBetween(-halfSize + 10, halfSize - 10, halfSize - 10, -halfSize + 10);
         break;
+      }
     }
 
     // Layer count display for multi-layer obstacles
