@@ -63,7 +63,20 @@ export class LevelSelect extends Phaser.Scene {
     this.cameras.main.fadeIn(300, 0, 0, 0);
 
     // Camera setup for scrollable world
-    this.cameras.main.setBounds(0, 0, MAP_CONFIG.MAP_WIDTH, MAP_CONFIG.MAP_HEIGHT);
+    // Extend world bottom so first level appears ~30% from bottom of viewport
+    const firstLevelY = MAP_CONFIG.LEVEL_NODES[0].y;
+    const worldBottom = firstLevelY + Math.round(height * 0.3);
+    const worldHeight = Math.max(MAP_CONFIG.MAP_HEIGHT, worldBottom);
+    this.cameras.main.setBounds(0, 0, MAP_CONFIG.MAP_WIDTH, worldHeight);
+
+    // Center camera horizontally on level node range
+    const nodeRangeCenterX = (260 + 650) / 2;
+    const scrollX = Phaser.Math.Clamp(
+      nodeRangeCenterX - width / 2,
+      0,
+      Math.max(0, MAP_CONFIG.MAP_WIDTH - width)
+    );
+    this.cameras.main.scrollX = scrollX;
 
     // Create parallax background layers
     this.createParallaxBackground();
@@ -86,7 +99,7 @@ export class LevelSelect extends Phaser.Scene {
     }
 
     // HUD background bar (fixed to camera)
-    this.hudBarHeight = Math.max(this.layout.hudHeight + cssToGame(20), cssToGame(100));
+    this.hudBarHeight = cssToGame(50);
     this.hudBg = this.add.graphics();
     this.hudBg.fillStyle(0xFFFFFF, 0.8);
     this.hudBg.fillRect(0, 0, width, this.hudBarHeight);
@@ -96,10 +109,10 @@ export class LevelSelect extends Phaser.Scene {
     // Title (fixed to camera)
     this.titleText = this.add.text(width / 2, this.hudBarHeight / 2, 'Оберіть рівень', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(32)}px`,
+      fontSize: `${cssToGame(16)}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
-      shadow: { offsetX: 2, offsetY: 2, color: '#00000020', blur: 4, fill: true },
+      shadow: { offsetX: 1, offsetY: 1, color: '#00000020', blur: 2, fill: true },
     });
     this.titleText.setOrigin(0.5);
     this.titleText.setScrollFactor(0);
@@ -125,41 +138,40 @@ export class LevelSelect extends Phaser.Scene {
   }
 
   private createParallaxBackground(): void {
-    const maxScroll = MAP_CONFIG.MAP_HEIGHT - 768; // 1432
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+    const maxScroll = MAP_CONFIG.MAP_HEIGHT - height;
 
-    // Sky layer - static, covers viewport
-    const sky = this.add.image(512, 384, 'kyiv_sky');
-    // Aspect-ratio fill: source 1536x1024, scale to cover 1024x768
-    const skyScale = Math.max(MAP_CONFIG.MAP_WIDTH / 1536, 768 / 1024);
+    // Sky layer - static, covers entire viewport (scrollFactor=0 = screen coords)
+    const sky = this.add.image(width / 2, height / 2, 'kyiv_sky');
+    // Source: 1536x1024 — scale to cover the full viewport (aspect-fill)
+    const skyScale = Math.max(width / 1536, height / 1024);
     sky.setScale(skyScale);
     sky.setScrollFactor(MAP_CONFIG.PARALLAX_SKY);
     sky.setDepth(0);
 
     // Far layer - 3 segments, slow parallax (scrollFactor 0.25)
-    // Effective visible worldY range: 0 to maxScroll*0.25 + 768 = ~1126
-    const farEffectiveRange = maxScroll * MAP_CONFIG.PARALLAX_FAR + 768;
-    // Source: 1536x1024, aspect-ratio scale to fill viewport width
-    const farScale = MAP_CONFIG.MAP_WIDTH / 1536; // 0.667 → height ~683
-    const farImgHeight = 1024 * farScale;
+    const farEffectiveRange = Math.max(maxScroll, 0) * MAP_CONFIG.PARALLAX_FAR + height;
+    // Source: 1536x1024, scale to fill at least viewport width (aspect-fill)
+    const farScale = Math.max(width / 1536, MAP_CONFIG.MAP_WIDTH / 1536);
     const farSpacing = farEffectiveRange / 3;
     const farParts = ['kyiv_far_top', 'kyiv_far_mid', 'kyiv_far_bottom'];
     farParts.forEach((key, i) => {
-      const part = this.add.image(512, farSpacing * i + farSpacing / 2, key);
+      const part = this.add.image(MAP_CONFIG.MAP_WIDTH / 2, farSpacing * i + farSpacing / 2, key);
       part.setScale(farScale);
       part.setScrollFactor(MAP_CONFIG.PARALLAX_FAR);
       part.setDepth(1);
     });
 
     // Mid layer - 2 images, medium parallax (scrollFactor 0.6)
-    // Effective visible worldY range: 0 to maxScroll*0.6 + 768 = ~1627
-    const midEffectiveRange = maxScroll * MAP_CONFIG.PARALLAX_MID + 768;
-    // Source: 1024x1536, already at native width — scale = 1.0
-    // kyiv_mid_0 (KLO station) at bottom, kyiv_mid (landmarks) at top
+    const midEffectiveRange = Math.max(maxScroll, 0) * MAP_CONFIG.PARALLAX_MID + height;
+    // Source: 1024x1536, scale to fill at least viewport width
+    const midScale = Math.max(width / 1024, 1);
     const midParts = ['kyiv_mid', 'kyiv_mid_0'];
     const midSpacing = midEffectiveRange / 2;
     midParts.forEach((key, i) => {
-      const part = this.add.image(512, midSpacing * i + midSpacing / 2, key);
-      // No scaling needed — native width matches MAP_WIDTH (1024)
+      const part = this.add.image(MAP_CONFIG.MAP_WIDTH / 2, midSpacing * i + midSpacing / 2, key);
+      part.setScale(midScale);
       part.setScrollFactor(MAP_CONFIG.PARALLAX_MID);
       part.setDepth(2);
     });
@@ -262,27 +274,28 @@ export class LevelSelect extends Phaser.Scene {
 
     if (currentLevelId > 0 && currentLevelId <= 10) {
       const targetNode = MAP_CONFIG.LEVEL_NODES[currentLevelId - 1];
-      // Pan camera to center on current level
-      this.cameras.main.pan(targetNode.x, targetNode.y, 800, 'Sine.easeInOut', true);
+      // Pan camera: center X on node range, Y on current level
+      const nodeRangeCenterX = (260 + 650) / 2;
+      this.cameras.main.pan(nodeRangeCenterX, targetNode.y, 800, 'Sine.easeInOut', true);
     }
   }
 
   private createEconomyHUD(width: number, economy: EconomyManager): void {
-    const containerX = width - cssToGame(80);
+    const containerX = width - cssToGame(50);
     const containerY = this.hudBarHeight / 2;
 
     // Heart icon + lives count
-    this.heartIcon = this.add.text(containerX - cssToGame(70), containerY - cssToGame(20), '❤', {
+    this.heartIcon = this.add.text(containerX - cssToGame(55), containerY - cssToGame(10), '❤', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(20)}px`,
+      fontSize: `${cssToGame(12)}px`,
     });
     this.heartIcon.setOrigin(0.5);
     this.heartIcon.setScrollFactor(0);
     this.heartIcon.setDepth(11);
 
-    this.livesText = this.add.text(containerX - cssToGame(40), containerY - cssToGame(20), '5/5', {
+    this.livesText = this.add.text(containerX - cssToGame(35), containerY - cssToGame(10), '5/5', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(20)}px`,
+      fontSize: `${cssToGame(12)}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
@@ -291,9 +304,9 @@ export class LevelSelect extends Phaser.Scene {
     this.livesText.setDepth(11);
 
     // Countdown text (hidden when lives = 5)
-    this.countdownText = this.add.text(containerX - cssToGame(70), containerY + cssToGame(10), '', {
+    this.countdownText = this.add.text(containerX - cssToGame(55), containerY + cssToGame(8), '', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(14)}px`,
+      fontSize: `${cssToGame(9)}px`,
       color: '#666666',
     });
     this.countdownText.setOrigin(0, 0.5);
@@ -301,17 +314,17 @@ export class LevelSelect extends Phaser.Scene {
     this.countdownText.setDepth(11);
 
     // Bonus icon + count
-    this.bonusIcon = this.add.text(containerX - cssToGame(70), containerY + cssToGame(40), '💎', {
+    this.bonusIcon = this.add.text(containerX, containerY - cssToGame(10), '💎', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(16)}px`,
+      fontSize: `${cssToGame(12)}px`,
     });
     this.bonusIcon.setOrigin(0.5);
     this.bonusIcon.setScrollFactor(0);
     this.bonusIcon.setDepth(11);
 
-    this.bonusText = this.add.text(containerX - cssToGame(40), containerY + cssToGame(40), '500', {
+    this.bonusText = this.add.text(containerX + cssToGame(15), containerY - cssToGame(10), '500', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(16)}px`,
+      fontSize: `${cssToGame(12)}px`,
       color: '#FFB800',
       fontStyle: 'bold',
     });
@@ -479,15 +492,15 @@ export class LevelSelect extends Phaser.Scene {
     onClick: () => void,
     secondary: boolean = false
   ): Phaser.GameObjects.Container {
-    const buttonWidth = cssToGame(170);
-    const buttonHeight = cssToGame(44);
+    const buttonWidth = cssToGame(140);
+    const buttonHeight = cssToGame(36);
 
     const bg = this.add.image(0, 0, secondary ? GUI_TEXTURE_KEYS.buttonYellow : GUI_TEXTURE_KEYS.buttonOrange);
     bg.setDisplaySize(buttonWidth, buttonHeight);
 
     const text = this.add.text(0, 0, label, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(16)}px`,
+      fontSize: `${cssToGame(13)}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
@@ -508,8 +521,8 @@ export class LevelSelect extends Phaser.Scene {
   }
 
   private createBackButton(): void {
-    const buttonWidth = cssToGame(80);
-    const buttonHeight = cssToGame(36);
+    const buttonWidth = cssToGame(60);
+    const buttonHeight = cssToGame(28);
 
     // Button background using GUI sprite
     const buttonBg = this.add.image(0, 0, GUI_TEXTURE_KEYS.buttonYellow);
@@ -517,12 +530,12 @@ export class LevelSelect extends Phaser.Scene {
 
     const buttonText = this.add.text(0, 0, '< Меню', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(14)}px`,
+      fontSize: `${cssToGame(11)}px`,
       color: '#1A1A1A',
     });
     buttonText.setOrigin(0.5);
 
-    const container = this.add.container(cssToGame(55), cssToGame(24), [buttonBg, buttonText]);
+    const container = this.add.container(cssToGame(40), this.hudBarHeight / 2, [buttonBg, buttonText]);
     container.setSize(buttonWidth, buttonHeight);
     container.setInteractive({ useHandCursor: true });
     container.setScrollFactor(0);
@@ -564,7 +577,7 @@ export class LevelSelect extends Phaser.Scene {
     const name = LEVEL_NAMES[levelId] || `Рівень ${levelId}`;
     const landmark = MAP_CONFIG.LEVEL_NODES[levelId - 1].label;
 
-    const size = cssToGame(55);
+    const size = cssToGame(38);
 
     // Button background - circular checkpoint using GUI sprite
     const bg = this.add.image(0, 0, unlocked ? GUI_TEXTURE_KEYS.buttonOrange : GUI_TEXTURE_KEYS.buttonYellow);
@@ -578,7 +591,7 @@ export class LevelSelect extends Phaser.Scene {
     // Level number
     const numText = this.add.text(0, 0, String(levelId), {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(26)}px`,
+      fontSize: `${cssToGame(18)}px`,
       color: unlocked ? '#1A1A1A' : '#999999',
       fontStyle: 'bold',
     });
@@ -586,17 +599,17 @@ export class LevelSelect extends Phaser.Scene {
 
     // Stars display below button
     const starString = this.getStarString(stars);
-    const starText = this.add.text(0, size / 2 + cssToGame(20), starString, {
+    const starText = this.add.text(0, size / 2 + cssToGame(10), starString, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(14)}px`,
+      fontSize: `${cssToGame(10)}px`,
       color: '#FFB800',
     });
     starText.setOrigin(0.5);
 
     // Kyiv landmark label below stars
-    const landmarkText = this.add.text(0, size / 2 + cssToGame(45), landmark, {
+    const landmarkText = this.add.text(0, size / 2 + cssToGame(25), landmark, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(11)}px`,
+      fontSize: `${cssToGame(8)}px`,
       color: '#666666',
     });
     landmarkText.setOrigin(0.5);
@@ -605,8 +618,8 @@ export class LevelSelect extends Phaser.Scene {
 
     // Crown decoration for 3-star levels
     if (stars === 3) {
-      const crown = this.add.image(0, -size / 2 - cssToGame(15), GUI_TEXTURE_KEYS.crown1);
-      crown.setDisplaySize(cssToGame(22), cssToGame(22));
+      const crown = this.add.image(0, -size / 2 - cssToGame(10), GUI_TEXTURE_KEYS.crown1);
+      crown.setDisplaySize(cssToGame(16), cssToGame(16));
       children.push(crown);
     }
 
@@ -617,7 +630,7 @@ export class LevelSelect extends Phaser.Scene {
       lockOverlay.fillCircle(0, 0, size / 2);
 
       const lockIcon = this.add.image(0, 0, GUI_TEXTURE_KEYS.goldLock);
-      lockIcon.setDisplaySize(cssToGame(26), cssToGame(26));
+      lockIcon.setDisplaySize(cssToGame(20), cssToGame(20));
 
       children.unshift(lockOverlay); // Add behind lock icon
       children.push(lockIcon);
@@ -639,7 +652,7 @@ export class LevelSelect extends Phaser.Scene {
 
   private createMapPointer(x: number, y: number): void {
     const pointer = this.add.image(x, y, GUI_TEXTURE_KEYS.mapPointer);
-    pointer.setDisplaySize(cssToGame(32), cssToGame(32));
+    pointer.setDisplaySize(cssToGame(24), cssToGame(24));
     pointer.setDepth(6);
 
     // Gentle bobbing animation
@@ -672,10 +685,10 @@ export class LevelSelect extends Phaser.Scene {
   }
 
   private createSettingsButton(width: number): void {
-    // Position gear icon in top area, between back button and economy HUD
-    this.settingsIcon = this.add.text(width - cssToGame(160), cssToGame(24), '⚙', {
+    // Position gear icon in HUD bar, between back button and economy HUD
+    this.settingsIcon = this.add.text(width - cssToGame(120), this.hudBarHeight / 2, '⚙', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(24)}px`,
+      fontSize: `${cssToGame(18)}px`,
       color: '#1A1A1A',
     });
     this.settingsIcon.setOrigin(0.5);
@@ -967,20 +980,23 @@ export class LevelSelect extends Phaser.Scene {
 
     // Recompute layout for new viewport
     this.layout = getResponsiveLayout(width, height);
-    this.hudBarHeight = Math.max(this.layout.hudHeight + cssToGame(20), cssToGame(100));
+    this.hudBarHeight = cssToGame(50);
 
     // Update camera viewport (CRITICAL for input)
     this.cameras.main.setViewport(0, 0, width, height);
 
-    // Update camera bounds -- world size stays 1024xMAP_HEIGHT but camera viewport changes
-    this.cameras.main.setBounds(0, 0, MAP_CONFIG.MAP_WIDTH, MAP_CONFIG.MAP_HEIGHT);
+    // Update camera bounds with dynamic bottom padding
+    const firstLevelY = MAP_CONFIG.LEVEL_NODES[0].y;
+    const worldBottom = firstLevelY + Math.round(height * 0.3);
+    const worldHeight = Math.max(MAP_CONFIG.MAP_HEIGHT, worldBottom);
+    this.cameras.main.setBounds(0, 0, MAP_CONFIG.MAP_WIDTH, worldHeight);
 
     // Center camera horizontally on level node range (x=260..650)
     const nodeRangeCenter = (260 + 650) / 2;
     const scrollX = Phaser.Math.Clamp(
       nodeRangeCenter - width / 2,
       0,
-      MAP_CONFIG.MAP_WIDTH - width
+      Math.max(0, MAP_CONFIG.MAP_WIDTH - width)
     );
     this.cameras.main.setScroll(scrollX, this.cameras.main.scrollY);
 
@@ -995,30 +1011,30 @@ export class LevelSelect extends Phaser.Scene {
     if (this.titleText) this.titleText.setPosition(width / 2, this.hudBarHeight / 2);
 
     // Settings gear repositions relative to width
-    if (this.settingsIcon) this.settingsIcon.setPosition(width - cssToGame(160), cssToGame(24));
+    if (this.settingsIcon) this.settingsIcon.setPosition(width - cssToGame(120), this.hudBarHeight / 2);
 
     // Economy HUD repositions relative to width
     this.repositionEconomyHUD(width);
   }
 
   private repositionEconomyHUD(width: number): void {
-    const containerX = width - cssToGame(80);
+    const containerX = width - cssToGame(50);
     const containerY = this.hudBarHeight / 2;
 
     // Heart icon
-    if (this.heartIcon) this.heartIcon.setPosition(containerX - cssToGame(70), containerY - cssToGame(20));
+    if (this.heartIcon) this.heartIcon.setPosition(containerX - cssToGame(55), containerY - cssToGame(10));
 
     // Lives text
-    if (this.livesText) this.livesText.setPosition(containerX - cssToGame(40), containerY - cssToGame(20));
+    if (this.livesText) this.livesText.setPosition(containerX - cssToGame(35), containerY - cssToGame(10));
 
     // Countdown text
-    if (this.countdownText) this.countdownText.setPosition(containerX - cssToGame(70), containerY + cssToGame(10));
+    if (this.countdownText) this.countdownText.setPosition(containerX - cssToGame(55), containerY + cssToGame(8));
 
     // Bonus icon
-    if (this.bonusIcon) this.bonusIcon.setPosition(containerX - cssToGame(70), containerY + cssToGame(40));
+    if (this.bonusIcon) this.bonusIcon.setPosition(containerX, containerY - cssToGame(10));
 
     // Bonus text
-    if (this.bonusText) this.bonusText.setPosition(containerX - cssToGame(40), containerY + cssToGame(40));
+    if (this.bonusText) this.bonusText.setPosition(containerX + cssToGame(15), containerY - cssToGame(10));
   }
 
   shutdown(): void {

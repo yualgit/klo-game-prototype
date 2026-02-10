@@ -393,8 +393,6 @@ export class Game extends Phaser.Scene {
     livesDisplay.setOrigin(0.5);
     panelContainer.add(livesDisplay);
 
-    let nextButtonY = cssToGame(100);
-
     // Coupon display for level 10
     if (this.currentLevel === 10) {
       const couponBg = this.add.graphics();
@@ -424,15 +422,13 @@ export class Game extends Phaser.Scene {
       });
       couponText.setOrigin(0.5);
       panelContainer.add(couponText);
-
-      nextButtonY = cssToGame(145);
     }
 
-    // "Далі" button → next level or LevelSelect
+    // "Далі" button → next level or LevelSelect (positioned near panel bottom)
     const isLastLevel = this.currentLevel >= MAX_LEVELS;
     const nextLabel = isLastLevel ? 'Меню' : 'Далі';
 
-    const nextBtn = this.createOverlayButton(panelW / 2, nextButtonY, nextLabel, () => {
+    const nextBtn = this.createOverlayButton(panelW / 2, panelH - cssToGame(80), nextLabel, () => {
       if (isLastLevel) {
         this.scene.start('LevelSelect');
       } else {
@@ -443,7 +439,7 @@ export class Game extends Phaser.Scene {
 
     // "Рівні" button → LevelSelect (only when not last level)
     if (!isLastLevel) {
-      const levelsBtn = this.createOverlayButton(panelW / 2, nextButtonY + cssToGame(30), 'Рівні', () => {
+      const levelsBtn = this.createOverlayButton(panelW / 2, panelH - cssToGame(25), 'Рівні', () => {
         this.scene.start('LevelSelect');
       }, true);
       panelContainer.add(levelsBtn);
@@ -479,9 +475,9 @@ export class Game extends Phaser.Scene {
       duration: 200,
     });
 
-    // Panel background (responsive width)
+    // Panel background (responsive width, tall enough for buttons at bottom)
     const panelW = this.layout.overlayPanelWidth;
-    const panelH = cssToGame(190);
+    const panelH = cssToGame(250);
     const panelX = (width - panelW) / 2;
     const panelY = (height - panelH) / 2;
 
@@ -511,7 +507,7 @@ export class Game extends Phaser.Scene {
     panelContainer.add(titleText);
 
     // Subtitle
-    const subtitle = this.add.text(panelW / 2, cssToGame(47.5), 'Спробуйте ще раз!', {
+    const subtitle = this.add.text(panelW / 2, cssToGame(50), 'Спробуйте ще раз!', {
       fontFamily: 'Arial, sans-serif',
       fontSize: `${this.layout.overlaySubtitleSize}px`,
       color: '#666666',
@@ -521,7 +517,7 @@ export class Game extends Phaser.Scene {
 
     // Lives remaining display
     const livesRemaining = economy.getLives();
-    const livesInfo = this.add.text(panelW / 2, cssToGame(65), `Залишилось життів: ${livesRemaining}/5`, {
+    const livesInfo = this.add.text(panelW / 2, cssToGame(75), `Залишилось життів: ${livesRemaining}/5`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: `${this.layout.overlaySubtitleSize}px`,
       color: '#FFB800',
@@ -530,12 +526,12 @@ export class Game extends Phaser.Scene {
     livesInfo.setOrigin(0.5);
     panelContainer.add(livesInfo);
 
-    // "Повторити" button → restart same level (with lives check)
-    const retryBtn = this.createOverlayButton(panelW / 2, cssToGame(90), 'Повторити', () => {
+    // "Повторити" button → restart same level (positioned near panel bottom)
+    const retryBtn = this.createOverlayButton(panelW / 2, panelH - cssToGame(80), 'Повторити', () => {
       const eco = this.registry.get('economy') as EconomyManager;
       if (!eco.canStartLevel()) {
         // Show inline refill option instead of restarting
-        this.showRefillOrReturn(panelContainer, panelW);
+        this.showRefillOrReturn(panelContainer, panelW, panelH);
         return;
       }
       this.scene.start('Game', { levelId: this.currentLevel });
@@ -543,7 +539,7 @@ export class Game extends Phaser.Scene {
     panelContainer.add(retryBtn);
 
     // "Меню" button → LevelSelect
-    const menuBtn = this.createOverlayButton(panelW / 2, cssToGame(120), 'Меню', () => {
+    const menuBtn = this.createOverlayButton(panelW / 2, panelH - cssToGame(25), 'Меню', () => {
       this.scene.start('LevelSelect');
     }, true);
     panelContainer.add(menuBtn);
@@ -552,12 +548,12 @@ export class Game extends Phaser.Scene {
   /**
    * Show refill option when player tries to retry without lives
    */
-  private showRefillOrReturn(panelContainer: Phaser.GameObjects.Container, panelW: number): void {
+  private showRefillOrReturn(panelContainer: Phaser.GameObjects.Container, panelW: number, _panelH: number): void {
     const economy = this.registry.get('economy') as EconomyManager;
     const canRefill = economy.getBonuses() >= 15;
 
-    // Add refill message
-    const msg = this.add.text(panelW / 2, cssToGame(145), canRefill ? 'Поповнити життя?' : 'Недостатньо бонусів', {
+    // Add refill message (positioned between lives info and buttons)
+    const msg = this.add.text(panelW / 2, cssToGame(105), canRefill ? 'Поповнити життя?' : 'Недостатньо бонусів', {
       fontFamily: 'Arial, sans-serif',
       fontSize: `${this.layout.overlaySubtitleSize}px`,
       color: canRefill ? '#1A1A1A' : '#999999',
@@ -567,7 +563,7 @@ export class Game extends Phaser.Scene {
     panelContainer.add(msg);
 
     if (canRefill) {
-      const refillBtn = this.createOverlayButton(panelW / 2, cssToGame(165), 'Поповнити (15)', async () => {
+      const refillBtn = this.createOverlayButton(panelW / 2, cssToGame(135), 'Поповнити (15)', async () => {
         const success = await economy.spendBonusesForRefill();
         if (success) {
           this.scene.start('Game', { levelId: this.currentLevel });

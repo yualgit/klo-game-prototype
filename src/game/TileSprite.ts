@@ -247,8 +247,7 @@ export class TileSprite extends Phaser.GameObjects.Container {
       this.boosterImage.setDisplaySize(targetSize, targetSize);
       this.add(this.boosterImage);
 
-      // Add subtle idle animation effect
-      this.addBoosterIdleEffect();
+      // Idle animations removed — too prominent at variable scales
     }
   }
 
