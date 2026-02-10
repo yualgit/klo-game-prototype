@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Інтерактивний прототип match-3 гри для мережі АЗК KLO, призначений для презентації клієнту. Демо включає повний набір match-3 механік з KLO-тематикою (паливо, кава, снеки, дорога), 5 рівнів, всі типи бустерів та перешкод, базову Firebase інтеграцію та мок-UI для купонів.
+Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed AI-generated assets, 5 levels, boosters, obstacles, and Firebase persistence. Built for client presentation to demonstrate gameplay feel and KLO brand integration.
 
 ## Core Value
 
@@ -12,97 +12,47 @@
 
 ### Validated
 
-(None yet — this is the first implementation)
+- ✓ CORE-01..06: Full match-3 mechanics (swap, match, gravity, cascade, reshuffle) — v1.0
+- ✓ TILE-01..04: 4 tile types with AI-generated sprites (fuel, coffee, snack, road) — v1.0
+- ✓ BOOST-01..05: 4 booster types + combo matrix (line, bomb, rocket, KLO-sphere) — v1.0
+- ✓ OBST-01..04: 4 obstacle types (ice, dirt, crate, blocked) — v1.0
+- ✓ LVL-01..05: 5 levels from JSON with goals, moves, win/lose — v1.0
+- ✓ UI-01..06: Full UI flow (level select, HUD, win/lose overlays, coupon mock) — v1.0
+- ✓ FB-01..02: Firebase anonymous auth + Firestore progress persistence — v1.0
+- ✓ ASSET-01..05: AI-generated tiles, boosters, obstacles, UI elements, backgrounds — v1.0
 
 ### Active
 
-**Core Mechanics:**
-- [ ] **CORE-01**: Гравець може свайпати/тапати дві сусідні фішки для обміну місцями
-- [ ] **CORE-02**: 3+ однакових фішки в ряд/колонку автоматично зникають
-- [ ] **CORE-03**: Після зникнення фішки падають вниз (gravity)
-- [ ] **CORE-04**: Нові фішки з'являються зверху (spawn з правильними ймовірностями)
-- [ ] **CORE-05**: Каскадні матчі працюють автоматично до стабілізації
-
-**Tiles (4 types):**
-- [ ] **TILE-01**: Паливо (fuel) — жовта крапля
-- [ ] **TILE-02**: Кава (coffee) — коричневий стакан
-- [ ] **TILE-03**: Снеки (snack) — упаковка
-- [ ] **TILE-04**: Дорога (road) — дорожній знак
-
-**Boosters (4 types):**
-- [ ] **BOOST-01**: Лінійний бустер (4 в ряд) — чистить ряд/колонку
-- [ ] **BOOST-02**: Бомба (5 в Г/Т форму) — вибух 3×3
-- [ ] **BOOST-03**: Ракета (комбо лінійних) — чистить хрест
-- [ ] **BOOST-04**: KLO-сфера (5 в ряд) — знищує всі фішки одного типу
-
-**Obstacles (4 types):**
-- [ ] **OBST-01**: Лід (ice) — 1-2 удари для знищення
-- [ ] **OBST-02**: Бруд (dirt) — блокує фішку, 1 удар
-- [ ] **OBST-03**: Ящик (crate) — 2-3 удари
-- [ ] **OBST-04**: Заблокована клітинка (blocked) — фішки не ставляться
-
-**Levels:**
-- [ ] **LVL-01**: Рівень 1-5 завантажуються з JSON
-- [ ] **LVL-02**: Цілі рівня відображаються (збір фішок, знищення перешкод, створення бустерів)
-- [ ] **LVL-03**: Лічильник ходів працює
-- [ ] **LVL-04**: Win при виконанні всіх цілей
-- [ ] **LVL-05**: Lose при закінченні ходів без виконання цілей
-
-**UI:**
-- [ ] **UI-01**: Ігрове поле 8×8 з фішками
-- [ ] **UI-02**: Панель цілей зверху
-- [ ] **UI-03**: Лічильник ходів
-- [ ] **UI-04**: Екран перемоги з результатом
-- [ ] **UI-05**: Екран поразки з кнопкою retry
-- [ ] **UI-06**: Просте меню вибору рівня (L1-5)
-
-**Firebase:**
-- [ ] **FB-01**: Firebase Analytics — базові події (level_start, level_win, level_fail)
-- [ ] **FB-02**: Збереження прогресу в Firestore (пройдені рівні)
-- [ ] **FB-03**: Анонімна авторизація
-
-**Coupon Mock:**
-- [ ] **COUP-01**: Мок UI показу отриманого купона (після перемоги на L5)
-- [ ] **COUP-02**: Візуальний приклад купона "Кава безкоштовно"
-
-**Assets:**
-- [ ] **ASSET-01**: AI-generated тайли (4 типи) по STYLE_GUIDE.md
-- [ ] **ASSET-02**: AI-generated бустери (4 типи)
-- [ ] **ASSET-03**: AI-generated перешкоди (4 типи)
-- [ ] **ASSET-04**: Базові UI елементи (кнопки, картки)
-- [ ] **ASSET-05**: Фон ігрового поля
+(None — define in next milestone with `/gsd:new-milestone`)
 
 ### Out of Scope
 
-- Об'єкти доставки (канистры до низу поля) — з'являються з L8+
-- Реальний backend для купонів (Cloud Functions)
-- Погашення купонів / інтеграція з касами
-- Карта рівнів (level map)
-- Місії та стріки (meta-game)
-- Рівні L6-20
-- Звукові ефекти та музика — можна додати пізніше
+- Об'єкти доставки (канистры) — з'являються з L8+
 - Phone auth / loyalty_id — не для демо
-- Remote Config — використовуємо статичні JSON
-- Система життів (lives)
+- Remote Config — статичні JSON достатні
+- Рівні L6-20 — 5 рівнів достатньо для демо
+- Real-time multiplayer — не в скоупі
+- In-app purchases — безкоштовна гра з купонами
 
 ## Context
 
-**Бізнес-контекст:**
-- KLO — мережа АЗК в Україні
-- Гра — інструмент лояльності (грай → отримуй купони → гасиш на АЗК)
-- Демо має переконати клієнта в цінності продукту
+Shipped v1.0 MVP with 5,490 LOC TypeScript.
+Tech stack: Phaser 3.90 + TypeScript + Vite + Firebase (Auth, Firestore).
+68 commits across 5 phases in 6 days.
+Demo is fully playable with 5 levels, all mechanics, and KLO-branded visuals.
 
-**Технічний контекст:**
-- Детальний GAME_DESIGN.md з дизайном L1-20, економікою, фразами
-- Детальний TECH_SPEC.md з архітектурою та схемами даних
-- Детальний STYLE_GUIDE.md з візуальним стилем та промптами для AI
-- JSON рівні L1-5 вже існують в `data/levels/`
-- Цільова платформа: PWA (мобільні браузери)
+## Key Decisions
 
-**Попередня робота:**
-- Документація повністю готова
-- Codebase mapping виконано (.planning/codebase/)
-- Робочого коду поки немає
+| Decision | Rationale | Outcome |
+|----------|-----------|---------|
+| Phaser 3 замість pixi.js | Більше готових рішень для match-3, краща документація | ✓ Good — scene system, tweens, input handling worked well |
+| Firebase замість custom backend | Швидкий старт, готові SDK для auth/analytics/firestore | ✓ Good — anonymous auth + Firestore persistence seamless |
+| AI-generated assets | Немає дизайнера, STYLE_GUIDE.md має детальні промпти | ✓ Good — consistent KLO-branded look achieved |
+| L1-5 для демо | JSON вже готовий, достатньо для показу всіх механік | ✓ Good — showcases all mechanics adequately |
+| Всі 4 бустери в демо | Показати клієнту повний потенціал | ✓ Good — combo matrix adds depth |
+| ProgressManager singleton in registry | Global access for Firebase persistence across scenes | ✓ Good — clean scene communication |
+| Direct scene.start() from overlays | Avoid tween/shutdown race conditions | ✓ Good — fixed crash on scene restart |
+| Runtime particle textures | Avoid external PNG dependencies for VFX | ✓ Good — self-contained particle system |
 
 ## Constraints
 
@@ -111,15 +61,5 @@
 - **Assets**: AI-generated на основі STYLE_GUIDE.md (немає дизайнера)
 - **Scope**: Тільки L1-5 з повним набором механік
 
-## Key Decisions
-
-| Decision | Rationale | Outcome |
-|----------|-----------|---------|
-| Phaser 3 замість pixi.js | Більше готових рішень для match-3, краща документація | — Pending |
-| Firebase замість custom backend | Швидкий старт, готові SDK для auth/analytics/firestore | — Pending |
-| AI-generated assets | Немає дизайнера, STYLE_GUIDE.md має детальні промпти | — Pending |
-| L1-5 для демо | JSON вже готовий, достатньо для показу всіх механік | — Pending |
-| Всі 4 бустери в демо | Показати клієнту повний потенціал, навіть якщо L1-5 не всі використовують | — Pending |
-
 ---
-*Last updated: 2026-02-05 after initialization*
+*Last updated: 2026-02-10 after v1.0 milestone*
