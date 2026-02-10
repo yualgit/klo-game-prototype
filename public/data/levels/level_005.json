@@ -9,12 +9,6 @@
   },
   "goals": [
     {
-      "type": "create_booster",
-      "booster_type": "linear",
-      "count": 1,
-      "description": "Створити 1 лінійний бустер"
-    },
-    {
       "type": "collect",
       "item": "snack",
       "count": 20,
