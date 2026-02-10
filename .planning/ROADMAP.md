@@ -56,8 +56,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 13-01-PLAN.md — UIScene + EventsCenter + EconomyManager event emission
-- [ ] 13-02-PLAN.md — Scene integration (LevelSelect/Game/Collections/Shop) + visual verification
+- [x] 13-01-PLAN.md — UIScene + EventsCenter + EconomyManager event emission
+- [x] 13-02-PLAN.md — Scene integration (LevelSelect/Game/Collections/Shop) + visual verification
 
 ### Phase 14: Collection Data Model & Viewing
 **Goal**: Collection screen shows all 3 collections with card inventory and progress tracking
@@ -118,7 +118,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15 → 16
 |-------|-----------|----------------|--------|-----------|
 | 11. Art & Asset Quality | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
 | 12. Responsive Layout | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
-| 13. Persistent UI Navigation | v1.2 | 0/TBD | Not started | - |
+| 13. Persistent UI Navigation | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
 | 14. Collection Data Model | v1.2 | 0/TBD | Not started | - |
 | 15. Card Acquisition Flow | v1.2 | 0/TBD | Not started | - |
 | 16. Collection Exchange | v1.2 | 0/TBD | Not started | - |
