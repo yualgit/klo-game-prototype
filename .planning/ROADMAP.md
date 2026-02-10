@@ -53,11 +53,11 @@ Plans:
   3. Global header displays current lives count, bonuses count, and settings button
   4. Lives/bonuses values update immediately when economy state changes (no refresh needed)
   5. During gameplay, bottom nav hidden but global header remains visible
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 13-01: TBD
-- [ ] 13-02: TBD
+- [ ] 13-01-PLAN.md — UIScene + EventsCenter + EconomyManager event emission
+- [ ] 13-02-PLAN.md — Scene integration (LevelSelect/Game/Collections/Shop) + visual verification
 
 ### Phase 14: Collection Data Model & Viewing
 **Goal**: Collection screen shows all 3 collections with card inventory and progress tracking
