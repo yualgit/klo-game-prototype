@@ -108,21 +108,44 @@ export class LevelSelect extends Phaser.Scene {
   }
 
   private createParallaxBackground(): void {
+    const maxScroll = MAP_CONFIG.MAP_HEIGHT - 768; // 1432
+
     // Sky layer - static, covers viewport
     const sky = this.add.image(512, 384, 'kyiv_sky');
-    sky.setDisplaySize(MAP_CONFIG.MAP_WIDTH, 768);
+    // Aspect-ratio fill: source 1536x1024, scale to cover 1024x768
+    const skyScale = Math.max(MAP_CONFIG.MAP_WIDTH / 1536, 768 / 1024);
+    sky.setScale(skyScale);
     sky.setScrollFactor(MAP_CONFIG.PARALLAX_SKY);
     sky.setDepth(0);
 
-    // Far layer - distant landmarks, slow parallax
-    const far = this.add.image(512, MAP_CONFIG.MAP_HEIGHT / 2, 'kyiv_far');
-    far.setScrollFactor(MAP_CONFIG.PARALLAX_FAR);
-    far.setDepth(1);
+    // Far layer - 3 segments, slow parallax (scrollFactor 0.25)
+    // Effective visible worldY range: 0 to maxScroll*0.25 + 768 = ~1126
+    const farEffectiveRange = maxScroll * MAP_CONFIG.PARALLAX_FAR + 768;
+    // Source: 1536x1024, aspect-ratio scale to fill viewport width
+    const farScale = MAP_CONFIG.MAP_WIDTH / 1536; // 0.667 → height ~683
+    const farImgHeight = 1024 * farScale;
+    const farSpacing = farEffectiveRange / 3;
+    const farParts = ['kyiv_far_top', 'kyiv_far_mid', 'kyiv_far_bottom'];
+    farParts.forEach((key, i) => {
+      const part = this.add.image(512, farSpacing * i + farSpacing / 2, key);
+      part.setScale(farScale);
+      part.setScrollFactor(MAP_CONFIG.PARALLAX_FAR);
+      part.setDepth(1);
+    });
 
-    // Mid layer - closer buildings, medium parallax
-    const mid = this.add.image(512, MAP_CONFIG.MAP_HEIGHT / 2, 'kyiv_mid');
-    mid.setScrollFactor(MAP_CONFIG.PARALLAX_MID);
-    mid.setDepth(2);
+    // Mid layer - 2 images, medium parallax (scrollFactor 0.6)
+    // Effective visible worldY range: 0 to maxScroll*0.6 + 768 = ~1627
+    const midEffectiveRange = maxScroll * MAP_CONFIG.PARALLAX_MID + 768;
+    // Source: 1024x1536, already at native width — scale = 1.0
+    // kyiv_mid_0 (KLO station) at bottom, kyiv_mid (landmarks) at top
+    const midParts = ['kyiv_mid', 'kyiv_mid_0'];
+    const midSpacing = midEffectiveRange / 2;
+    midParts.forEach((key, i) => {
+      const part = this.add.image(512, midSpacing * i + midSpacing / 2, key);
+      // No scaling needed — native width matches MAP_WIDTH (1024)
+      part.setScrollFactor(MAP_CONFIG.PARALLAX_MID);
+      part.setDepth(2);
+    });
   }
 
   private drawRoadPath(): void {

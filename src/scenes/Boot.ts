@@ -103,6 +103,14 @@ export class Boot extends Phaser.Scene {
     this.load.audio('sfx_level_win', 'assets/sound/level_win.wav');
     this.load.audio('sfx_level_loose', 'assets/sound/level_loose.wav');
 
+    // --- Load Kyiv map backgrounds ---
+    this.load.image('kyiv_sky', 'assets/bg/kyiv_sky.png');
+    this.load.image('kyiv_far_top', 'assets/bg/kyiv_far_top.png');
+    this.load.image('kyiv_far_mid', 'assets/bg/kyiv_far_mid.png');
+    this.load.image('kyiv_far_bottom', 'assets/bg/kyiv_far_bottom.png');
+    this.load.image('kyiv_mid', 'assets/bg/kyiv_mid.png');
+    this.load.image('kyiv_mid_0', 'assets/bg/kyiv_mid_0.png');
+
     // Load level JSON data
     this.load.json('level_001', 'data/levels/level_001.json');
     this.load.json('level_002', 'data/levels/level_002.json');
@@ -134,70 +142,12 @@ export class Boot extends Phaser.Scene {
   }
 
   create(): void {
-    console.log('[Boot] Assets loaded, generating Kyiv map textures...');
-
-    // Generate Kyiv map background textures programmatically
-    this.generateKyivTextures();
+    console.log('[Boot] Assets loaded');
 
     // Fade transition to Menu scene
     this.cameras.main.fadeOut(200, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.start('Menu');
     });
-  }
-
-  private generateKyivTextures(): void {
-    // Sky texture (1024x768 - viewport size, will be static)
-    const skyGfx = this.add.graphics();
-    skyGfx.fillGradientStyle(0x87CEEB, 0x87CEEB, 0xF0F8FF, 0xF0F8FF, 1);
-    skyGfx.fillRect(0, 0, 1024, 768);
-    skyGfx.generateTexture('kyiv_sky', 1024, 768);
-    skyGfx.destroy();
-
-    // Far background texture (1024x2200 - full map height, distant landmarks)
-    const farGfx = this.add.graphics();
-    // Draw faint silhouettes of distant buildings and Kyiv skyline
-    farGfx.fillStyle(0xCCCCCC, 0.3);
-
-    // Draw several building shapes spaced vertically
-    farGfx.fillRect(200, 300, 80, 150);     // Building 1
-    farGfx.fillRect(350, 450, 60, 120);     // Building 2
-    farGfx.fillRect(600, 600, 100, 180);    // Building 3
-    farGfx.fillRect(150, 900, 70, 140);     // Building 4
-    farGfx.fillRect(700, 1100, 90, 160);    // Building 5
-    farGfx.fillRect(400, 1400, 80, 150);    // Building 6
-    farGfx.fillRect(250, 1700, 100, 200);   // Building 7
-    farGfx.fillRect(650, 1900, 85, 140);    // Building 8
-
-    // Draw a dome shape for Pechersk Lavra near top
-    farGfx.fillCircle(512, 200, 60);        // Lavra dome
-    farGfx.fillRect(492, 260, 40, 80);      // Dome base
-
-    farGfx.generateTexture('kyiv_far', 1024, 2200);
-    farGfx.destroy();
-
-    // Mid-ground texture (1024x2200 - closer buildings)
-    const midGfx = this.add.graphics();
-    midGfx.fillStyle(0xAAAAAA, 0.2);
-
-    // Draw closer building shapes with some arches
-    midGfx.fillRect(100, 400, 120, 200);    // Building 1
-    midGfx.fillRect(500, 700, 140, 220);    // Building 2
-    midGfx.fillRect(750, 1000, 100, 180);   // Building 3
-    midGfx.fillRect(300, 1300, 130, 210);   // Building 4
-    midGfx.fillRect(600, 1600, 110, 190);   // Building 5
-    midGfx.fillRect(200, 1900, 140, 200);   // Building 6
-
-    // Add some arch shapes (Golden Gate style)
-    midGfx.fillStyle(0xAAAAAA, 0.15);
-    midGfx.fillCircle(400, 1250, 40);       // Arch 1
-    midGfx.fillRect(380, 1250, 40, 60);
-    midGfx.fillCircle(650, 860, 35);        // Arch 2
-    midGfx.fillRect(633, 860, 34, 50);
-
-    midGfx.generateTexture('kyiv_mid', 1024, 2200);
-    midGfx.destroy();
-
-    console.log('[Boot] Kyiv map textures generated');
   }
 }
