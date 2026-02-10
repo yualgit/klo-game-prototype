@@ -3,6 +3,7 @@ import { initFirebase } from './firebase';
 import { Boot, Menu, LevelSelect, Game } from './scenes';
 import { ProgressManager } from './game/ProgressManager';
 import { EconomyManager } from './game/EconomyManager';
+import { SettingsManager } from './game/SettingsManager';
 
 // Phaser game configuration
 const config: Phaser.Types.Core.GameConfig = {
@@ -72,12 +73,19 @@ async function main() {
 
     console.log('[Main] EconomyManager initialized');
 
+    // Load and create SettingsManager singleton
+    const settingsData = SettingsManager.load();
+    const settingsManager = new SettingsManager(settingsData);
+
+    console.log('[Main] SettingsManager initialized');
+
     // Start Phaser
     const game = new Phaser.Game(config);
 
-    // Store ProgressManager in registry for scene access
+    // Store managers in registry for scene access
     game.registry.set('progress', progressManager);
     game.registry.set('economy', economyManager);
+    game.registry.set('settings', settingsManager);
 
     // Expose game to window for debugging
     (window as unknown as { game: Phaser.Game }).game = game;
