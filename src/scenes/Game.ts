@@ -1056,17 +1056,24 @@ export class Game extends Phaser.Scene {
       const worldY = this.gridOffsetY + this.gridHeight * TILE_SIZE / 2;
       this.vfxManager.cascadeCombo(worldX, worldY, depth);
 
-      // Track matched tiles for goals BEFORE removeMatches mutates types to 'empty'
-      this.levelManager.onTilesMatched(matchResult.tilesToRemove);
-
-      // Animate tile removal
-      await this.animateMatchRemoval([{ tiles: matchResult.tilesToRemove, type: 'fuel', direction: 'horizontal' }]);
-      if (!this.sceneActive) break;
-
-      // Check for boosters in removed tiles and activate them
+      // Separate tiles into free (removable) vs obstacle-protected (stay in place, obstacle damaged)
       const grid = this.engine.getGrid();
+      const freeTiles = matchResult.tilesToRemove.filter(t => {
+        const cell = grid[t.row][t.col];
+        return !(cell.obstacle && cell.obstacle.layers > 0 && cell.obstacle.type !== 'blocked');
+      });
+
+      // Track only free tiles for collection goals (obstacle-protected tiles stay on board)
+      this.levelManager.onTilesMatched(freeTiles);
+
+      // Animate only free tile removal (obstacle-protected tiles stay visible)
+      if (freeTiles.length > 0) {
+        await this.animateMatchRemoval([{ tiles: freeTiles, type: 'fuel', direction: 'horizontal' }]);
+        if (!this.sceneActive) break;
+      }
+      // Check for boosters only in free tiles (obstacle-protected tiles can't activate)
       const activatedTiles: TileData[] = [];
-      for (const tile of matchResult.tilesToRemove) {
+      for (const tile of freeTiles) {
         const tileData = grid[tile.row][tile.col];
         if (tileData.booster) {
           console.log('[Game] Activating booster at', tile.row, tile.col, ':', tileData.booster);

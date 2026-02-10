@@ -411,8 +411,13 @@ export class Match3Engine {
   removeMatches(matches: Match[]): void {
     matches.forEach((match) => {
       match.tiles.forEach((tile) => {
-        this.grid[tile.row][tile.col].isEmpty = true;
-        this.grid[tile.row][tile.col].type = 'empty';
+        const cell = this.grid[tile.row][tile.col];
+        // Tiles protected by obstacles stay in place — obstacle is damaged via damageObstacles()
+        if (cell.obstacle && cell.obstacle.layers > 0 && cell.obstacle.type !== 'blocked') {
+          return;
+        }
+        cell.isEmpty = true;
+        cell.type = 'empty';
       });
     });
   }
@@ -758,7 +763,7 @@ export class Match3Engine {
     }
 
     // Process remaining matches (non-L/T)
-    matches.forEach((match, idx) => {
+    matches.forEach((match) => {
       const matchIdx =
         match.direction === 'horizontal'
           ? horizontalMatches.indexOf(match)

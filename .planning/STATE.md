@@ -2,7 +2,7 @@
 
 **Milestone:** v1.1 Kyiv Journey
 **Last Updated:** 2026-02-10
-**State:** Phase 7 complete, Phase 8 pending
+**State:** Phase 8 complete, Phase 9 pending
 
 ## Project Reference
 
@@ -14,14 +14,14 @@ Transform v1.0 MVP (5 levels, basic mechanics) into deeper experience with lives
 
 ## Current Position
 
-**Phase:** 8 - Advanced Level Mechanics (complete)
-**Plan:** 08-02 complete
-**Status:** Phase 8 complete ✓ (all 2 plans executed)
-**Progress:** [██████████] 100%
+**Phase:** 9 - Kyiv Map Experience (next)
+**Plan:** None (awaiting `/gsd:plan-phase 9`)
+**Status:** Phase 8 verified ✓, Phase 9 pending
+**Progress:** 3/5 phases complete
 
 ```
-[████████████████░░░░░░░░░░░░░░░░░░░░░░░░] 40%
-Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics (Pending)
+[████████████████████████░░░░░░░░░░░░░░░░] 60%
+Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Phase 9: Kyiv Map (Pending)
 ```
 
 ## Performance Metrics
@@ -46,7 +46,7 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics (Pending
 | 07-02 | 1min | 1 | 1 | 2026-02-10 |
 | 07-01 | 2min | 2 | 4 | 2026-02-10 |
 | 06-02 | 2min | 2 | 2 | 2026-02-10 |
-| Phase 08 P02 | 4 | 2 tasks | 8 files |
+| 06-01 | 8min | 2 | 3 | 2026-02-10 |
 
 ## Accumulated Context
 
@@ -79,13 +79,14 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics (Pending
 | tileSprites array (TileSprite \| null)[][] | Null entries for inactive cells prevent rendering/interaction | 08-02 | Clean inactive cell handling |
 | Inactive cells masked with scene background | Creates clean visual holes in variable boards (0xFFFBF0 fill) | 08-02 | Diamond/hourglass shapes visible |
 | Coupon trigger moved to level 10 | Final challenge reward for completing all levels (was level 5) | 08-02 | Better progression feel |
+| Obstacle-protected tiles skip removeMatches | Tiles under ice/grass stay in place — obstacle layer decreases via damageObstacles | 08 | Fix: ice properly reduces per hit |
 
 ### Open TODOs
 
 **Phase Planning:**
 - [x] Create Phase 6 plan (Economy System) — DONE, executed & verified 2026-02-10
 - [x] Create Phase 7 plan (Settings) — DONE, executed & verified 2026-02-10
-- [ ] Create Phase 8 plan (Advanced Level Mechanics) via `/gsd:plan-phase 8`
+- [x] Create Phase 8 plan (Advanced Level Mechanics) — DONE, executed & verified 2026-02-10
 - [ ] Create Phase 9 plan (Kyiv Map Experience) via `/gsd:plan-phase 9`
 - [ ] Create Phase 10 plan (Mobile Polish) via `/gsd:plan-phase 10`
 
@@ -116,20 +117,21 @@ None. All phases ready for planning.
 
 ## Session Continuity
 
-**Last Session:** 2026-02-10T13:29:58.974Z
-**Stopped At:** Completed 08-02-PLAN.md
+**Last Session:** 2026-02-10
+**Stopped At:** Phase 8 complete — verified and approved by user
 
-**Next Action:** Phase 8 complete. Proceed to Phase 9 (Kyiv Map Experience) or Phase 10 (Mobile Polish)
+**Next Action:** Run `/gsd:plan-phase 9` to begin Phase 9: Kyiv Map Experience planning
 
 **Context for Next Session:**
 - Phase 08 complete ✓: Variable board shapes, 3-layer obstacles, pre-placed tiles, L6-L10 levels
+- Bugfix applied: obstacle-protected tiles now stay in place during matches — ice/grass reduces by 1 layer instead of tile disappearing (removeMatches skips obstacle tiles, damageObstacles handles layer reduction)
 - Game scene fully dynamic: gridWidth/gridHeight from level data, cell_map integration, pre-placed tile spawning
 - TileSprites array changed to (TileSprite | null)[][] with null guards in all rendering methods
-- 5 new levels created: L6 (diamond), L7 (hourglass), L8 (cross + pre-placed boosters), L9 (wide-center + mixed obstacles), L10 (L-shape + all mechanics)
+- 5 new levels: L6 (diamond), L7 (hourglass), L8 (cross + pre-placed boosters), L9 (wide-center + mixed obstacles), L10 (L-shape + all mechanics)
 - Boot loads all 10 levels, LevelSelect displays 10 checkpoints with Ukrainian names
 - MAX_LEVELS = 10, coupon trigger moved to level 10
-- Phase 8 deliverables: 2 plans, 4 tasks, 14 files, 4 commits
-- Next: Phase 9 (Kyiv Map Experience) — landmark backgrounds, map progression visuals, cultural integration
+- Phase 8 deliverables: 2 plans, 4 tasks, 14 files, 7 commits
+- Next: Phase 9 (Kyiv Map Experience) — scrollable map, Kyiv landmarks, winding path level nodes
 
 **Files to Reference:**
 - `.planning/ROADMAP.md` — Phase structure, success criteria, dependencies
@@ -141,4 +143,4 @@ None. All phases ready for planning.
 ---
 
 *State initialized: 2026-02-05*
-*Last checkpoint: 2026-02-10 — Phase 7 complete, Phase 8 pending*
+*Last checkpoint: 2026-02-10 — Phase 8 complete, Phase 9 pending*

@@ -104,8 +104,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Types/schema extension + dirt-to-grass rename + Match3Engine cell_map algorithms
-- [ ] 08-02-PLAN.md — Game scene integration + L6-L10 level JSONs + Boot/LevelSelect expansion
+- [x] 08-01-PLAN.md — Types/schema extension + dirt-to-grass rename + Match3Engine cell_map algorithms
+- [x] 08-02-PLAN.md — Game scene integration + L6-L10 level JSONs + Boot/LevelSelect expansion
 
 **Research Flags:** None (cellMap pattern researched, implementation clear)
 
@@ -159,11 +159,11 @@ Plans:
 |-------|--------|--------------|-------|------------|
 | 6 - Economy System | ✅ Complete (2026-02-10) | 7 (ECON-01..07) | 2/2 | 100% |
 | 7 - Settings | ✅ Complete (2026-02-10) | 4 (SETT-01..04) | 2/2 | 100% |
-| 8 - Advanced Level Mechanics | Planning | 7 (OBST-05..07, LVLD-01..04) | 0/2 | 0% |
+| 8 - Advanced Level Mechanics | ✅ Complete (2026-02-10) | 7 (OBST-05..07, LVLD-01..04) | 2/2 | 100% |
 | 9 - Kyiv Map Experience | Pending | 3 (VISL-01..03) | 0/? | 0% |
 | 10 - Mobile Polish | Pending | 2 (VISL-04..05) | 0/? | 0% |
 
-**Overall:** 40% complete (2/5 phases)
+**Overall:** 60% complete (3/5 phases)
 
 ### Coverage
 
