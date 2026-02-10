@@ -1338,7 +1338,6 @@ export class Game extends Phaser.Scene {
 
     // Recalculate grid offset with new layout (account for UIScene header)
     const gridPixelWidth = this.gridWidth * this.layout.tileSize;
-    const gridPixelHeight = this.gridHeight * this.layout.tileSize;
     this.gridOffsetX = (width - gridPixelWidth) / 2;
     this.gridOffsetY = cssToGame(50) + this.layout.hudHeight + cssToGame(10);
 
