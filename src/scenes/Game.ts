@@ -12,6 +12,7 @@ import { TILE_COLORS, GUI_TEXTURE_KEYS, TEXTURE_KEYS } from '../game/constants';
 import { LevelManager } from '../game/LevelManager';
 import { BoosterActivator } from '../game/BoosterActivator';
 import { ProgressManager } from '../game/ProgressManager';
+import { EconomyManager } from '../game/EconomyManager';
 import { AudioManager } from '../game/AudioManager';
 import { VFXManager } from '../game/VFXManager';
 
@@ -337,6 +338,17 @@ export class Game extends Phaser.Scene {
       });
     }
 
+    // Lives display (informational - no life lost on win)
+    const economyMgr = this.registry.get('economy') as EconomyManager;
+    const currentLives = economyMgr.getLives();
+    const livesDisplay = this.add.text(panelW / 2, starY + 50, `❤ ${currentLives}/5`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '18px',
+      color: '#FFB800',
+    });
+    livesDisplay.setOrigin(0.5);
+    panelContainer.add(livesDisplay);
+
     let nextButtonY = 200;
 
     // Coupon display for level 5
@@ -398,6 +410,10 @@ export class Game extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
+    // Lose life
+    const economy = this.registry.get('economy') as EconomyManager;
+    economy.loseLife();
+
     // Brief camera shake before overlay
     this.cameras.main.shake(150, 0.003);
 
@@ -418,7 +434,7 @@ export class Game extends Phaser.Scene {
 
     // Panel background
     const panelW = 400;
-    const panelH = 280;
+    const panelH = 380;
     const panelX = (width - panelW) / 2;
     const panelY = (height - panelH) / 2;
 
@@ -456,17 +472,62 @@ export class Game extends Phaser.Scene {
     subtitle.setOrigin(0.5);
     panelContainer.add(subtitle);
 
-    // "Повторити" button → restart same level
-    const retryBtn = this.createOverlayButton(panelW / 2, 150, 'Повторити', () => {
+    // Lives remaining display
+    const livesRemaining = economy.getLives();
+    const livesInfo = this.add.text(panelW / 2, 130, `Залишилось життів: ${livesRemaining}/5`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '18px',
+      color: '#FFB800',
+      fontStyle: 'bold',
+    });
+    livesInfo.setOrigin(0.5);
+    panelContainer.add(livesInfo);
+
+    // "Повторити" button → restart same level (with lives check)
+    const retryBtn = this.createOverlayButton(panelW / 2, 180, 'Повторити', () => {
+      const eco = this.registry.get('economy') as EconomyManager;
+      if (!eco.canStartLevel()) {
+        // Show inline refill option instead of restarting
+        this.showRefillOrReturn(panelContainer, panelW);
+        return;
+      }
       this.scene.start('Game', { levelId: this.currentLevel });
     });
     panelContainer.add(retryBtn);
 
     // "Меню" button → LevelSelect
-    const menuBtn = this.createOverlayButton(panelW / 2, 210, 'Меню', () => {
+    const menuBtn = this.createOverlayButton(panelW / 2, 240, 'Меню', () => {
       this.scene.start('LevelSelect');
     }, true);
     panelContainer.add(menuBtn);
+  }
+
+  /**
+   * Show refill option when player tries to retry without lives
+   */
+  private showRefillOrReturn(panelContainer: Phaser.GameObjects.Container, panelW: number): void {
+    const economy = this.registry.get('economy') as EconomyManager;
+    const canRefill = economy.getBonuses() >= 15;
+
+    // Add refill message
+    const msg = this.add.text(panelW / 2, 290, canRefill ? 'Поповнити життя?' : 'Недостатньо бонусів', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '18px',
+      color: canRefill ? '#1A1A1A' : '#999999',
+      fontStyle: 'bold',
+    });
+    msg.setOrigin(0.5);
+    panelContainer.add(msg);
+
+    if (canRefill) {
+      const refillBtn = this.createOverlayButton(panelW / 2, 330, 'Поповнити (15)', async () => {
+        const success = await economy.spendBonusesForRefill();
+        if (success) {
+          this.scene.start('Game', { levelId: this.currentLevel });
+        }
+      });
+      panelContainer.add(refillBtn);
+    }
   }
 
   /**
