@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 12 of 16 (Responsive Layout Foundation)
-Plan: Ready to plan
-Status: Not started
-Last activity: 2026-02-10 — Phase 11 complete (Art & Asset Quality Upgrade, 2/2 plans, verified)
+Plan: Needs re-planning
+Status: Scale.FIT approach reverted — needs responsive approach
+Last activity: 2026-02-10 — Scale.FIT attempt reverted (made UI unreadable on mobile, wrong scaling strategy)
 
 Progress: [███████████████░░░░░░░░░░░░░] 46% (11 of 16 phases complete)
 
@@ -62,7 +62,12 @@ None yet — v1.2 milestone starting fresh.
 
 ### Blockers/Concerns
 
-None yet — foundation from v1.0 + v1.1 provides stable base for v1.2 features.
+**Phase 12 Scale.FIT FAILED — lessons learned:**
+- Scale.FIT with fixed 1024x1820 design resolution scales EVERYTHING down uniformly on mobile (1024→375 = 2.7x shrink)
+- HUD text at 14px design-space becomes ~5px on screen — unreadable
+- Game board becomes tiny instead of filling viewport width
+- Level select scroll broke click detection on level nodes
+- **Correct approach:** Keep Scale.RESIZE (device-native resolution), make layouts responsive with max-width capping, adapt element sizes to actual viewport dimensions
 
 **Known considerations for v1.2:**
 - Phase 11: Multi-atlas strategy needed for 1024px assets (memory management)
@@ -75,4 +80,4 @@ Last session: 2026-02-10
 Stopped at: Phase 11 complete, verified, assets deployed
 Resume file: None
 
-**Next action:** `/gsd:plan-phase 12` to plan responsive layout foundation
+**Next action:** `/gsd:plan-phase 12` to re-plan with responsive approach (Scale.RESIZE + adaptive layouts)

@@ -40,8 +40,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — Scale.FIT migration, safe-area CSS, scene layout adaptation
-- [ ] 12-02-PLAN.md — Layout polish for Game/LevelSelect + cross-viewport verification
+- [ ] TBD — needs re-planning (Scale.FIT approach reverted, need responsive approach)
 
 ### Phase 13: Persistent UI Navigation Shell
 **Goal**: Bottom navigation + global header visible across all non-game screens
