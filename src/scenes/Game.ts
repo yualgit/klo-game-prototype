@@ -8,7 +8,7 @@ import { Match3Engine } from '../game/Match3Engine';
 import { TileSprite } from '../game/TileSprite';
 import { TileData, SpawnRules, LevelGoal, LevelEvent, MatchResult, TileType } from '../game/types';
 import { TILE_SIZE } from '../utils/constants';
-import { TILE_COLORS } from '../game/constants';
+import { TILE_COLORS, GUI_TEXTURE_KEYS, TEXTURE_KEYS } from '../game/constants';
 import { LevelManager } from '../game/LevelManager';
 import { BoosterActivator } from '../game/BoosterActivator';
 import { ProgressManager } from '../game/ProgressManager';
@@ -67,6 +67,14 @@ export class Game extends Phaser.Scene {
 
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
+
+    // Fade in from black
+    this.cameras.main.fadeIn(300, 0, 0, 0);
+
+    // Scene background gradient (warm tones)
+    const bg = this.add.graphics();
+    bg.fillGradientStyle(0xFFFBF0, 0xFFFBF0, 0xFFF0D0, 0xFFF0D0, 1);
+    bg.fillRect(0, 0, width, height);
 
     // Reset scene state for restarts
     this.resetState();
@@ -150,10 +158,14 @@ export class Game extends Phaser.Scene {
   }
 
   private createHUD(width: number): void {
-    // HUD background
+    // HUD background with styled bar
     const hudBg = this.add.graphics();
-    hudBg.fillStyle(KLO_BLACK, 0.1);
-    hudBg.fillRect(0, 0, width, 60);
+    hudBg.fillStyle(0xFFB800, 0.15);
+    hudBg.fillRoundedRect(8, 8, width - 16, 52, 8);
+
+    // Add KLO branding stripe on left
+    hudBg.fillStyle(KLO_YELLOW, 1);
+    hudBg.fillRoundedRect(12, 12, 4, 44, 2);
 
     // Initial HUD text
     this.updateHUDText(width);
@@ -166,7 +178,7 @@ export class Game extends Phaser.Scene {
     const moves = this.levelManager.getMovesRemaining();
     const goals = this.levelManager.getGoals();
 
-    // Format goals for display
+    // Format goals for display with mini tile icons
     const goalText = goals
       .map((g) => {
         const item = g.item || g.obstacleType || g.boosterType || '';
@@ -174,12 +186,12 @@ export class Game extends Phaser.Scene {
       })
       .join(' | ');
 
-    const text = `Level ${this.currentLevel}  -  Moves: ${moves}  -  ${goalText}`;
+    const text = `Рівень ${this.currentLevel}  •  Ходи: ${moves}  •  ${goalText}`;
 
     if (!this.hudText) {
-      this.hudText = this.add.text(width / 2, 30, text, {
+      this.hudText = this.add.text(width / 2, 34, text, {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '18px',
+        fontSize: '16px',
         color: '#1A1A1A',
         fontStyle: 'bold',
       });
@@ -363,7 +375,7 @@ export class Game extends Phaser.Scene {
   }
 
   /**
-   * Create a styled button for overlays
+   * Create a styled button for overlays using GUI sprites
    */
   private createOverlayButton(
     x: number,
@@ -375,13 +387,9 @@ export class Game extends Phaser.Scene {
     const buttonWidth = 200;
     const buttonHeight = 50;
 
-    const bg = this.add.graphics();
-    bg.fillStyle(secondary ? KLO_WHITE : KLO_YELLOW, 1);
-    if (secondary) {
-      bg.lineStyle(2, KLO_BLACK, 1);
-      bg.strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 10);
-    }
-    bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 10);
+    // Use GUI sprite background
+    const bg = this.add.image(0, 0, secondary ? GUI_TEXTURE_KEYS.buttonYellow : GUI_TEXTURE_KEYS.buttonOrange);
+    bg.setDisplaySize(buttonWidth, buttonHeight);
 
     const text = this.add.text(0, 0, label, {
       fontFamily: 'Arial, sans-serif',
@@ -407,12 +415,9 @@ export class Game extends Phaser.Scene {
     const buttonWidth = 100;
     const buttonHeight = 40;
 
-    // Button background
-    const buttonBg = this.add.graphics();
-    buttonBg.fillStyle(KLO_WHITE, 1);
-    buttonBg.lineStyle(2, KLO_BLACK, 1);
-    buttonBg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 8);
-    buttonBg.strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 8);
+    // Button background using GUI sprite
+    const buttonBg = this.add.image(0, 0, GUI_TEXTURE_KEYS.buttonYellow);
+    buttonBg.setDisplaySize(buttonWidth, buttonHeight);
 
     // Button text
     const buttonText = this.add.text(0, 0, '< Menu', {
@@ -446,15 +451,25 @@ export class Game extends Phaser.Scene {
     const gridPixelWidth = GRID_WIDTH * TILE_SIZE;
     const gridPixelHeight = GRID_HEIGHT * TILE_SIZE;
 
-    // Draw grid background
-    const gridBg = this.add.graphics();
-    gridBg.fillStyle(KLO_BLACK, 0.05);
-    gridBg.fillRoundedRect(
-      this.gridOffsetX - 10,
-      this.gridOffsetY - 10,
-      gridPixelWidth + 20,
-      gridPixelHeight + 20,
-      12
+    // Board background with shadow and polished style
+    const shadow = this.add.graphics();
+    shadow.fillStyle(0x000000, 0.08);
+    shadow.fillRoundedRect(
+      this.gridOffsetX - 12,
+      this.gridOffsetY - 12,
+      gridPixelWidth + 24,
+      gridPixelHeight + 24,
+      16
+    );
+
+    const board = this.add.graphics();
+    board.fillStyle(0xFFFFFF, 0.6);
+    board.fillRoundedRect(
+      this.gridOffsetX - 8,
+      this.gridOffsetY - 8,
+      gridPixelWidth + 16,
+      gridPixelHeight + 16,
+      14
     );
   }
 
