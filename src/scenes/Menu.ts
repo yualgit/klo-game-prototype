@@ -13,6 +13,10 @@ const KLO_WHITE = 0xf9f9f9;
 
 export class Menu extends Phaser.Scene {
   private playButton: Phaser.GameObjects.Container;
+  private bg: Phaser.GameObjects.Graphics;
+  private title: Phaser.GameObjects.Text;
+  private subtitle: Phaser.GameObjects.Text;
+  private floatingTiles: { sprite: Phaser.GameObjects.Image; basePos: { xPct: number; yPct: number } }[] = [];
 
   constructor() {
     super({ key: 'Menu' });
@@ -25,32 +29,32 @@ export class Menu extends Phaser.Scene {
     const height = this.cameras.main.height;
 
     // Background: Soft gradient from light to warm
-    const bg = this.add.graphics();
-    bg.fillGradientStyle(0xF9F9F9, 0xF9F9F9, 0xFFF5E0, 0xFFF5E0, 1);
-    bg.fillRect(0, 0, width, height);
+    this.bg = this.add.graphics();
+    this.bg.fillGradientStyle(0xF9F9F9, 0xF9F9F9, 0xFFF5E0, 0xFFF5E0, 1);
+    this.bg.fillRect(0, 0, width, height);
 
     // Create floating tile decorations
     this.createFloatingTiles(width, height);
 
     // Title: "KLO Match-3" with bounce-in animation
-    const title = this.add.text(width / 2, -100, 'KLO Match-3', {
+    this.title = this.add.text(width / 2, -100, 'KLO Match-3', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '64px',
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
-    title.setOrigin(0.5);
+    this.title.setOrigin(0.5);
 
     // Animate title in from top
     this.tweens.add({
-      targets: title,
+      targets: this.title,
       y: height / 3,
       duration: 800,
       ease: 'Bounce.Out',
       onComplete: () => {
         // After title appears, add continuous glow/pulse
         this.tweens.add({
-          targets: title,
+          targets: this.title,
           scale: { from: 1, to: 1.02 },
           duration: 1500,
           yoyo: true,
@@ -61,17 +65,17 @@ export class Menu extends Phaser.Scene {
     });
 
     // Subtitle: "Demo"
-    const subtitle = this.add.text(width / 2, height / 3 + 60, 'Demo', {
+    this.subtitle = this.add.text(width / 2, height / 3 + 60, 'Demo', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '24px',
       color: '#666666',
     });
-    subtitle.setOrigin(0.5);
-    subtitle.setAlpha(0);
+    this.subtitle.setOrigin(0.5);
+    this.subtitle.setAlpha(0);
 
     // Fade in subtitle after title
     this.tweens.add({
-      targets: subtitle,
+      targets: this.subtitle,
       alpha: 1,
       delay: 600,
       duration: 400,
@@ -79,30 +83,44 @@ export class Menu extends Phaser.Scene {
 
     // Create Play button
     this.createPlayButton(width / 2, height / 2 + 50);
+
+    // Register resize listener
+    this.scale.on('resize', this.handleResize, this);
+
+    // Clean up listener on scene shutdown
+    this.events.once('shutdown', () => {
+      this.scale.off('resize', this.handleResize, this);
+    });
   }
 
   private createFloatingTiles(width: number, height: number): void {
     // Create 6 floating tile decorations around the edges
     const tileKeys = Object.values(TEXTURE_KEYS);
     const positions = [
-      { x: width * 0.15, y: height * 0.2 },
-      { x: width * 0.85, y: height * 0.25 },
-      { x: width * 0.1, y: height * 0.5 },
-      { x: width * 0.9, y: height * 0.55 },
-      { x: width * 0.2, y: height * 0.8 },
-      { x: width * 0.8, y: height * 0.75 },
+      { xPct: 0.15, yPct: 0.2 },
+      { xPct: 0.85, yPct: 0.25 },
+      { xPct: 0.1, yPct: 0.5 },
+      { xPct: 0.9, yPct: 0.55 },
+      { xPct: 0.2, yPct: 0.8 },
+      { xPct: 0.8, yPct: 0.75 },
     ];
 
     positions.forEach((pos, i) => {
       const tileKey = tileKeys[i % tileKeys.length];
-      const floater = this.add.image(pos.x, pos.y, tileKey);
+      const floater = this.add.image(width * pos.xPct, height * pos.yPct, tileKey);
       floater.setDisplaySize(48, 48);
       floater.setAlpha(0.3);
+
+      // Store with percentage position for resize
+      this.floatingTiles.push({
+        sprite: floater,
+        basePos: { xPct: pos.xPct, yPct: pos.yPct },
+      });
 
       // Each tile has a unique floating animation
       this.tweens.add({
         targets: floater,
-        y: pos.y + 15,
+        y: height * pos.yPct + 15,
         angle: { from: -5, to: 5 },
         duration: 2000 + Math.random() * 1000,
         yoyo: true,
@@ -188,5 +206,33 @@ export class Menu extends Phaser.Scene {
         this.scene.start('LevelSelect');
       });
     });
+  }
+
+  private handleResize(gameSize: Phaser.Structs.Size): void {
+    const { width, height } = gameSize;
+
+    // Update camera viewport (CRITICAL for input hit testing)
+    this.cameras.main.setViewport(0, 0, width, height);
+
+    // Redraw background gradient to new size
+    if (this.bg) {
+      this.bg.clear();
+      this.bg.fillGradientStyle(0xF9F9F9, 0xF9F9F9, 0xFFF5E0, 0xFFF5E0, 1);
+      this.bg.fillRect(0, 0, width, height);
+    }
+
+    // Reposition title and subtitle
+    if (this.title) this.title.setPosition(width / 2, height / 3);
+    if (this.subtitle) this.subtitle.setPosition(width / 2, height / 3 + 60);
+
+    // Reposition play button
+    if (this.playButton) this.playButton.setPosition(width / 2, height / 2 + 50);
+
+    // Reposition floating tiles proportionally
+    if (this.floatingTiles) {
+      this.floatingTiles.forEach(ft => {
+        ft.sprite.setPosition(width * ft.basePos.xPct, height * ft.basePos.yPct);
+      });
+    }
   }
 }
