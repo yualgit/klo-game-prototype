@@ -5,6 +5,7 @@
 
 import Phaser from 'phaser';
 import { TEXTURE_KEYS, GUI_TEXTURE_KEYS } from '../game/constants';
+import { cssToGame } from '../utils/responsive';
 
 // Design constants from STYLE_GUIDE.md
 const KLO_YELLOW = 0xffb800;
@@ -39,7 +40,7 @@ export class Menu extends Phaser.Scene {
     // Title: "KLO Match-3" with bounce-in animation
     this.title = this.add.text(width / 2, -100, 'KLO Match-3', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '64px',
+      fontSize: `${cssToGame(48)}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
@@ -65,9 +66,9 @@ export class Menu extends Phaser.Scene {
     });
 
     // Subtitle: "Demo"
-    this.subtitle = this.add.text(width / 2, height / 3 + 60, 'Demo', {
+    this.subtitle = this.add.text(width / 2, height / 3 + cssToGame(45), 'Demo', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '24px',
+      fontSize: `${cssToGame(18)}px`,
       color: '#666666',
     });
     this.subtitle.setOrigin(0.5);
@@ -108,7 +109,8 @@ export class Menu extends Phaser.Scene {
     positions.forEach((pos, i) => {
       const tileKey = tileKeys[i % tileKeys.length];
       const floater = this.add.image(width * pos.xPct, height * pos.yPct, tileKey);
-      floater.setDisplaySize(48, 48);
+      const tileSize = cssToGame(36);
+      floater.setDisplaySize(tileSize, tileSize);
       floater.setAlpha(0.3);
 
       // Store with percentage position for resize
@@ -118,9 +120,10 @@ export class Menu extends Phaser.Scene {
       });
 
       // Each tile has a unique floating animation
+      const oscillation = cssToGame(10);
       this.tweens.add({
         targets: floater,
-        y: height * pos.yPct + 15,
+        y: height * pos.yPct + oscillation,
         angle: { from: -5, to: 5 },
         duration: 2000 + Math.random() * 1000,
         yoyo: true,
@@ -131,8 +134,8 @@ export class Menu extends Phaser.Scene {
   }
 
   private createPlayButton(x: number, y: number): void {
-    const buttonWidth = 200;
-    const buttonHeight = 60;
+    const buttonWidth = cssToGame(160);
+    const buttonHeight = cssToGame(50);
 
     // Button background using GUI sprite
     const buttonBg = this.add.image(0, 0, GUI_TEXTURE_KEYS.buttonOrange);
@@ -141,7 +144,7 @@ export class Menu extends Phaser.Scene {
     // Button text
     const buttonText = this.add.text(0, 0, 'PLAY', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '28px',
+      fontSize: `${cssToGame(22)}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
@@ -223,15 +226,17 @@ export class Menu extends Phaser.Scene {
 
     // Reposition title and subtitle
     if (this.title) this.title.setPosition(width / 2, height / 3);
-    if (this.subtitle) this.subtitle.setPosition(width / 2, height / 3 + 60);
+    if (this.subtitle) this.subtitle.setPosition(width / 2, height / 3 + cssToGame(45));
 
     // Reposition play button
     if (this.playButton) this.playButton.setPosition(width / 2, height / 2 + 50);
 
-    // Reposition floating tiles proportionally
+    // Reposition floating tiles proportionally and update their size
     if (this.floatingTiles) {
+      const tileSize = cssToGame(36);
       this.floatingTiles.forEach(ft => {
         ft.sprite.setPosition(width * ft.basePos.xPct, height * ft.basePos.yPct);
+        ft.sprite.setDisplaySize(tileSize, tileSize);
       });
     }
   }

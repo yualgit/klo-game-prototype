@@ -8,6 +8,7 @@ import { ProgressManager } from '../game/ProgressManager';
 import { EconomyManager } from '../game/EconomyManager';
 import { SettingsManager } from '../game/SettingsManager';
 import { GUI_TEXTURE_KEYS, MAP_CONFIG } from '../game/constants';
+import { getResponsiveLayout, cssToGame, getDpr } from '../utils/responsive';
 
 const KLO_YELLOW = 0xffb800;
 const KLO_BLACK = 0x1a1a1a;
@@ -42,6 +43,8 @@ export class LevelSelect extends Phaser.Scene {
   private settingsIcon: Phaser.GameObjects.Text;
   private heartIcon: Phaser.GameObjects.Text;
   private bonusIcon: Phaser.GameObjects.Text;
+  private hudBarHeight: number;
+  private layout: ReturnType<typeof getResponsiveLayout>;
 
   constructor() {
     super({ key: 'LevelSelect' });
@@ -52,6 +55,9 @@ export class LevelSelect extends Phaser.Scene {
     const height = this.cameras.main.height;
     const progress = this.registry.get('progress') as ProgressManager;
     const economy = this.registry.get('economy') as EconomyManager;
+
+    // Store layout for responsive sizing
+    this.layout = getResponsiveLayout(width, height);
 
     // Fade in from black
     this.cameras.main.fadeIn(300, 0, 0, 0);
@@ -80,16 +86,17 @@ export class LevelSelect extends Phaser.Scene {
     }
 
     // HUD background bar (fixed to camera)
+    this.hudBarHeight = Math.max(this.layout.hudHeight + cssToGame(20), cssToGame(100));
     this.hudBg = this.add.graphics();
     this.hudBg.fillStyle(0xFFFFFF, 0.8);
-    this.hudBg.fillRect(0, 0, width, 120);
+    this.hudBg.fillRect(0, 0, width, this.hudBarHeight);
     this.hudBg.setScrollFactor(0);
     this.hudBg.setDepth(10);
 
     // Title (fixed to camera)
-    this.titleText = this.add.text(width / 2, 60, 'Оберіть рівень', {
+    this.titleText = this.add.text(width / 2, this.hudBarHeight / 2, 'Оберіть рівень', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '40px',
+      fontSize: `${cssToGame(32)}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
       shadow: { offsetX: 2, offsetY: 2, color: '#00000020', blur: 4, fill: true },
@@ -261,21 +268,21 @@ export class LevelSelect extends Phaser.Scene {
   }
 
   private createEconomyHUD(width: number, economy: EconomyManager): void {
-    const containerX = width - 100;
-    const containerY = 60;
+    const containerX = width - cssToGame(80);
+    const containerY = this.hudBarHeight / 2;
 
     // Heart icon + lives count
-    this.heartIcon = this.add.text(containerX - 70, containerY - 20, '❤', {
+    this.heartIcon = this.add.text(containerX - cssToGame(70), containerY - cssToGame(20), '❤', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '24px',
+      fontSize: `${cssToGame(20)}px`,
     });
     this.heartIcon.setOrigin(0.5);
     this.heartIcon.setScrollFactor(0);
     this.heartIcon.setDepth(11);
 
-    this.livesText = this.add.text(containerX - 40, containerY - 20, '5/5', {
+    this.livesText = this.add.text(containerX - cssToGame(40), containerY - cssToGame(20), '5/5', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '24px',
+      fontSize: `${cssToGame(20)}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
@@ -284,9 +291,9 @@ export class LevelSelect extends Phaser.Scene {
     this.livesText.setDepth(11);
 
     // Countdown text (hidden when lives = 5)
-    this.countdownText = this.add.text(containerX - 70, containerY + 10, '', {
+    this.countdownText = this.add.text(containerX - cssToGame(70), containerY + cssToGame(10), '', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '16px',
+      fontSize: `${cssToGame(14)}px`,
       color: '#666666',
     });
     this.countdownText.setOrigin(0, 0.5);
@@ -294,17 +301,17 @@ export class LevelSelect extends Phaser.Scene {
     this.countdownText.setDepth(11);
 
     // Bonus icon + count
-    this.bonusIcon = this.add.text(containerX - 70, containerY + 40, '💎', {
+    this.bonusIcon = this.add.text(containerX - cssToGame(70), containerY + cssToGame(40), '💎', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '20px',
+      fontSize: `${cssToGame(16)}px`,
     });
     this.bonusIcon.setOrigin(0.5);
     this.bonusIcon.setScrollFactor(0);
     this.bonusIcon.setDepth(11);
 
-    this.bonusText = this.add.text(containerX - 40, containerY + 40, '500', {
+    this.bonusText = this.add.text(containerX - cssToGame(40), containerY + cssToGame(40), '500', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '20px',
+      fontSize: `${cssToGame(16)}px`,
       color: '#FFB800',
       fontStyle: 'bold',
     });
@@ -375,22 +382,22 @@ export class LevelSelect extends Phaser.Scene {
     overlayElements.push(backdrop);
 
     // White panel
-    const panelW = 300;
-    const panelH = 250;
+    const panelW = Math.min(cssToGame(300), width * 0.9);
+    const panelH = cssToGame(250);
     const panelX = (width - panelW) / 2;
     const panelY = (height - panelH) / 2;
 
     const panel = this.add.graphics();
     panel.fillStyle(KLO_WHITE, 1);
-    panel.fillRoundedRect(panelX, panelY, panelW, panelH, 16);
+    panel.fillRoundedRect(panelX, panelY, panelW, panelH, cssToGame(16));
     panel.setScrollFactor(0);
     panel.setDepth(101);
     overlayElements.push(panel);
 
     // Title
-    const title = this.add.text(width / 2, panelY + 50, 'Немає життів!', {
+    const title = this.add.text(width / 2, panelY + cssToGame(50), 'Немає життів!', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '32px',
+      fontSize: `${cssToGame(28)}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
@@ -405,11 +412,11 @@ export class LevelSelect extends Phaser.Scene {
     const secs = seconds % 60;
     const countdownMsg = this.add.text(
       width / 2,
-      panelY + 90,
+      panelY + cssToGame(90),
       `Наступне через: ${minutes}:${secs.toString().padStart(2, '0')}`,
       {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '16px',
+        fontSize: `${cssToGame(14)}px`,
         color: '#666666',
       }
     );
@@ -424,7 +431,7 @@ export class LevelSelect extends Phaser.Scene {
     if (canRefill) {
       const refillBtn = this.createOverlayButton(
         width / 2,
-        panelY + 140,
+        panelY + cssToGame(140),
         'Поповнити (15 бонусів)',
         async () => {
           const success = await economy.spendBonusesForRefill();
@@ -439,9 +446,9 @@ export class LevelSelect extends Phaser.Scene {
       );
       overlayElements.push(refillBtn);
     } else {
-      const noBonus = this.add.text(width / 2, panelY + 140, 'Недостатньо бонусів', {
+      const noBonus = this.add.text(width / 2, panelY + cssToGame(140), 'Недостатньо бонусів', {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '18px',
+        fontSize: `${cssToGame(16)}px`,
         color: '#999999',
         fontStyle: 'bold',
       });
@@ -454,7 +461,7 @@ export class LevelSelect extends Phaser.Scene {
     // Close button
     const closeBtn = this.createOverlayButton(
       width / 2,
-      panelY + 190,
+      panelY + cssToGame(190),
       'Закрити',
       () => {
         overlayElements.forEach(el => el.destroy());
@@ -472,15 +479,15 @@ export class LevelSelect extends Phaser.Scene {
     onClick: () => void,
     secondary: boolean = false
   ): Phaser.GameObjects.Container {
-    const buttonWidth = 200;
-    const buttonHeight = 50;
+    const buttonWidth = cssToGame(170);
+    const buttonHeight = cssToGame(44);
 
     const bg = this.add.image(0, 0, secondary ? GUI_TEXTURE_KEYS.buttonYellow : GUI_TEXTURE_KEYS.buttonOrange);
     bg.setDisplaySize(buttonWidth, buttonHeight);
 
     const text = this.add.text(0, 0, label, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '18px',
+      fontSize: `${cssToGame(16)}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
@@ -501,8 +508,8 @@ export class LevelSelect extends Phaser.Scene {
   }
 
   private createBackButton(): void {
-    const buttonWidth = 100;
-    const buttonHeight = 40;
+    const buttonWidth = cssToGame(80);
+    const buttonHeight = cssToGame(36);
 
     // Button background using GUI sprite
     const buttonBg = this.add.image(0, 0, GUI_TEXTURE_KEYS.buttonYellow);
@@ -510,12 +517,12 @@ export class LevelSelect extends Phaser.Scene {
 
     const buttonText = this.add.text(0, 0, '< Меню', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '18px',
+      fontSize: `${cssToGame(14)}px`,
       color: '#1A1A1A',
     });
     buttonText.setOrigin(0.5);
 
-    const container = this.add.container(70, 30, [buttonBg, buttonText]);
+    const container = this.add.container(cssToGame(55), cssToGame(24), [buttonBg, buttonText]);
     container.setSize(buttonWidth, buttonHeight);
     container.setInteractive({ useHandCursor: true });
     container.setScrollFactor(0);
@@ -557,7 +564,7 @@ export class LevelSelect extends Phaser.Scene {
     const name = LEVEL_NAMES[levelId] || `Рівень ${levelId}`;
     const landmark = MAP_CONFIG.LEVEL_NODES[levelId - 1].label;
 
-    const size = 70;
+    const size = cssToGame(55);
 
     // Button background - circular checkpoint using GUI sprite
     const bg = this.add.image(0, 0, unlocked ? GUI_TEXTURE_KEYS.buttonOrange : GUI_TEXTURE_KEYS.buttonYellow);
@@ -571,7 +578,7 @@ export class LevelSelect extends Phaser.Scene {
     // Level number
     const numText = this.add.text(0, 0, String(levelId), {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '32px',
+      fontSize: `${cssToGame(26)}px`,
       color: unlocked ? '#1A1A1A' : '#999999',
       fontStyle: 'bold',
     });
@@ -579,17 +586,17 @@ export class LevelSelect extends Phaser.Scene {
 
     // Stars display below button
     const starString = this.getStarString(stars);
-    const starText = this.add.text(0, size / 2 + 20, starString, {
+    const starText = this.add.text(0, size / 2 + cssToGame(20), starString, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '18px',
+      fontSize: `${cssToGame(14)}px`,
       color: '#FFB800',
     });
     starText.setOrigin(0.5);
 
     // Kyiv landmark label below stars
-    const landmarkText = this.add.text(0, size / 2 + 45, landmark, {
+    const landmarkText = this.add.text(0, size / 2 + cssToGame(45), landmark, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '14px',
+      fontSize: `${cssToGame(11)}px`,
       color: '#666666',
     });
     landmarkText.setOrigin(0.5);
@@ -598,8 +605,8 @@ export class LevelSelect extends Phaser.Scene {
 
     // Crown decoration for 3-star levels
     if (stars === 3) {
-      const crown = this.add.image(0, -size / 2 - 15, GUI_TEXTURE_KEYS.crown1);
-      crown.setDisplaySize(28, 28);
+      const crown = this.add.image(0, -size / 2 - cssToGame(15), GUI_TEXTURE_KEYS.crown1);
+      crown.setDisplaySize(cssToGame(22), cssToGame(22));
       children.push(crown);
     }
 
@@ -610,7 +617,7 @@ export class LevelSelect extends Phaser.Scene {
       lockOverlay.fillCircle(0, 0, size / 2);
 
       const lockIcon = this.add.image(0, 0, GUI_TEXTURE_KEYS.goldLock);
-      lockIcon.setDisplaySize(32, 32);
+      lockIcon.setDisplaySize(cssToGame(26), cssToGame(26));
 
       children.unshift(lockOverlay); // Add behind lock icon
       children.push(lockIcon);
@@ -632,7 +639,7 @@ export class LevelSelect extends Phaser.Scene {
 
   private createMapPointer(x: number, y: number): void {
     const pointer = this.add.image(x, y, GUI_TEXTURE_KEYS.mapPointer);
-    pointer.setDisplaySize(40, 40);
+    pointer.setDisplaySize(cssToGame(32), cssToGame(32));
     pointer.setDepth(6);
 
     // Gentle bobbing animation
@@ -666,9 +673,9 @@ export class LevelSelect extends Phaser.Scene {
 
   private createSettingsButton(width: number): void {
     // Position gear icon in top area, between back button and economy HUD
-    this.settingsIcon = this.add.text(width - 200, 30, '⚙', {
+    this.settingsIcon = this.add.text(width - cssToGame(160), cssToGame(24), '⚙', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '28px',
+      fontSize: `${cssToGame(24)}px`,
       color: '#1A1A1A',
     });
     this.settingsIcon.setOrigin(0.5);
@@ -728,24 +735,24 @@ export class LevelSelect extends Phaser.Scene {
     });
     overlayElements.push(backdrop);
 
-    // White panel (340 x 380, centered)
-    const panelW = 340;
-    const panelH = 380;
+    // White panel (responsive width, centered)
+    const panelW = Math.min(cssToGame(340), width * 0.9);
+    const panelH = cssToGame(380);
     const panelX = (width - panelW) / 2;
     const panelY = (height - panelH) / 2;
 
     const panel = this.add.graphics();
     panel.fillStyle(0xF9F9F9, 1);
-    panel.fillRoundedRect(panelX, panelY, panelW, panelH, 16);
+    panel.fillRoundedRect(panelX, panelY, panelW, panelH, cssToGame(16));
     panel.setInteractive(new Phaser.Geom.Rectangle(panelX, panelY, panelW, panelH), Phaser.Geom.Rectangle.Contains);
     panel.setScrollFactor(0);
     panel.setDepth(101);
     overlayElements.push(panel);
 
     // Title
-    const title = this.add.text(width / 2, panelY + 50, 'Налаштування', {
+    const title = this.add.text(width / 2, panelY + cssToGame(50), 'Налаштування', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '28px',
+      fontSize: `${cssToGame(24)}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
@@ -755,11 +762,11 @@ export class LevelSelect extends Phaser.Scene {
     overlayElements.push(title);
 
     // ---- SFX Toggle (y offset ~100 from panel top) ----
-    const sfxRowY = panelY + 100;
+    const sfxRowY = panelY + cssToGame(100);
 
-    const sfxLabel = this.add.text(panelX + 30, sfxRowY, 'Звукові ефекти', {
+    const sfxLabel = this.add.text(panelX + cssToGame(30), sfxRowY, 'Звукові ефекти', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '18px',
+      fontSize: `${cssToGame(16)}px`,
       color: '#1A1A1A',
     });
     sfxLabel.setOrigin(0, 0.5);
@@ -773,18 +780,20 @@ export class LevelSelect extends Phaser.Scene {
     const sfxToggleBg = this.add.graphics();
     sfxToggleBg.setScrollFactor(0);
     sfxToggleBg.setDepth(102);
-    const sfxToggleThumb = this.add.circle(0, 0, 12, 0xFFFFFF);
+    const sfxToggleThumb = this.add.circle(0, 0, cssToGame(12), 0xFFFFFF);
     sfxToggleThumb.setScrollFactor(0);
     sfxToggleThumb.setDepth(103);
-    const sfxToggleX = panelX + panelW - 80;
+    const sfxToggleX = panelX + panelW - cssToGame(80);
+    const toggleWidth = cssToGame(60);
+    const toggleHeight = cssToGame(30);
 
     const updateSfxToggle = () => {
       sfxToggleBg.clear();
       sfxToggleBg.fillStyle(sfxEnabled ? 0x4CAF50 : 0xCCCCCC, 1);
-      sfxToggleBg.fillRoundedRect(sfxToggleX, sfxRowY - 15, 60, 30, 15);
+      sfxToggleBg.fillRoundedRect(sfxToggleX, sfxRowY - toggleHeight/2, toggleWidth, toggleHeight, toggleHeight/2);
 
       // Position thumb: left when off, right when on
-      const thumbX = sfxEnabled ? sfxToggleX + 60 - 16 : sfxToggleX + 16;
+      const thumbX = sfxEnabled ? sfxToggleX + toggleWidth - cssToGame(16) : sfxToggleX + cssToGame(16);
       sfxToggleThumb.setPosition(thumbX, sfxRowY);
     };
 
@@ -792,7 +801,7 @@ export class LevelSelect extends Phaser.Scene {
     overlayElements.push(sfxToggleBg, sfxToggleThumb);
 
     // Make toggle interactive
-    const sfxToggleHitArea = this.add.rectangle(sfxToggleX + 30, sfxRowY, 60, 30);
+    const sfxToggleHitArea = this.add.rectangle(sfxToggleX + toggleWidth/2, sfxRowY, toggleWidth, toggleHeight);
     sfxToggleHitArea.setInteractive({ useHandCursor: true });
     sfxToggleHitArea.setAlpha(0.001);
     sfxToggleHitArea.setScrollFactor(0);
@@ -804,7 +813,7 @@ export class LevelSelect extends Phaser.Scene {
       settings.set('sfxEnabled', sfxEnabled);
 
       // Animate thumb position
-      const thumbX = sfxEnabled ? sfxToggleX + 60 - 16 : sfxToggleX + 16;
+      const thumbX = sfxEnabled ? sfxToggleX + toggleWidth - cssToGame(16) : sfxToggleX + cssToGame(16);
       this.tweens.add({
         targets: sfxToggleThumb,
         x: thumbX,
@@ -817,11 +826,11 @@ export class LevelSelect extends Phaser.Scene {
     });
 
     // ---- Volume Slider (y offset ~170 from panel top) ----
-    const volumeRowY = panelY + 170;
+    const volumeRowY = panelY + cssToGame(170);
 
-    const volumeLabel = this.add.text(panelX + 30, volumeRowY, 'Гучність', {
+    const volumeLabel = this.add.text(panelX + cssToGame(30), volumeRowY, 'Гучність', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '18px',
+      fontSize: `${cssToGame(16)}px`,
       color: '#1A1A1A',
     });
     volumeLabel.setOrigin(0, 0.5);
@@ -829,18 +838,19 @@ export class LevelSelect extends Phaser.Scene {
     volumeLabel.setDepth(102);
     overlayElements.push(volumeLabel);
 
-    const sliderTrackX = panelX + panelW - 160;
-    const sliderTrackW = 140;
+    const sliderTrackX = panelX + panelW - cssToGame(160);
+    const sliderTrackW = cssToGame(140);
+    const sliderTrackH = cssToGame(6);
 
     // Track background
-    const sliderTrack = this.add.rectangle(sliderTrackX, volumeRowY, sliderTrackW, 6, 0xDDDDDD);
+    const sliderTrack = this.add.rectangle(sliderTrackX, volumeRowY, sliderTrackW, sliderTrackH, 0xDDDDDD);
     sliderTrack.setOrigin(0, 0.5);
     sliderTrack.setScrollFactor(0);
     sliderTrack.setDepth(102);
     overlayElements.push(sliderTrack);
 
     // Fill (shows current volume)
-    const sliderFill = this.add.rectangle(sliderTrackX, volumeRowY, 0, 6, 0xFFB800);
+    const sliderFill = this.add.rectangle(sliderTrackX, volumeRowY, 0, sliderTrackH, 0xFFB800);
     sliderFill.setOrigin(0, 0.5);
     sliderFill.setScrollFactor(0);
     sliderFill.setDepth(102);
@@ -849,14 +859,14 @@ export class LevelSelect extends Phaser.Scene {
     // Thumb
     const volume = settings.get('sfxVolume');
     const thumbX = sliderTrackX + volume * sliderTrackW;
-    const sliderThumb = this.add.circle(thumbX, volumeRowY, 10, 0xFFFFFF);
-    sliderThumb.setStrokeStyle(2, 0xFFB800);
+    const sliderThumb = this.add.circle(thumbX, volumeRowY, cssToGame(10), 0xFFFFFF);
+    sliderThumb.setStrokeStyle(cssToGame(2), 0xFFB800);
     sliderThumb.setScrollFactor(0);
     sliderThumb.setDepth(103);
     overlayElements.push(sliderThumb);
 
     // Initial fill width
-    sliderFill.setDisplaySize(volume * sliderTrackW, 6);
+    sliderFill.setDisplaySize(volume * sliderTrackW, sliderTrackH);
 
     // Make thumb draggable
     sliderThumb.setInteractive({ useHandCursor: true, draggable: true });
@@ -869,7 +879,7 @@ export class LevelSelect extends Phaser.Scene {
 
       // Update fill width
       const fillWidth = clampedX - sliderTrackX;
-      sliderFill.setDisplaySize(fillWidth, 6);
+      sliderFill.setDisplaySize(fillWidth, sliderTrackH);
 
       // Calculate and set volume value
       const volumeValue = (clampedX - sliderTrackX) / sliderTrackW;
@@ -877,11 +887,11 @@ export class LevelSelect extends Phaser.Scene {
     });
 
     // ---- Animation Toggle (y offset ~240 from panel top) ----
-    const animRowY = panelY + 240;
+    const animRowY = panelY + cssToGame(240);
 
-    const animLabel = this.add.text(panelX + 30, animRowY, 'Анімації бустерів', {
+    const animLabel = this.add.text(panelX + cssToGame(30), animRowY, 'Анімації бустерів', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '18px',
+      fontSize: `${cssToGame(16)}px`,
       color: '#1A1A1A',
     });
     animLabel.setOrigin(0, 0.5);
@@ -895,18 +905,18 @@ export class LevelSelect extends Phaser.Scene {
     const animToggleBg = this.add.graphics();
     animToggleBg.setScrollFactor(0);
     animToggleBg.setDepth(102);
-    const animToggleThumb = this.add.circle(0, 0, 12, 0xFFFFFF);
+    const animToggleThumb = this.add.circle(0, 0, cssToGame(12), 0xFFFFFF);
     animToggleThumb.setScrollFactor(0);
     animToggleThumb.setDepth(103);
-    const animToggleX = panelX + panelW - 80;
+    const animToggleX = panelX + panelW - cssToGame(80);
 
     const updateAnimToggle = () => {
       animToggleBg.clear();
       animToggleBg.fillStyle(animEnabled ? 0x4CAF50 : 0xCCCCCC, 1);
-      animToggleBg.fillRoundedRect(animToggleX, animRowY - 15, 60, 30, 15);
+      animToggleBg.fillRoundedRect(animToggleX, animRowY - toggleHeight/2, toggleWidth, toggleHeight, toggleHeight/2);
 
       // Position thumb: left when off, right when on
-      const thumbX = animEnabled ? animToggleX + 60 - 16 : animToggleX + 16;
+      const thumbX = animEnabled ? animToggleX + toggleWidth - cssToGame(16) : animToggleX + cssToGame(16);
       animToggleThumb.setPosition(thumbX, animRowY);
     };
 
@@ -914,7 +924,7 @@ export class LevelSelect extends Phaser.Scene {
     overlayElements.push(animToggleBg, animToggleThumb);
 
     // Make toggle interactive
-    const animToggleHitArea = this.add.rectangle(animToggleX + 30, animRowY, 60, 30);
+    const animToggleHitArea = this.add.rectangle(animToggleX + toggleWidth/2, animRowY, toggleWidth, toggleHeight);
     animToggleHitArea.setInteractive({ useHandCursor: true });
     animToggleHitArea.setAlpha(0.001);
     animToggleHitArea.setScrollFactor(0);
@@ -926,7 +936,7 @@ export class LevelSelect extends Phaser.Scene {
       settings.set('animationsEnabled', animEnabled);
 
       // Animate thumb position
-      const thumbX = animEnabled ? animToggleX + 60 - 16 : animToggleX + 16;
+      const thumbX = animEnabled ? animToggleX + toggleWidth - cssToGame(16) : animToggleX + cssToGame(16);
       this.tweens.add({
         targets: animToggleThumb,
         x: thumbX,
@@ -941,7 +951,7 @@ export class LevelSelect extends Phaser.Scene {
     // ---- Close Button (y offset ~320 from panel top) ----
     const closeBtn = this.createOverlayButton(
       width / 2,
-      panelY + 320,
+      panelY + cssToGame(320),
       'Закрити',
       () => {
         overlayElements.forEach(el => el.destroy());
@@ -955,47 +965,60 @@ export class LevelSelect extends Phaser.Scene {
   private handleResize(gameSize: Phaser.Structs.Size): void {
     const { width, height } = gameSize;
 
+    // Recompute layout for new viewport
+    this.layout = getResponsiveLayout(width, height);
+    this.hudBarHeight = Math.max(this.layout.hudHeight + cssToGame(20), cssToGame(100));
+
     // Update camera viewport (CRITICAL for input)
     this.cameras.main.setViewport(0, 0, width, height);
 
     // Update camera bounds -- world size stays 1024xMAP_HEIGHT but camera viewport changes
     this.cameras.main.setBounds(0, 0, MAP_CONFIG.MAP_WIDTH, MAP_CONFIG.MAP_HEIGHT);
 
+    // Center camera horizontally on level node range (x=260..650)
+    const nodeRangeCenter = (260 + 650) / 2;
+    const scrollX = Phaser.Math.Clamp(
+      nodeRangeCenter - width / 2,
+      0,
+      MAP_CONFIG.MAP_WIDTH - width
+    );
+    this.cameras.main.setScroll(scrollX, this.cameras.main.scrollY);
+
     // Redraw HUD background to new width
     if (this.hudBg) {
       this.hudBg.clear();
       this.hudBg.fillStyle(0xFFFFFF, 0.8);
-      this.hudBg.fillRect(0, 0, width, 120);
+      this.hudBg.fillRect(0, 0, width, this.hudBarHeight);
     }
 
     // Reposition fixed HUD elements (scrollFactor=0, use viewport coords)
-    if (this.titleText) this.titleText.setPosition(width / 2, 60);
+    if (this.titleText) this.titleText.setPosition(width / 2, this.hudBarHeight / 2);
 
     // Settings gear repositions relative to width
-    if (this.settingsIcon) this.settingsIcon.setPosition(width - 200, 30);
+    if (this.settingsIcon) this.settingsIcon.setPosition(width - cssToGame(160), cssToGame(24));
 
     // Economy HUD repositions relative to width
     this.repositionEconomyHUD(width);
   }
 
   private repositionEconomyHUD(width: number): void {
-    const containerX = width - 100;
-    const containerY = 60;
+    const containerX = width - cssToGame(80);
+    const containerY = this.hudBarHeight / 2;
 
     // Heart icon
-    if (this.heartIcon) this.heartIcon.setPosition(containerX - 70, containerY - 20);
+    if (this.heartIcon) this.heartIcon.setPosition(containerX - cssToGame(70), containerY - cssToGame(20));
 
     // Lives text
-    if (this.livesText) this.livesText.setPosition(containerX - 40, containerY - 20);
+    if (this.livesText) this.livesText.setPosition(containerX - cssToGame(40), containerY - cssToGame(20));
 
     // Countdown text
-    if (this.countdownText) this.countdownText.setPosition(containerX - 70, containerY + 10);
+    if (this.countdownText) this.countdownText.setPosition(containerX - cssToGame(70), containerY + cssToGame(10));
 
     // Bonus icon
-    if (this.bonusIcon) this.bonusIcon.setPosition(containerX - 70, containerY + 40);
+    if (this.bonusIcon) this.bonusIcon.setPosition(containerX - cssToGame(70), containerY + cssToGame(40));
 
     // Bonus text
-    if (this.bonusText) this.bonusText.setPosition(containerX - 40, containerY + 40);
+    if (this.bonusText) this.bonusText.setPosition(containerX - cssToGame(40), containerY + cssToGame(40));
   }
 
   shutdown(): void {
