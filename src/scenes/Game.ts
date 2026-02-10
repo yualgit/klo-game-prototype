@@ -8,7 +8,7 @@ import { Match3Engine } from '../game/Match3Engine';
 import { TileSprite } from '../game/TileSprite';
 import { TileData, SpawnRules, LevelGoal, LevelEvent, MatchResult, TileType } from '../game/types';
 import { TILE_SIZE } from '../utils/constants';
-import { TILE_COLORS, GUI_TEXTURE_KEYS, TEXTURE_KEYS } from '../game/constants';
+import { TILE_COLORS, GUI_TEXTURE_KEYS, TEXTURE_KEYS, BLOCK_TEXTURE_KEY } from '../game/constants';
 import { LevelManager } from '../game/LevelManager';
 import { BoosterActivator } from '../game/BoosterActivator';
 import { ProgressManager } from '../game/ProgressManager';
@@ -32,6 +32,7 @@ export class Game extends Phaser.Scene {
   private gridBoardGraphics: Phaser.GameObjects.Graphics;
   private gridShadowGraphics: Phaser.GameObjects.Graphics;
   private gridMaskGraphics: Phaser.GameObjects.Graphics;
+  private blockSprites: Phaser.GameObjects.Image[] = [];
 
   // Game engine and state
   private engine: Match3Engine;
@@ -194,6 +195,7 @@ export class Game extends Phaser.Scene {
   private resetState(): void {
     // Reset any scene state here for proper restart handling
     this.tileSprites = [];
+    this.blockSprites = [];
     this.isProcessing = false;
     this.selectedTile = null;
     // Clear references to destroyed game objects from previous scene run
@@ -660,18 +662,32 @@ export class Game extends Phaser.Scene {
       14
     );
 
-    // Mask out inactive cells with scene background color
+    // Inactive cell rendering: block sprites or transparent mask
+    const inactiveStyle = this.levelData.grid.inactive_cell_style || 'transparent';
+
     this.gridMaskGraphics = this.add.graphics();
-    this.gridMaskGraphics.fillStyle(0xFFFBF0, 1); // Scene background color
+
     for (let row = 0; row < this.gridHeight; row++) {
       for (let col = 0; col < this.gridWidth; col++) {
         if (!this.engine.isCellActive(row, col)) {
-          this.gridMaskGraphics.fillRect(
-            this.gridOffsetX + col * TILE_SIZE,
-            this.gridOffsetY + row * TILE_SIZE,
-            TILE_SIZE,
-            TILE_SIZE
-          );
+          if (inactiveStyle === 'block') {
+            // Place block sprite
+            const x = this.gridOffsetX + col * TILE_SIZE + TILE_SIZE / 2;
+            const y = this.gridOffsetY + row * TILE_SIZE + TILE_SIZE / 2;
+            const blockSprite = this.add.image(x, y, BLOCK_TEXTURE_KEY);
+            blockSprite.setDisplaySize(TILE_SIZE, TILE_SIZE);
+            blockSprite.setDepth(0); // Same depth as board, under tiles
+            this.blockSprites.push(blockSprite);
+          } else {
+            // Transparent: mask with bg color
+            this.gridMaskGraphics.fillStyle(0xFFFBF0, 1);
+            this.gridMaskGraphics.fillRect(
+              this.gridOffsetX + col * TILE_SIZE,
+              this.gridOffsetY + row * TILE_SIZE,
+              TILE_SIZE,
+              TILE_SIZE
+            );
+          }
         }
       }
     }
@@ -700,14 +716,14 @@ export class Game extends Phaser.Scene {
         const tileData = grid[row][col];
 
         // Engine should never generate empty tiles, but safeguard
-        const tileType = tileData.type === 'empty' ? 'fuel' : tileData.type;
+        const tileType = (tileData.type === 'empty' ? 'burger' : tileData.type) as 'burger' | 'hotdog' | 'oil' | 'water' | 'snack' | 'soda';
 
         // Create TileSprite
         const tile = new TileSprite(
           this,
           row,
           col,
-          tileType as 'fuel' | 'coffee' | 'snack' | 'road',
+          tileType,
           this.gridOffsetX,
           this.gridOffsetY
         );
@@ -1077,7 +1093,7 @@ export class Game extends Phaser.Scene {
 
       // Animate only free tile removal (obstacle-protected tiles stay visible)
       if (freeTiles.length > 0) {
-        await this.animateMatchRemoval([{ tiles: freeTiles, type: 'fuel', direction: 'horizontal' }]);
+        await this.animateMatchRemoval([{ tiles: freeTiles, type: 'burger', direction: 'horizontal' }]);
         if (!this.sceneActive) break;
       }
       // Check for boosters only in free tiles (obstacle-protected tiles can't activate)
@@ -1113,7 +1129,7 @@ export class Game extends Phaser.Scene {
       }
 
       // Damage obstacles from matches BEFORE removeMatches
-      const matches = [{ tiles: matchResult.tilesToRemove, type: 'fuel' as TileType, direction: 'horizontal' as const }];
+      const matches = [{ tiles: matchResult.tilesToRemove, type: 'burger' as TileType, direction: 'horizontal' as const }];
       const damagedObstacles = this.engine.damageObstacles(matches);
       if (damagedObstacles.length > 0) {
         console.log('[Game] Damaged', damagedObstacles.length, 'obstacles');
@@ -1135,7 +1151,8 @@ export class Game extends Phaser.Scene {
         // Update visual
         const sprite = this.tileSprites[boosterSpawn.row]?.[boosterSpawn.col];
         if (sprite) {
-          sprite.setType(boosterSpawn.baseType as 'fuel' | 'coffee' | 'snack' | 'road');
+          const baseType = (boosterSpawn.baseType === 'empty' ? 'burger' : boosterSpawn.baseType) as 'burger' | 'hotdog' | 'oil' | 'water' | 'snack' | 'soda';
+          sprite.setType(baseType);
           sprite.setBooster(boosterSpawn.boosterType);
           sprite.setScale(1);
           sprite.setAlpha(1);
@@ -1147,9 +1164,9 @@ export class Game extends Phaser.Scene {
       // Remove booster-activated tiles if any
       if (activatedTiles.length > 0) {
         this.levelManager.onTilesMatched(activatedTiles);
-        await this.animateMatchRemoval([{ tiles: activatedTiles, type: 'fuel', direction: 'horizontal' }]);
+        await this.animateMatchRemoval([{ tiles: activatedTiles, type: 'burger', direction: 'horizontal' }]);
         if (!this.sceneActive) break;
-        this.engine.removeMatches([{ tiles: activatedTiles, type: 'fuel', direction: 'horizontal' }]);
+        this.engine.removeMatches([{ tiles: activatedTiles, type: 'burger', direction: 'horizontal' }]);
       }
 
       // Apply gravity and get movements
@@ -1255,8 +1272,8 @@ export class Game extends Phaser.Scene {
       if (!sprite) return;
 
       // Set type and position above screen (safeguard against empty type)
-      const tileType = spawn.type === 'empty' ? 'fuel' : spawn.type;
-      sprite.setType(tileType as 'fuel' | 'coffee' | 'snack' | 'road');
+      const tileType = (spawn.type === 'empty' ? 'burger' : spawn.type) as 'burger' | 'hotdog' | 'oil' | 'water' | 'snack' | 'soda';
+      sprite.setType(tileType);
       sprite.x = this.gridOffsetX + spawn.col * TILE_SIZE + TILE_SIZE / 2;
       sprite.y = this.gridOffsetY - (index + 1) * TILE_SIZE;
       sprite.setScale(1);
@@ -1349,8 +1366,29 @@ export class Game extends Phaser.Scene {
       );
     }
 
-    // Redraw mask for inactive cells
-    if (this.gridMaskGraphics) {
+    // Reposition block sprites or redraw mask for inactive cells
+    const inactiveStyle = this.levelData.grid.inactive_cell_style || 'transparent';
+
+    if (inactiveStyle === 'block') {
+      // Reposition block sprites on resize
+      let blockIdx = 0;
+      for (let row = 0; row < this.gridHeight; row++) {
+        for (let col = 0; col < this.gridWidth; col++) {
+          if (!this.engine.isCellActive(row, col)) {
+            if (blockIdx < this.blockSprites.length) {
+              this.blockSprites[blockIdx].setPosition(
+                this.gridOffsetX + col * TILE_SIZE + TILE_SIZE / 2,
+                this.gridOffsetY + row * TILE_SIZE + TILE_SIZE / 2
+              );
+              blockIdx++;
+            }
+          }
+        }
+      }
+    }
+
+    // Redraw mask for transparent mode
+    if (this.gridMaskGraphics && inactiveStyle === 'transparent') {
       this.gridMaskGraphics.clear();
       this.gridMaskGraphics.fillStyle(0xFFFBF0, 1);
       for (let row = 0; row < this.gridHeight; row++) {
@@ -1394,9 +1432,9 @@ export class Game extends Phaser.Scene {
         const tileData = grid[row][col];
 
         // Engine should never have empty tiles after spawn, but safeguard
-        const tileType = tileData.type === 'empty' ? 'fuel' : tileData.type;
+        const tileType = (tileData.type === 'empty' ? 'burger' : tileData.type) as 'burger' | 'hotdog' | 'oil' | 'water' | 'snack' | 'soda';
 
-        sprite.setType(tileType as 'fuel' | 'coffee' | 'snack' | 'road');
+        sprite.setType(tileType);
         sprite.setBooster(tileData.booster);
         sprite.setObstacle(tileData.obstacle);
         sprite.row = row;
