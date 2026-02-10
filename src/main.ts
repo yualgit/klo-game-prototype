@@ -4,7 +4,6 @@ import { Boot, Menu, LevelSelect, Game } from './scenes';
 import { ProgressManager } from './game/ProgressManager';
 import { EconomyManager } from './game/EconomyManager';
 import { SettingsManager } from './game/SettingsManager';
-import { DESIGN_WIDTH, DESIGN_HEIGHT } from './utils/constants';
 
 // Compute DPR capped at 2x for crisp retina rendering without performance issues
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -12,13 +11,14 @@ const dpr = Math.min(window.devicePixelRatio || 1, 2);
 // Phaser game configuration
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
-  width: DESIGN_WIDTH,
-  height: DESIGN_HEIGHT,
+  width: window.innerWidth * dpr,
+  height: window.innerHeight * dpr,
   parent: 'game-container',
-  backgroundColor: '#1A1A1A',
+  backgroundColor: '#F9F9F9',
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+    zoom: 1 / dpr,
   },
   render: {
     pixelArt: false,

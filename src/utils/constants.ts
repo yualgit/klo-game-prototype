@@ -7,10 +7,6 @@ export const TILE_SIZE = 64;
 export const GAME_WIDTH = 1024;
 export const GAME_HEIGHT = 768;
 
-// Design resolution for Scale.FIT mode (portrait mobile, matches MAP_WIDTH)
-export const DESIGN_WIDTH = 1024;
-export const DESIGN_HEIGHT = 1820;
-
 // KLO brand colors (as hex numbers for Phaser)
 export const KLO_YELLOW = 0xffb800;
 export const KLO_BLACK = 0x1a1a1a;

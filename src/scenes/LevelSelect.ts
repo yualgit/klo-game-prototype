@@ -118,21 +118,19 @@ export class LevelSelect extends Phaser.Scene {
   }
 
   private createParallaxBackground(): void {
-    const maxScroll = MAP_CONFIG.MAP_HEIGHT - this.cameras.main.height; // 2200 - 1820 = 380
+    const maxScroll = MAP_CONFIG.MAP_HEIGHT - 768; // 1432
 
     // Sky layer - static, covers viewport
-    // Source: 1536x1024, scale to cover 1024x1820 viewport
-    const skyScaleW = MAP_CONFIG.MAP_WIDTH / 1536;
-    const skyScaleH = this.cameras.main.height / 1024;
-    const skyScale = Math.max(skyScaleW, skyScaleH); // Cover viewport - use larger scale
-    const sky = this.add.image(MAP_CONFIG.MAP_WIDTH / 2, this.cameras.main.height / 2, 'kyiv_sky');
+    const sky = this.add.image(512, 384, 'kyiv_sky');
+    // Aspect-ratio fill: source 1536x1024, scale to cover 1024x768
+    const skyScale = Math.max(MAP_CONFIG.MAP_WIDTH / 1536, 768 / 1024);
     sky.setScale(skyScale);
     sky.setScrollFactor(MAP_CONFIG.PARALLAX_SKY);
     sky.setDepth(0);
 
     // Far layer - 3 segments, slow parallax (scrollFactor 0.25)
-    // Effective visible worldY range: 0 to maxScroll*0.25 + 1820
-    const farEffectiveRange = maxScroll * MAP_CONFIG.PARALLAX_FAR + this.cameras.main.height;
+    // Effective visible worldY range: 0 to maxScroll*0.25 + 768 = ~1126
+    const farEffectiveRange = maxScroll * MAP_CONFIG.PARALLAX_FAR + 768;
     // Source: 1536x1024, aspect-ratio scale to fill viewport width
     const farScale = MAP_CONFIG.MAP_WIDTH / 1536; // 0.667 → height ~683
     const farImgHeight = 1024 * farScale;
@@ -146,8 +144,8 @@ export class LevelSelect extends Phaser.Scene {
     });
 
     // Mid layer - 2 images, medium parallax (scrollFactor 0.6)
-    // Effective visible worldY range: 0 to maxScroll*0.6 + 1820
-    const midEffectiveRange = maxScroll * MAP_CONFIG.PARALLAX_MID + this.cameras.main.height;
+    // Effective visible worldY range: 0 to maxScroll*0.6 + 768 = ~1627
+    const midEffectiveRange = maxScroll * MAP_CONFIG.PARALLAX_MID + 768;
     // Source: 1024x1536, already at native width — scale = 1.0
     // kyiv_mid_0 (KLO station) at bottom, kyiv_mid (landmarks) at top
     const midParts = ['kyiv_mid', 'kyiv_mid_0'];

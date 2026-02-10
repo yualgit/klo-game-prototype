@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>KLO Match-3</title>
   <style>
     * {
@@ -13,18 +13,10 @@
     body {
       overflow: hidden;
       background-color: #1A1A1A;
-      /* Safe area for iOS notch devices */
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
-      padding-left: env(safe-area-inset-left);
-      padding-right: env(safe-area-inset-right);
     }
     #game-container {
       width: 100vw;
       height: 100vh;
-      /* Subtract safe area from container dimensions */
-      width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right));
-      height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
       display: flex;
       justify-content: center;
       align-items: center;
