@@ -27,6 +27,11 @@ export class Game extends Phaser.Scene {
   // UI elements
   private backButton: Phaser.GameObjects.Container;
   private hudText: Phaser.GameObjects.Text;
+  private bg: Phaser.GameObjects.Graphics;
+  private hudBg: Phaser.GameObjects.Graphics;
+  private gridBoardGraphics: Phaser.GameObjects.Graphics;
+  private gridShadowGraphics: Phaser.GameObjects.Graphics;
+  private gridMaskGraphics: Phaser.GameObjects.Graphics;
 
   // Game engine and state
   private engine: Match3Engine;
@@ -74,9 +79,9 @@ export class Game extends Phaser.Scene {
     this.cameras.main.fadeIn(300, 0, 0, 0);
 
     // Scene background gradient (warm tones)
-    const bg = this.add.graphics();
-    bg.fillGradientStyle(0xFFFBF0, 0xFFFBF0, 0xFFF0D0, 0xFFF0D0, 1);
-    bg.fillRect(0, 0, width, height);
+    this.bg = this.add.graphics();
+    this.bg.fillGradientStyle(0xFFFBF0, 0xFFFBF0, 0xFFF0D0, 0xFFF0D0, 1);
+    this.bg.fillRect(0, 0, width, height);
 
     // Mark scene as active (reset from previous shutdown)
     this.sceneActive = true;
@@ -86,6 +91,7 @@ export class Game extends Phaser.Scene {
     // On shutdown, flag scene inactive so async chains (processCascade, etc.) stop
     this.events.once('shutdown', () => {
       this.sceneActive = false;
+      this.scale.off('resize', this.handleResize, this);
     });
 
     // Get level ID from scene data
@@ -180,6 +186,9 @@ export class Game extends Phaser.Scene {
 
     // Setup input handling
     this.setupInput();
+
+    // Register resize handler
+    this.scale.on('resize', this.handleResize, this);
   }
 
   private resetState(): void {
@@ -194,13 +203,13 @@ export class Game extends Phaser.Scene {
 
   private createHUD(width: number): void {
     // HUD background with styled bar
-    const hudBg = this.add.graphics();
-    hudBg.fillStyle(0xFFB800, 0.15);
-    hudBg.fillRoundedRect(8, 8, width - 16, 52, 8);
+    this.hudBg = this.add.graphics();
+    this.hudBg.fillStyle(0xFFB800, 0.15);
+    this.hudBg.fillRoundedRect(8, 8, width - 16, 52, 8);
 
     // Add KLO branding stripe on left
-    hudBg.fillStyle(KLO_YELLOW, 1);
-    hudBg.fillRoundedRect(12, 12, 4, 44, 2);
+    this.hudBg.fillStyle(KLO_YELLOW, 1);
+    this.hudBg.fillRoundedRect(12, 12, 4, 44, 2);
 
     // Initial HUD text
     this.updateHUDText(width);
@@ -631,9 +640,9 @@ export class Game extends Phaser.Scene {
     const gridPixelHeight = this.gridHeight * TILE_SIZE;
 
     // Board background with shadow and polished style
-    const shadow = this.add.graphics();
-    shadow.fillStyle(0x000000, 0.08);
-    shadow.fillRoundedRect(
+    this.gridShadowGraphics = this.add.graphics();
+    this.gridShadowGraphics.fillStyle(0x000000, 0.08);
+    this.gridShadowGraphics.fillRoundedRect(
       this.gridOffsetX - 12,
       this.gridOffsetY - 12,
       gridPixelWidth + 24,
@@ -641,9 +650,9 @@ export class Game extends Phaser.Scene {
       16
     );
 
-    const board = this.add.graphics();
-    board.fillStyle(0xFFFFFF, 0.6);
-    board.fillRoundedRect(
+    this.gridBoardGraphics = this.add.graphics();
+    this.gridBoardGraphics.fillStyle(0xFFFFFF, 0.6);
+    this.gridBoardGraphics.fillRoundedRect(
       this.gridOffsetX - 8,
       this.gridOffsetY - 8,
       gridPixelWidth + 16,
@@ -652,12 +661,12 @@ export class Game extends Phaser.Scene {
     );
 
     // Mask out inactive cells with scene background color
-    const mask = this.add.graphics();
-    mask.fillStyle(0xFFFBF0, 1); // Scene background color
+    this.gridMaskGraphics = this.add.graphics();
+    this.gridMaskGraphics.fillStyle(0xFFFBF0, 1); // Scene background color
     for (let row = 0; row < this.gridHeight; row++) {
       for (let col = 0; col < this.gridWidth; col++) {
         if (!this.engine.isCellActive(row, col)) {
-          mask.fillRect(
+          this.gridMaskGraphics.fillRect(
             this.gridOffsetX + col * TILE_SIZE,
             this.gridOffsetY + row * TILE_SIZE,
             TILE_SIZE,
@@ -1265,6 +1274,109 @@ export class Game extends Phaser.Scene {
     });
 
     await Promise.all(tweens);
+  }
+
+  private handleResize(gameSize: Phaser.Structs.Size): void {
+    // Skip if scene not active (mid-shutdown)
+    if (!this.sceneActive) return;
+
+    const { width, height } = gameSize;
+
+    // Update camera viewport (CRITICAL for input)
+    this.cameras.main.setViewport(0, 0, width, height);
+
+    // Recalculate grid offset (center on new viewport)
+    const gridPixelWidth = this.gridWidth * TILE_SIZE;
+    const gridPixelHeight = this.gridHeight * TILE_SIZE;
+    this.gridOffsetX = (width - gridPixelWidth) / 2;
+    this.gridOffsetY = (height - gridPixelHeight) / 2 + 30;
+
+    // Redraw background
+    if (this.bg) {
+      this.bg.clear();
+      this.bg.fillGradientStyle(0xFFFBF0, 0xFFFBF0, 0xFFF0D0, 0xFFF0D0, 1);
+      this.bg.fillRect(0, 0, width, height);
+    }
+
+    // Redraw HUD background
+    if (this.hudBg) {
+      this.hudBg.clear();
+      this.hudBg.fillStyle(0xFFB800, 0.15);
+      this.hudBg.fillRoundedRect(8, 8, width - 16, 52, 8);
+      this.hudBg.fillStyle(KLO_YELLOW, 1);
+      this.hudBg.fillRoundedRect(12, 12, 4, 44, 2);
+    }
+
+    // Reposition HUD text
+    if (this.hudText) {
+      this.hudText.setPosition(width / 2, 34);
+    }
+
+    // Redraw grid background (board, shadow, mask)
+    this.redrawGridBackground();
+
+    // Reposition all tile sprites
+    this.repositionAllTiles();
+  }
+
+  private redrawGridBackground(): void {
+    const gridPixelWidth = this.gridWidth * TILE_SIZE;
+    const gridPixelHeight = this.gridHeight * TILE_SIZE;
+
+    // Redraw shadow
+    if (this.gridShadowGraphics) {
+      this.gridShadowGraphics.clear();
+      this.gridShadowGraphics.fillStyle(0x000000, 0.08);
+      this.gridShadowGraphics.fillRoundedRect(
+        this.gridOffsetX - 12,
+        this.gridOffsetY - 12,
+        gridPixelWidth + 24,
+        gridPixelHeight + 24,
+        16
+      );
+    }
+
+    // Redraw board
+    if (this.gridBoardGraphics) {
+      this.gridBoardGraphics.clear();
+      this.gridBoardGraphics.fillStyle(0xFFFFFF, 0.6);
+      this.gridBoardGraphics.fillRoundedRect(
+        this.gridOffsetX - 8,
+        this.gridOffsetY - 8,
+        gridPixelWidth + 16,
+        gridPixelHeight + 16,
+        14
+      );
+    }
+
+    // Redraw mask for inactive cells
+    if (this.gridMaskGraphics) {
+      this.gridMaskGraphics.clear();
+      this.gridMaskGraphics.fillStyle(0xFFFBF0, 1);
+      for (let row = 0; row < this.gridHeight; row++) {
+        for (let col = 0; col < this.gridWidth; col++) {
+          if (!this.engine.isCellActive(row, col)) {
+            this.gridMaskGraphics.fillRect(
+              this.gridOffsetX + col * TILE_SIZE,
+              this.gridOffsetY + row * TILE_SIZE,
+              TILE_SIZE,
+              TILE_SIZE
+            );
+          }
+        }
+      }
+    }
+  }
+
+  private repositionAllTiles(): void {
+    for (let row = 0; row < this.gridHeight; row++) {
+      for (let col = 0; col < this.gridWidth; col++) {
+        const sprite = this.tileSprites[row]?.[col];
+        if (sprite) {
+          sprite.setOffset(this.gridOffsetX, this.gridOffsetY);
+        }
+      }
+    }
   }
 
   /**
