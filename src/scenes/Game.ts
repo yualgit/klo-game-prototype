@@ -362,18 +362,24 @@ export class Game extends Phaser.Scene {
     const nextLabel = isLastLevel ? 'Меню' : 'Далі';
 
     const nextBtn = this.createOverlayButton(panelW / 2, nextButtonY, nextLabel, () => {
-      if (isLastLevel) {
-        this.scene.start('LevelSelect');
-      } else {
-        this.scene.start('Game', { levelId: this.currentLevel + 1 });
-      }
+      this.cameras.main.fadeOut(300, 0, 0, 0);
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        if (isLastLevel) {
+          this.scene.start('LevelSelect');
+        } else {
+          this.scene.start('Game', { levelId: this.currentLevel + 1 });
+        }
+      });
     });
     panelContainer.add(nextBtn);
 
     // "Рівні" button → LevelSelect (only when not last level)
     if (!isLastLevel) {
       const levelsBtn = this.createOverlayButton(panelW / 2, nextButtonY + 60, 'Рівні', () => {
-        this.scene.start('LevelSelect');
+        this.cameras.main.fadeOut(300, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+          this.scene.start('LevelSelect');
+        });
       }, true);
       panelContainer.add(levelsBtn);
     }
@@ -446,13 +452,19 @@ export class Game extends Phaser.Scene {
 
     // "Повторити" button → restart same level
     const retryBtn = this.createOverlayButton(panelW / 2, 150, 'Повторити', () => {
-      this.scene.start('Game', { levelId: this.currentLevel });
+      this.cameras.main.fadeOut(300, 0, 0, 0);
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        this.scene.start('Game', { levelId: this.currentLevel });
+      });
     });
     panelContainer.add(retryBtn);
 
     // "Меню" button → LevelSelect
     const menuBtn = this.createOverlayButton(panelW / 2, 210, 'Меню', () => {
-      this.scene.start('LevelSelect');
+      this.cameras.main.fadeOut(300, 0, 0, 0);
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        this.scene.start('LevelSelect');
+      });
     }, true);
     panelContainer.add(menuBtn);
   }
@@ -526,7 +538,10 @@ export class Game extends Phaser.Scene {
 
     this.backButton.on('pointerup', () => {
       console.log('[Game] Back button clicked, returning to LevelSelect');
-      this.scene.start('LevelSelect');
+      this.cameras.main.fadeOut(300, 0, 0, 0);
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        this.scene.start('LevelSelect');
+      });
     });
   }
 
