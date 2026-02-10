@@ -25,8 +25,8 @@
 **Plans**: 2 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — Core type system, engine, asset loading, and level data migration
-- [ ] 11-02-PLAN.md — Booster sprite rendering, inactive cell styling, and test updates
+- [x] 11-01-PLAN.md — Core type system, engine, asset loading, and level data migration
+- [x] 11-02-PLAN.md — Booster sprite rendering, inactive cell styling, and test updates
 
 ### Phase 12: Responsive Layout Foundation
 **Goal**: Proper responsive scaling across all mobile viewports
@@ -116,7 +116,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15 → 16
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 11. Art & Asset Quality | v1.2 | 0/TBD | Not started | - |
+| 11. Art & Asset Quality | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
 | 12. Responsive Layout | v1.2 | 0/TBD | Not started | - |
 | 13. Persistent UI Navigation | v1.2 | 0/TBD | Not started | - |
 | 14. Collection Data Model | v1.2 | 0/TBD | Not started | - |
