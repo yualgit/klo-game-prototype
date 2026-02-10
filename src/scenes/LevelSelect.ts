@@ -36,6 +36,13 @@ export class LevelSelect extends Phaser.Scene {
   private overlayActive: boolean = false;
   private levelNodes: Phaser.GameObjects.Container[] = [];
 
+  // UI elements for resize repositioning
+  private hudBg: Phaser.GameObjects.Graphics;
+  private titleText: Phaser.GameObjects.Text;
+  private settingsIcon: Phaser.GameObjects.Text;
+  private heartIcon: Phaser.GameObjects.Text;
+  private bonusIcon: Phaser.GameObjects.Text;
+
   constructor() {
     super({ key: 'LevelSelect' });
   }
@@ -73,23 +80,23 @@ export class LevelSelect extends Phaser.Scene {
     }
 
     // HUD background bar (fixed to camera)
-    const hudBg = this.add.graphics();
-    hudBg.fillStyle(0xFFFFFF, 0.8);
-    hudBg.fillRect(0, 0, width, 120);
-    hudBg.setScrollFactor(0);
-    hudBg.setDepth(10);
+    this.hudBg = this.add.graphics();
+    this.hudBg.fillStyle(0xFFFFFF, 0.8);
+    this.hudBg.fillRect(0, 0, width, 120);
+    this.hudBg.setScrollFactor(0);
+    this.hudBg.setDepth(10);
 
     // Title (fixed to camera)
-    const title = this.add.text(width / 2, 60, 'Оберіть рівень', {
+    this.titleText = this.add.text(width / 2, 60, 'Оберіть рівень', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '40px',
       color: '#1A1A1A',
       fontStyle: 'bold',
       shadow: { offsetX: 2, offsetY: 2, color: '#00000020', blur: 4, fill: true },
     });
-    title.setOrigin(0.5);
-    title.setScrollFactor(0);
-    title.setDepth(11);
+    this.titleText.setOrigin(0.5);
+    this.titleText.setScrollFactor(0);
+    this.titleText.setDepth(11);
 
     // Back button (fixed to camera)
     this.createBackButton();
@@ -105,6 +112,9 @@ export class LevelSelect extends Phaser.Scene {
 
     // Auto-scroll to current level
     this.scrollToCurrentLevel();
+
+    // Register resize handler
+    this.scale.on('resize', this.handleResize, this);
   }
 
   private createParallaxBackground(): void {
@@ -255,13 +265,13 @@ export class LevelSelect extends Phaser.Scene {
     const containerY = 60;
 
     // Heart icon + lives count
-    const heartIcon = this.add.text(containerX - 70, containerY - 20, '❤', {
+    this.heartIcon = this.add.text(containerX - 70, containerY - 20, '❤', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '24px',
     });
-    heartIcon.setOrigin(0.5);
-    heartIcon.setScrollFactor(0);
-    heartIcon.setDepth(11);
+    this.heartIcon.setOrigin(0.5);
+    this.heartIcon.setScrollFactor(0);
+    this.heartIcon.setDepth(11);
 
     this.livesText = this.add.text(containerX - 40, containerY - 20, '5/5', {
       fontFamily: 'Arial, sans-serif',
@@ -284,13 +294,13 @@ export class LevelSelect extends Phaser.Scene {
     this.countdownText.setDepth(11);
 
     // Bonus icon + count
-    const bonusIcon = this.add.text(containerX - 70, containerY + 40, '💎', {
+    this.bonusIcon = this.add.text(containerX - 70, containerY + 40, '💎', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '20px',
     });
-    bonusIcon.setOrigin(0.5);
-    bonusIcon.setScrollFactor(0);
-    bonusIcon.setDepth(11);
+    this.bonusIcon.setOrigin(0.5);
+    this.bonusIcon.setScrollFactor(0);
+    this.bonusIcon.setDepth(11);
 
     this.bonusText = this.add.text(containerX - 40, containerY + 40, '500', {
       fontFamily: 'Arial, sans-serif',
@@ -656,34 +666,34 @@ export class LevelSelect extends Phaser.Scene {
 
   private createSettingsButton(width: number): void {
     // Position gear icon in top area, between back button and economy HUD
-    const gearIcon = this.add.text(width - 200, 30, '⚙', {
+    this.settingsIcon = this.add.text(width - 200, 30, '⚙', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '28px',
       color: '#1A1A1A',
     });
-    gearIcon.setOrigin(0.5);
-    gearIcon.setInteractive({ useHandCursor: true });
-    gearIcon.setScrollFactor(0);
-    gearIcon.setDepth(11);
+    this.settingsIcon.setOrigin(0.5);
+    this.settingsIcon.setInteractive({ useHandCursor: true });
+    this.settingsIcon.setScrollFactor(0);
+    this.settingsIcon.setDepth(11);
 
     // Hover effects
-    gearIcon.on('pointerover', () => {
+    this.settingsIcon.on('pointerover', () => {
       this.tweens.add({
-        targets: gearIcon,
+        targets: this.settingsIcon,
         scale: 1.15,
         duration: 100,
       });
     });
 
-    gearIcon.on('pointerout', () => {
+    this.settingsIcon.on('pointerout', () => {
       this.tweens.add({
-        targets: gearIcon,
+        targets: this.settingsIcon,
         scale: 1,
         duration: 100,
       });
     });
 
-    gearIcon.on('pointerup', () => {
+    this.settingsIcon.on('pointerup', () => {
       this.showSettingsOverlay();
     });
   }
@@ -942,7 +952,56 @@ export class LevelSelect extends Phaser.Scene {
     overlayElements.push(closeBtn);
   }
 
+  private handleResize(gameSize: Phaser.Structs.Size): void {
+    const { width, height } = gameSize;
+
+    // Update camera viewport (CRITICAL for input)
+    this.cameras.main.setViewport(0, 0, width, height);
+
+    // Update camera bounds -- world size stays 1024xMAP_HEIGHT but camera viewport changes
+    this.cameras.main.setBounds(0, 0, MAP_CONFIG.MAP_WIDTH, MAP_CONFIG.MAP_HEIGHT);
+
+    // Redraw HUD background to new width
+    if (this.hudBg) {
+      this.hudBg.clear();
+      this.hudBg.fillStyle(0xFFFFFF, 0.8);
+      this.hudBg.fillRect(0, 0, width, 120);
+    }
+
+    // Reposition fixed HUD elements (scrollFactor=0, use viewport coords)
+    if (this.titleText) this.titleText.setPosition(width / 2, 60);
+
+    // Settings gear repositions relative to width
+    if (this.settingsIcon) this.settingsIcon.setPosition(width - 200, 30);
+
+    // Economy HUD repositions relative to width
+    this.repositionEconomyHUD(width);
+  }
+
+  private repositionEconomyHUD(width: number): void {
+    const containerX = width - 100;
+    const containerY = 60;
+
+    // Heart icon
+    if (this.heartIcon) this.heartIcon.setPosition(containerX - 70, containerY - 20);
+
+    // Lives text
+    if (this.livesText) this.livesText.setPosition(containerX - 40, containerY - 20);
+
+    // Countdown text
+    if (this.countdownText) this.countdownText.setPosition(containerX - 70, containerY + 10);
+
+    // Bonus icon
+    if (this.bonusIcon) this.bonusIcon.setPosition(containerX - 70, containerY + 40);
+
+    // Bonus text
+    if (this.bonusText) this.bonusText.setPosition(containerX - 40, containerY + 40);
+  }
+
   shutdown(): void {
+    // Cleanup resize handler
+    this.scale.off('resize', this.handleResize, this);
+
     // Cleanup pointer event listeners
     this.input.off('pointerdown');
     this.input.off('pointermove');
