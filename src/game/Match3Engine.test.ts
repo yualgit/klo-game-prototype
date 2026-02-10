@@ -678,4 +678,152 @@ describe('Match3Engine', () => {
       expect(grid[0][0].isEmpty).toBe(true);
     });
   });
+
+  describe('Non-Rectangular Boards', () => {
+    test('isCellActive returns true for all cells when no cellMap', () => {
+      engine.generateGrid(defaultSpawnRules);
+      expect(engine.isCellActive(0, 0)).toBe(true);
+      expect(engine.isCellActive(3, 3)).toBe(true);
+      expect(engine.isCellActive(7, 7)).toBe(true);
+    });
+
+    test('isCellActive returns false for inactive cells in cellMap', () => {
+      const cellMap = [
+        [0, 1, 1, 0],
+        [1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [0, 1, 1, 0]
+      ];
+      const diamondEngine = new Match3Engine(4, 4);
+      diamondEngine.setCellMap(cellMap);
+      diamondEngine.generateGrid(defaultSpawnRules);
+
+      expect(diamondEngine.isCellActive(0, 0)).toBe(false);
+      expect(diamondEngine.isCellActive(0, 1)).toBe(true);
+      expect(diamondEngine.isCellActive(1, 0)).toBe(true);
+      expect(diamondEngine.isCellActive(3, 3)).toBe(false);
+    });
+
+    test('isCellActive returns false for out of bounds', () => {
+      engine.generateGrid(defaultSpawnRules);
+      expect(engine.isCellActive(-1, 0)).toBe(false);
+      expect(engine.isCellActive(0, -1)).toBe(false);
+      expect(engine.isCellActive(10, 0)).toBe(false);
+      expect(engine.isCellActive(0, 10)).toBe(false);
+    });
+
+    test('findMatches does not match across inactive cells', () => {
+      const cellMap = [
+        [1, 1, 0, 1, 1]
+      ];
+      const testEngine = new Match3Engine(1, 5);
+      testEngine.setCellMap(cellMap);
+      testEngine.generateGrid(defaultSpawnRules);
+      const grid = testEngine.getGrid();
+
+      // Place same type on both sides of inactive cell
+      grid[0][0].type = 'fuel';
+      grid[0][1].type = 'fuel';
+      grid[0][3].type = 'fuel';
+      grid[0][4].type = 'fuel';
+
+      const matches = testEngine.findMatches();
+
+      // Should NOT create a match of 4 across the gap
+      // Each side is only 2 tiles, so no matches at all
+      expect(matches.length).toBe(0);
+    });
+
+    test('applyGravity skips inactive cells', () => {
+      // Create 4x4 board with bottom-right corner inactive
+      const cellMap = [
+        [1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [1, 1, 1, 0]
+      ];
+      const testEngine = new Match3Engine(4, 4);
+      testEngine.setCellMap(cellMap);
+      testEngine.generateGrid(defaultSpawnRules);
+      const grid = testEngine.getGrid();
+
+      // Create empty cell at (2,3) - should fall to (2,3) not (3,3)
+      grid[0][3].isEmpty = false;
+      grid[0][3].type = 'fuel';
+      grid[1][3].isEmpty = true;
+      grid[1][3].type = 'empty';
+      grid[2][3].isEmpty = true;
+      grid[2][3].type = 'empty';
+
+      const movements = testEngine.applyGravity();
+
+      // Tile at (0,3) should fall to (2,3), not (3,3) which is inactive
+      const movement = movements.find(m => m.fromRow === 0 && m.fromCol === 3);
+      expect(movement).toBeDefined();
+      expect(movement?.toRow).toBe(2);
+    });
+
+    test('spawnNewTiles skips inactive cells', () => {
+      const cellMap = [
+        [0, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1]
+      ];
+      const testEngine = new Match3Engine(3, 3);
+      testEngine.setCellMap(cellMap);
+      testEngine.generateGrid(defaultSpawnRules);
+      const grid = testEngine.getGrid();
+
+      // Mark (0,0) as empty (it's inactive)
+      grid[0][0].isEmpty = true;
+      grid[0][0].type = 'empty';
+
+      // Mark (0,1) as empty (it's active)
+      grid[0][1].isEmpty = true;
+      grid[0][1].type = 'empty';
+
+      const spawns = testEngine.spawnNewTiles(defaultSpawnRules);
+
+      // Should not spawn on (0,0) - it's inactive
+      const spawnOnInactive = spawns.find(s => s.row === 0 && s.col === 0);
+      expect(spawnOnInactive).toBeUndefined();
+
+      // Should spawn on (0,1) - it's active
+      const spawnOnActive = spawns.find(s => s.row === 0 && s.col === 1);
+      expect(spawnOnActive).toBeDefined();
+    });
+
+    test('hasValidMoves skips inactive cells', () => {
+      // Create 3x3 board with center inactive
+      const cellMap = [
+        [1, 1, 1],
+        [1, 0, 1],
+        [1, 1, 1]
+      ];
+      const testEngine = new Match3Engine(3, 3);
+      testEngine.setCellMap(cellMap);
+      testEngine.generateGrid(defaultSpawnRules);
+
+      // Should still check for valid moves around the inactive center
+      // This test just verifies it doesn't crash
+      const hasValid = testEngine.hasValidMoves();
+      expect(typeof hasValid).toBe('boolean');
+    });
+
+    test('existing tests still pass with no cellMap (backward compatible)', () => {
+      // Run a full cascade on a normal board
+      engine.generateGrid(defaultSpawnRules);
+      const grid = engine.getGrid();
+
+      // Create a match
+      grid[0][0].type = 'fuel';
+      grid[0][1].type = 'fuel';
+      grid[0][2].type = 'fuel';
+
+      const result = engine.processTurn();
+
+      expect(result.matches.length).toBeGreaterThan(0);
+      expect(result.depth).toBeGreaterThanOrEqual(1);
+    });
+  });
 });

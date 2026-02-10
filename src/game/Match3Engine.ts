@@ -24,10 +24,64 @@ export class Match3Engine {
   private cols: number;
   private tileIdCounter = 0;
   private readonly MAX_CASCADE_DEPTH = 20;
+  private cellMap?: number[][];
 
   constructor(rows: number, cols: number) {
     this.rows = rows;
     this.cols = cols;
+  }
+
+  /**
+   * Check if a cell is active (not blocked by cell_map)
+   */
+  isCellActive(row: number, col: number): boolean {
+    // Out of bounds check
+    if (row < 0 || row >= this.rows || col < 0 || col >= this.cols) {
+      return false;
+    }
+
+    // No cellMap = all cells active (backward compatibility)
+    if (!this.cellMap) {
+      return true;
+    }
+
+    return this.cellMap[row][col] === 1;
+  }
+
+  /**
+   * Set the cell map and mark inactive cells as blocked
+   */
+  setCellMap(cellMap?: number[][]): void {
+    this.cellMap = cellMap;
+
+    if (cellMap) {
+      this.applyCellMap();
+    }
+  }
+
+  /**
+   * Apply cell map to grid by marking inactive cells as blocked
+   */
+  private applyCellMap(): void {
+    if (!this.cellMap || !this.grid || this.grid.length === 0) return;
+
+    for (let row = 0; row < this.rows; row++) {
+      if (!this.grid[row]) continue;
+
+      for (let col = 0; col < this.cols; col++) {
+        if (this.cellMap[row][col] === 0) {
+          // Mark inactive cell as empty with blocked obstacle
+          this.grid[row][col] = {
+            row,
+            col,
+            type: 'empty',
+            isEmpty: true,
+            id: this.generateTileId(),
+            obstacle: { type: 'blocked', layers: 1 }
+          };
+        }
+      }
+    }
   }
 
   /**
@@ -63,6 +117,11 @@ export class Match3Engine {
         };
       }
     }
+
+    // Apply cell map if exists
+    if (this.cellMap) {
+      this.applyCellMap();
+    }
   }
 
   /**
@@ -79,14 +138,14 @@ export class Match3Engine {
 
     // Count to the left
     let c = col - 1;
-    while (c >= 0 && grid[row][c] && grid[row][c].type === type) {
+    while (c >= 0 && this.isCellActive(row, c) && grid[row][c] && grid[row][c].type === type) {
       horizontalCount++;
       c--;
     }
 
     // Count to the right
     c = col + 1;
-    while (c < this.cols && grid[row][c] && grid[row][c].type === type) {
+    while (c < this.cols && this.isCellActive(row, c) && grid[row][c] && grid[row][c].type === type) {
       horizontalCount++;
       c++;
     }
@@ -98,14 +157,14 @@ export class Match3Engine {
 
     // Count upward
     let r = row - 1;
-    while (r >= 0 && grid[r][col] && grid[r][col].type === type) {
+    while (r >= 0 && this.isCellActive(r, col) && grid[r][col] && grid[r][col].type === type) {
       verticalCount++;
       r--;
     }
 
     // Count downward
     r = row + 1;
-    while (r < this.rows && grid[r] && grid[r][col] && grid[r][col].type === type) {
+    while (r < this.rows && this.isCellActive(r, col) && grid[r] && grid[r][col] && grid[r][col].type === type) {
       verticalCount++;
       r++;
     }
@@ -193,22 +252,60 @@ export class Match3Engine {
 
     // Check horizontal matches
     for (let row = 0; row < this.rows; row++) {
+      // Find first active cell in row
       let startCol = 0;
-      let currentType = this.grid[row][0].type;
+      while (startCol < this.cols && !this.isCellActive(row, startCol)) {
+        startCol++;
+      }
+
+      if (startCol >= this.cols) continue; // No active cells in row
+
+      let currentType = this.grid[row][startCol].type;
       let matchLength = 1;
 
-      for (let col = 1; col <= this.cols; col++) {
-        const tile = col < this.cols ? this.grid[row][col] : null;
+      for (let col = startCol + 1; col <= this.cols; col++) {
+        // Check if we hit an inactive cell or end of row
+        if (col >= this.cols || !this.isCellActive(row, col)) {
+          // Sequence ended by inactive cell or end
+          if (matchLength >= 3 && currentType !== 'empty') {
+            const tiles: TileData[] = [];
+            for (let c = startCol; c < col; c++) {
+              if (this.isCellActive(row, c)) {
+                tiles.push(this.grid[row][c]);
+              }
+            }
+            matches.push({
+              tiles,
+              type: currentType,
+              direction: 'horizontal',
+            });
+          }
+
+          // Skip to next active cell
+          if (col < this.cols) {
+            startCol = col + 1;
+            while (startCol < this.cols && !this.isCellActive(row, startCol)) {
+              startCol++;
+            }
+            if (startCol >= this.cols) break;
+
+            col = startCol;
+            currentType = this.grid[row][startCol].type;
+            matchLength = 1;
+          }
+          continue;
+        }
+
+        const tile = this.grid[row][col];
 
         if (
-          tile &&
           !tile.isEmpty &&
           tile.type === currentType &&
           currentType !== 'empty'
         ) {
           matchLength++;
         } else {
-          // Sequence ended
+          // Sequence ended by different type
           if (matchLength >= 3 && currentType !== 'empty') {
             const tiles: TileData[] = [];
             for (let c = startCol; c < col; c++) {
@@ -222,33 +319,69 @@ export class Match3Engine {
           }
 
           // Start new sequence
-          if (tile) {
-            currentType = tile.type;
-            startCol = col;
-            matchLength = 1;
-          }
+          currentType = tile.type;
+          startCol = col;
+          matchLength = 1;
         }
       }
     }
 
     // Check vertical matches
     for (let col = 0; col < this.cols; col++) {
+      // Find first active cell in column
       let startRow = 0;
-      let currentType = this.grid[0][col].type;
+      while (startRow < this.rows && !this.isCellActive(startRow, col)) {
+        startRow++;
+      }
+
+      if (startRow >= this.rows) continue; // No active cells in column
+
+      let currentType = this.grid[startRow][col].type;
       let matchLength = 1;
 
-      for (let row = 1; row <= this.rows; row++) {
-        const tile = row < this.rows ? this.grid[row][col] : null;
+      for (let row = startRow + 1; row <= this.rows; row++) {
+        // Check if we hit an inactive cell or end of column
+        if (row >= this.rows || !this.isCellActive(row, col)) {
+          // Sequence ended by inactive cell or end
+          if (matchLength >= 3 && currentType !== 'empty') {
+            const tiles: TileData[] = [];
+            for (let r = startRow; r < row; r++) {
+              if (this.isCellActive(r, col)) {
+                tiles.push(this.grid[r][col]);
+              }
+            }
+            matches.push({
+              tiles,
+              type: currentType,
+              direction: 'vertical',
+            });
+          }
+
+          // Skip to next active cell
+          if (row < this.rows) {
+            startRow = row + 1;
+            while (startRow < this.rows && !this.isCellActive(startRow, col)) {
+              startRow++;
+            }
+            if (startRow >= this.rows) break;
+
+            row = startRow;
+            currentType = this.grid[startRow][col].type;
+            matchLength = 1;
+          }
+          continue;
+        }
+
+        const tile = this.grid[row][col];
 
         if (
-          tile &&
           !tile.isEmpty &&
           tile.type === currentType &&
           currentType !== 'empty'
         ) {
           matchLength++;
         } else {
-          // Sequence ended
+          // Sequence ended by different type
           if (matchLength >= 3 && currentType !== 'empty') {
             const tiles: TileData[] = [];
             for (let r = startRow; r < row; r++) {
@@ -262,11 +395,9 @@ export class Match3Engine {
           }
 
           // Start new sequence
-          if (tile) {
-            currentType = tile.type;
-            startRow = row;
-            matchLength = 1;
-          }
+          currentType = tile.type;
+          startRow = row;
+          matchLength = 1;
         }
       }
     }
@@ -299,12 +430,17 @@ export class Match3Engine {
       // Process column from bottom to top
       let writeRow = this.rows - 1;
 
-      // Find the lowest valid landing spot (skip blocked cells)
-      while (writeRow >= 0 && this.grid[writeRow][col].obstacle?.type === 'blocked') {
+      // Find the lowest valid landing spot (skip blocked cells and inactive cells)
+      while (writeRow >= 0 && (!this.isCellActive(writeRow, col) || this.grid[writeRow][col].obstacle?.type === 'blocked')) {
         writeRow--;
       }
 
       for (let readRow = this.rows - 1; readRow >= 0; readRow--) {
+        // Skip inactive cells when reading
+        if (!this.isCellActive(readRow, col)) {
+          continue;
+        }
+
         const tile = this.grid[readRow][col];
 
         // Skip blocked cells when reading
@@ -316,8 +452,8 @@ export class Match3Engine {
         if (tile.obstacle && tile.obstacle.layers > 0) {
           if (readRow <= writeRow) {
             writeRow = readRow - 1;
-            // Skip any blocked cells above
-            while (writeRow >= 0 && this.grid[writeRow][col].obstacle?.type === 'blocked') {
+            // Skip any blocked cells and inactive cells above
+            while (writeRow >= 0 && (!this.isCellActive(writeRow, col) || this.grid[writeRow][col].obstacle?.type === 'blocked')) {
               writeRow--;
             }
           }
@@ -346,8 +482,8 @@ export class Match3Engine {
             };
           }
           writeRow--;
-          // Skip any blocked cells above
-          while (writeRow >= 0 && this.grid[writeRow][col].obstacle?.type === 'blocked') {
+          // Skip any blocked cells and inactive cells above
+          while (writeRow >= 0 && (!this.isCellActive(writeRow, col) || this.grid[writeRow][col].obstacle?.type === 'blocked')) {
             writeRow--;
           }
         }
@@ -360,13 +496,18 @@ export class Match3Engine {
   /**
    * Spawn new tiles to fill empty cells
    * Fills from top of each column
-   * Does not spawn on blocked cells
+   * Does not spawn on blocked cells or inactive cells
    */
   spawnNewTiles(spawnRules: SpawnRules): SpawnData[] {
     const spawns: SpawnData[] = [];
 
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
+        // Skip inactive cells
+        if (!this.isCellActive(row, col)) {
+          continue;
+        }
+
         const tile = this.grid[row][col];
 
         // Do not spawn on blocked cells
@@ -407,11 +548,14 @@ export class Match3Engine {
     // Try all possible adjacent swaps (skip tiles with obstacles - not swappable)
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
+        // Skip inactive cells
+        if (!this.isCellActive(row, col)) continue;
+
         const tile = this.grid[row][col];
         if (tile.obstacle && tile.obstacle.layers > 0) continue;
 
         // Try swapping with right neighbor
-        if (col < this.cols - 1) {
+        if (col < this.cols - 1 && this.isCellActive(row, col + 1)) {
           const rightNeighbor = this.grid[row][col + 1];
           if (!(rightNeighbor.obstacle && rightNeighbor.obstacle.layers > 0)) {
             this.swapTiles(row, col, row, col + 1);
@@ -422,7 +566,7 @@ export class Match3Engine {
         }
 
         // Try swapping with bottom neighbor
-        if (row < this.rows - 1) {
+        if (row < this.rows - 1 && this.isCellActive(row + 1, col)) {
           const bottomNeighbor = this.grid[row + 1][col];
           if (!(bottomNeighbor.obstacle && bottomNeighbor.obstacle.layers > 0)) {
             this.swapTiles(row, col, row + 1, col);
@@ -451,6 +595,7 @@ export class Match3Engine {
     do {
       // Regenerate grid using same approach as initial generation
       this.generateGrid(spawnRules);
+      // generateGrid now calls applyCellMap internally
       attempts++;
     } while (
       (this.findMatches().length > 0 || !this.hasValidMoves()) &&
@@ -514,6 +659,9 @@ export class Match3Engine {
 
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
+        // Skip inactive cells
+        if (!this.isCellActive(row, col)) continue;
+
         const type = this.grid[row][col].type;
         if (type !== 'empty' && !this.grid[row][col].isEmpty) {
           if (type in counts) {
@@ -730,19 +878,19 @@ export class Match3Engine {
     const tiles: TileData[] = [];
 
     // Up
-    if (row > 0) {
+    if (row > 0 && this.isCellActive(row - 1, col)) {
       tiles.push(this.grid[row - 1][col]);
     }
     // Down
-    if (row < this.rows - 1) {
+    if (row < this.rows - 1 && this.isCellActive(row + 1, col)) {
       tiles.push(this.grid[row + 1][col]);
     }
     // Left
-    if (col > 0) {
+    if (col > 0 && this.isCellActive(row, col - 1)) {
       tiles.push(this.grid[row][col - 1]);
     }
     // Right
-    if (col < this.cols - 1) {
+    if (col < this.cols - 1 && this.isCellActive(row, col + 1)) {
       tiles.push(this.grid[row][col + 1]);
     }
 
