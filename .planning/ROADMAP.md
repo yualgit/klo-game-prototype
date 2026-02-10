@@ -129,6 +129,12 @@ Plans:
 4. User opens level select and camera auto-scrolls to current level position
 5. User taps level node vs drags map and game correctly distinguishes tap (start level) from drag (scroll)
 
+**Plans:** 2 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Scrollable Kyiv map with camera bounds, parallax backgrounds, and winding path level nodes
+- [ ] 09-02-PLAN.md — Tap/drag interaction wiring, auto-scroll to current level, overlay fixes
+
 **Research Flags:** Medium (Phaser camera API researched, but specific UX flows may need design iteration during planning)
 
 ---
@@ -160,7 +166,7 @@ Plans:
 | 6 - Economy System | ✅ Complete (2026-02-10) | 7 (ECON-01..07) | 2/2 | 100% |
 | 7 - Settings | ✅ Complete (2026-02-10) | 4 (SETT-01..04) | 2/2 | 100% |
 | 8 - Advanced Level Mechanics | ✅ Complete (2026-02-10) | 7 (OBST-05..07, LVLD-01..04) | 2/2 | 100% |
-| 9 - Kyiv Map Experience | Pending | 3 (VISL-01..03) | 0/? | 0% |
+| 9 - Kyiv Map Experience | Planned | 3 (VISL-01..03) | 0/2 | 0% |
 | 10 - Mobile Polish | Pending | 2 (VISL-04..05) | 0/? | 0% |
 
 **Overall:** 60% complete (3/5 phases)
