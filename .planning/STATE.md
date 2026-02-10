@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 13 of 16 (Persistent UI Navigation Shell)
-Plan: 1 of 2 complete
-Status: Phase 13 Plan 01 complete — UIScene + EventsCenter infrastructure ready
-Last activity: 2026-02-10 — Phase 13-01 complete (EventsCenter + UIScene + reactive EconomyManager)
+Plan: 2 of 2 complete
+Status: Phase 13 complete — Persistent UI navigation shell integrated across all scenes
+Last activity: 2026-02-10 — Phase 13-02 complete (Navigation shell integration with Collections/Shop stubs)
 
-Progress: [████████████████░░░░░░░░░░░] 50% (12 of 16 phases complete, Phase 13: 1/2 plans)
+Progress: [█████████████████░░░░░░░░░░] 56% (13 of 16 phases complete, Phase 13: 2/2 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 29 (25 from v1.0 + v1.1, 4 from v1.2)
+- Total plans completed: 30 (25 from v1.0 + v1.1, 5 from v1.2)
 - Average duration: ~5 minutes per plan
-- Total execution time: ~6 days across 12 phases
+- Total execution time: ~6 days across 13 phases
 
 **By Phase:**
 
@@ -31,12 +31,13 @@ Progress: [████████████████░░░░░░░
 | 6-10 | 10 | v1.1 Kyiv Journey | Shipped 2026-02-10 |
 | 11 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
 | 12 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
-| 13-16 | TBD | v1.2 Collections | Not started |
+| 13 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
+| 14-16 | TBD | v1.2 Collections | Not started |
 
 **Recent Trend:**
 - v1.0 completed: 5 phases, 15 plans (Feb 5-10)
 - v1.1 completed: 5 phases, 10 plans (Feb 10)
-- v1.2 progress: 2 phases, 4 plans (Feb 10)
+- v1.2 progress: 3 phases, 5 plans (Feb 10)
 - Trend: Stable velocity with increasing phase complexity
 
 *Plan metrics:*
@@ -45,6 +46,7 @@ Progress: [████████████████░░░░░░░
 | Phase 12 P01 | 385 | 1 task | 3 files |
 | Phase 12 P02 | ~337 | 2 tasks | 5 files |
 | Phase 13 P01 | 154 | 2 tasks | 3 files |
+| Phase 13 P02 | 250 | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -68,6 +70,8 @@ Recent decisions affecting current work:
 - [Phase 13]: UIScene runs in parallel with content scenes via scene.launch() pattern
 - [Phase 13]: EventsCenter singleton pattern (not game.events) for cross-scene communication
 - [Phase 13]: Interactive graphics backgrounds required to block click-through (Phaser gotcha)
+- [Phase 13-02]: UIScene integrated across all scenes with conditional nav visibility (full nav on LevelSelect/Collections/Shop, header-only on Game)
+- [Phase 13-02]: Collections and Shop stub scenes created with navigation wiring, full implementation deferred to phases 14-15
 
 ### Pending Todos
 
@@ -87,7 +91,7 @@ None yet — v1.2 milestone continuing.
 ## Session Continuity
 
 Last session: 2026-02-10
-Stopped at: Phase 12 complete, all plans executed and verified
+Stopped at: Phase 13 complete - Persistent UI navigation shell integrated
 Resume file: None
 
-**Next action:** `/gsd:plan-phase 13` to plan Persistent UI Navigation Shell
+**Next action:** `/gsd:plan-phase 14` to plan Collections UI implementation
