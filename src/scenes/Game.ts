@@ -115,7 +115,11 @@ export class Game extends Phaser.Scene {
     const gridPixelWidth = this.gridWidth * TILE_SIZE;
     const gridPixelHeight = this.gridHeight * TILE_SIZE;
     this.gridOffsetX = (width - gridPixelWidth) / 2;
-    this.gridOffsetY = (height - gridPixelHeight) / 2 + 30; // Offset for HUD
+
+    // Position grid with HUD clearance: HUD ends at ~68px (8+52+8). Place grid in upper-middle for thumb accessibility.
+    const hudBottom = 68;
+    const availableHeight = height - hudBottom - 40; // 40px bottom padding
+    this.gridOffsetY = Math.max(hudBottom + 20, hudBottom + (availableHeight - gridPixelHeight) / 2);
 
     // Initialize engine and generate grid
     this.engine = new Match3Engine(this.gridHeight, this.gridWidth);
@@ -213,7 +217,7 @@ export class Game extends Phaser.Scene {
     this.hudBg.fillStyle(KLO_YELLOW, 1);
     this.hudBg.fillRoundedRect(12, 12, 4, 44, 2);
 
-    // Initial HUD text
+    // Initial HUD text with word wrapping
     this.updateHUDText(width);
   }
 
@@ -237,9 +241,10 @@ export class Game extends Phaser.Scene {
     if (!this.hudText) {
       this.hudText = this.add.text(width / 2, 34, text, {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '16px',
+        fontSize: '14px',
         color: '#1A1A1A',
         fontStyle: 'bold',
+        wordWrap: { width: width - 200, useAdvancedWrap: true }, // Leave room for back button
       });
       this.hudText.setOrigin(0.5);
     } else {
@@ -302,8 +307,8 @@ export class Game extends Phaser.Scene {
       duration: 200,
     });
 
-    // Panel background
-    const panelW = 400;
+    // Panel background - clamp width to safe percentage of viewport
+    const panelW = Math.min(400, width - 40);
     const panelH = this.currentLevel === 10 ? 400 : 320;
     const panelX = (width - panelW) / 2;
     const panelY = (height - panelH) / 2;
@@ -466,8 +471,8 @@ export class Game extends Phaser.Scene {
       duration: 200,
     });
 
-    // Panel background
-    const panelW = 400;
+    // Panel background - clamp width to safe percentage of viewport
+    const panelW = Math.min(400, width - 40);
     const panelH = 380;
     const panelX = (width - panelW) / 2;
     const panelY = (height - panelH) / 2;
@@ -1302,11 +1307,14 @@ export class Game extends Phaser.Scene {
     // Update camera viewport (CRITICAL for input)
     this.cameras.main.setViewport(0, 0, width, height);
 
-    // Recalculate grid offset (center on new viewport)
+    // Recalculate grid offset (center on new viewport with HUD clearance)
     const gridPixelWidth = this.gridWidth * TILE_SIZE;
     const gridPixelHeight = this.gridHeight * TILE_SIZE;
     this.gridOffsetX = (width - gridPixelWidth) / 2;
-    this.gridOffsetY = (height - gridPixelHeight) / 2 + 30;
+
+    const hudBottom = 68;
+    const availableHeight = height - hudBottom - 40;
+    this.gridOffsetY = Math.max(hudBottom + 20, hudBottom + (availableHeight - gridPixelHeight) / 2);
 
     // Redraw background
     if (this.bg) {

@@ -121,9 +121,11 @@ export class LevelSelect extends Phaser.Scene {
     const maxScroll = MAP_CONFIG.MAP_HEIGHT - this.cameras.main.height; // 2200 - 1820 = 380
 
     // Sky layer - static, covers viewport
-    const sky = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'kyiv_sky');
-    // Aspect-ratio fill: source 1536x1024, scale to cover 1024x1820
-    const skyScale = Math.max(MAP_CONFIG.MAP_WIDTH / 1536, this.cameras.main.height / 1024);
+    // Source: 1536x1024, scale to cover 1024x1820 viewport
+    const skyScaleW = MAP_CONFIG.MAP_WIDTH / 1536;
+    const skyScaleH = this.cameras.main.height / 1024;
+    const skyScale = Math.max(skyScaleW, skyScaleH); // Cover viewport - use larger scale
+    const sky = this.add.image(MAP_CONFIG.MAP_WIDTH / 2, this.cameras.main.height / 2, 'kyiv_sky');
     sky.setScale(skyScale);
     sky.setScrollFactor(MAP_CONFIG.PARALLAX_SKY);
     sky.setDepth(0);
