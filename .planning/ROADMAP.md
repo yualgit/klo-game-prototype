@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Core Grid Mechanics** - Match-3 engine with tiles, swap, gravity, cascade
 - [x] **Phase 3: Game Features** - Boosters, obstacles, and level system
 - [x] **Phase 4: UI & Progression** - All screens, menus, win/lose flow, coupon mock
-- [ ] **Phase 5: Assets & Polish** - AI-generated visuals and final integration
+- [x] **Phase 5: Assets & Polish** - AI-generated visuals and final integration
 
 ## Phase Details
 
@@ -103,9 +103,9 @@ Plans:
 **Plans**: 3 plans in 3 waves
 
 Plans:
-- [ ] 05-01-PLAN.md — Asset foundation (Boot preloading, texture constants, TileSprite PNG sprites, obstacle sprites, AudioManager)
-- [ ] 05-02-PLAN.md — VFX + audio (particle system, match/booster effects, sound integration into Game cascade)
-- [ ] 05-03-PLAN.md — Scene polish (animated Menu, road map LevelSelect, win/lose overlays, transitions, GUI sprites)
+- [x] 05-01-PLAN.md — Asset foundation (Boot preloading, texture constants, TileSprite PNG sprites, obstacle sprites, AudioManager)
+- [x] 05-02-PLAN.md — VFX + audio (particle system, match/booster effects, sound integration into Game cascade)
+- [x] 05-03-PLAN.md — Scene polish (animated Menu, road map LevelSelect, win/lose overlays, transitions, GUI sprites)
 
 ## Progress
 
@@ -118,8 +118,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Core Grid Mechanics | 3/3 | Complete | 2026-02-06 |
 | 3. Game Features | 5/5 | Complete | 2026-02-06 |
 | 4. UI & Progression | 1/1 | Complete | 2026-02-06 |
-| 5. Assets & Polish | 0/3 | In progress | - |
+| 5. Assets & Polish | 3/3 | Complete | 2026-02-10 |
 
 ---
 *Roadmap created: 2026-02-05*
-*Last updated: 2026-02-09*
+*Last updated: 2026-02-10*
