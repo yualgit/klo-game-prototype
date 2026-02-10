@@ -2,7 +2,7 @@
 
 **Milestone:** v1.1 Kyiv Journey
 **Last Updated:** 2026-02-10
-**State:** Phase 6 in progress
+**State:** Phase 6 complete, Phase 7 pending
 
 ## Project Reference
 
@@ -14,14 +14,14 @@ Transform v1.0 MVP (5 levels, basic mechanics) into deeper experience with lives
 
 ## Current Position
 
-**Phase:** 6 - Economy System
-**Plan:** 2 of 2 (both complete)
-**Status:** Complete
+**Phase:** 7 - Settings (next)
+**Plan:** None (awaiting `/gsd:plan-phase 7`)
+**Status:** Phase 6 verified ✓, Phase 7 pending
 **Progress:** 1/5 phases complete
 
 ```
-[########                                ] 20%
-Phase 6: Economy System (2/2 plans complete)
+[████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 20%
+Phase 6: Economy System ✓ | Phase 7: Settings (Pending)
 ```
 
 ## Performance Metrics
@@ -65,7 +65,7 @@ Phase 6: Economy System (2/2 plans complete)
 ### Open TODOs
 
 **Phase Planning:**
-- [ ] Create Phase 6 plan (Economy System) via `/gsd:plan-phase 6`
+- [x] Create Phase 6 plan (Economy System) — DONE, executed & verified 2026-02-10
 - [ ] Create Phase 7 plan (Settings) via `/gsd:plan-phase 7`
 - [ ] Create Phase 8 plan (Advanced Level Mechanics) via `/gsd:plan-phase 8`
 - [ ] Create Phase 9 plan (Kyiv Map Experience) via `/gsd:plan-phase 9`
@@ -98,19 +98,18 @@ None. All phases ready for planning.
 
 ## Session Continuity
 
-**Last Session:** 2026-02-10T12:12:26Z
-**Stopped At:** Completed Phase 06 (Economy System) - All plans complete
+**Last Session:** 2026-02-10
+**Stopped At:** Phase 6 complete — verified (10/10 must-haves passed)
 
-**Next Action:** Plan Phase 07 (Settings) via `/gsd:plan-phase 07`
+**Next Action:** Run `/gsd:plan-phase 7` to begin Phase 7: Settings planning
 
 **Context for Next Session:**
-- Phase 06 complete: Economy system fully integrated and user-facing
-- Lives system: regeneration (1/30min), gating (0 lives blocks level), HUD with countdown
-- Refill system: 15 bonus cost to refill to max 5 lives
-- UI patterns established: modal overlays, inline expansions, timer cleanup
-- All 7 ECON requirements implemented and verified
-- Phase 6 deliverables: 2 plans, 4 tasks, 5 files, 4 commits
-- Next phase: Settings (audio, music, SFX toggles, localStorage)
+- Phase 06 verified ✓: Economy system fully integrated, all 7 ECON requirements confirmed
+- EconomyManager: lives regen (1/30min), gating (0 lives blocks level), HUD with countdown
+- Refill: 15 bonus cost, available in LevelSelect modal + Game scene inline
+- UI patterns: modal overlays, inline panel expansions, timer cleanup on shutdown
+- Phase 6 deliverables: 2 plans, 4 tasks, 5 files, 6 commits
+- Next: Phase 7 (Settings) — SFX toggle, booster animation toggle, localStorage persistence
 
 **Files to Reference:**
 - `.planning/ROADMAP.md` — Phase structure, success criteria, dependencies

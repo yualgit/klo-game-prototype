@@ -44,8 +44,8 @@ Transform the v1.0 MVP into a deeper game experience with player progression (li
 **Plans:** 2 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — EconomyManager singleton + Firestore persistence + app startup wiring
-- [ ] 06-02-PLAN.md — Lives HUD in LevelSelect + life loss/refill in Game scene
+- [x] 06-01-PLAN.md — EconomyManager singleton + Firestore persistence + app startup wiring
+- [x] 06-02-PLAN.md — Lives HUD in LevelSelect + life loss/refill in Game scene
 
 **Research Flags:** None (standard Phaser timer + Firestore pattern)
 
@@ -145,13 +145,13 @@ Plans:
 
 | Phase | Status | Requirements | Plans | Completion |
 |-------|--------|--------------|-------|------------|
-| 6 - Economy System | Planned | 7 (ECON-01..07) | 0/2 | 0% |
+| 6 - Economy System | ✅ Complete (2026-02-10) | 7 (ECON-01..07) | 2/2 | 100% |
 | 7 - Settings | Pending | 4 (SETT-01..04) | 0/? | 0% |
 | 8 - Advanced Level Mechanics | Pending | 7 (OBST-05..07, LVLD-01..04) | 0/? | 0% |
 | 9 - Kyiv Map Experience | Pending | 3 (VISL-01..03) | 0/? | 0% |
 | 10 - Mobile Polish | Pending | 2 (VISL-04..05) | 0/? | 0% |
 
-**Overall:** 0% complete (0/5 phases)
+**Overall:** 20% complete (1/5 phases)
 
 ### Coverage
 
