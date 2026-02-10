@@ -79,6 +79,15 @@ export class Game extends Phaser.Scene {
     // Reset scene state for restarts
     this.resetState();
 
+    // Clean up on scene shutdown to prevent drawImage errors during restart
+    this.events.once('shutdown', () => {
+      this.tweens.killAll();
+      this.time.removeAllEvents();
+      this.tileSprites = [];
+      this.isProcessing = false;
+      this.selectedTile = null;
+    });
+
     // Get level ID from scene data
     const data = this.scene.settings.data as { levelId?: number };
     this.currentLevel = data?.levelId || 1;
