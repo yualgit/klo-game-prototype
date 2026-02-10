@@ -7,7 +7,7 @@ import Phaser from 'phaser';
 import { ProgressManager } from '../game/ProgressManager';
 import { EconomyManager } from '../game/EconomyManager';
 import { SettingsManager } from '../game/SettingsManager';
-import { GUI_TEXTURE_KEYS } from '../game/constants';
+import { GUI_TEXTURE_KEYS, MAP_CONFIG } from '../game/constants';
 
 const KLO_YELLOW = 0xffb800;
 const KLO_BLACK = 0x1a1a1a;
@@ -31,6 +31,8 @@ export class LevelSelect extends Phaser.Scene {
   private bonusText: Phaser.GameObjects.Text;
   private countdownText: Phaser.GameObjects.Text;
   private timerEvent: Phaser.Time.TimerEvent;
+  private isDragging: boolean = false;
+  private dragStartY: number = 0;
 
   constructor() {
     super({ key: 'LevelSelect' });
@@ -45,12 +47,37 @@ export class LevelSelect extends Phaser.Scene {
     // Fade in from black
     this.cameras.main.fadeIn(300, 0, 0, 0);
 
-    // Background: Light warm gradient (same as Menu)
-    const bg = this.add.graphics();
-    bg.fillGradientStyle(0xF9F9F9, 0xF9F9F9, 0xFFF5E0, 0xFFF5E0, 1);
-    bg.fillRect(0, 0, width, height);
+    // Camera setup for scrollable world
+    this.cameras.main.setBounds(0, 0, MAP_CONFIG.MAP_WIDTH, MAP_CONFIG.MAP_HEIGHT);
 
-    // Title
+    // Create parallax background layers
+    this.createParallaxBackground();
+
+    // Draw the road path connecting level nodes
+    this.drawRoadPath();
+
+    // Create level checkpoint buttons using MAP_CONFIG positions
+    for (let i = 0; i < MAP_CONFIG.LEVEL_NODES.length; i++) {
+      const levelId = i + 1;
+      const node = MAP_CONFIG.LEVEL_NODES[i];
+      this.createLevelCheckpoint(node.x, node.y, levelId, progress);
+    }
+
+    // Map pointer at current unlocked level
+    const currentLevelId = this.getCurrentLevel(progress);
+    if (currentLevelId > 0 && currentLevelId <= 10) {
+      const pointerPos = MAP_CONFIG.LEVEL_NODES[currentLevelId - 1];
+      this.createMapPointer(pointerPos.x, pointerPos.y - 60);
+    }
+
+    // HUD background bar (fixed to camera)
+    const hudBg = this.add.graphics();
+    hudBg.fillStyle(0xFFFFFF, 0.8);
+    hudBg.fillRect(0, 0, width, 120);
+    hudBg.setScrollFactor(0);
+    hudBg.setDepth(10);
+
+    // Title (fixed to camera)
     const title = this.add.text(width / 2, 60, 'Оберіть рівень', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '40px',
@@ -59,61 +86,52 @@ export class LevelSelect extends Phaser.Scene {
       shadow: { offsetX: 2, offsetY: 2, color: '#00000020', blur: 4, fill: true },
     });
     title.setOrigin(0.5);
+    title.setScrollFactor(0);
+    title.setDepth(11);
 
-    // Back button
+    // Back button (fixed to camera)
     this.createBackButton();
 
-    // Economy HUD (top-right area)
+    // Economy HUD (fixed to camera)
     this.createEconomyHUD(width, economy);
 
-    // Settings gear icon
+    // Settings gear icon (fixed to camera)
     this.createSettingsButton(width);
 
-    // 10 checkpoint positions along a winding path
-    const checkpoints = [
-      { x: width * 0.25, y: height * 0.88 },
-      { x: width * 0.55, y: height * 0.80 },
-      { x: width * 0.30, y: height * 0.70 },
-      { x: width * 0.60, y: height * 0.62 },
-      { x: width * 0.35, y: height * 0.52 },
-      { x: width * 0.65, y: height * 0.44 },
-      { x: width * 0.30, y: height * 0.36 },
-      { x: width * 0.55, y: height * 0.28 },
-      { x: width * 0.35, y: height * 0.20 },
-      { x: width * 0.50, y: height * 0.12 },
-    ];
-
-    // Draw the road path connecting checkpoints
-    this.drawRoadPath(checkpoints);
-
-    // Create level checkpoint buttons
-    for (let i = 0; i < 10; i++) {
-      const levelId = i + 1;
-      this.createLevelCheckpoint(
-        checkpoints[i].x,
-        checkpoints[i].y,
-        levelId,
-        progress
-      );
-    }
-
-    // Map pointer at current unlocked level
-    const currentLevelId = this.getCurrentLevel(progress);
-    if (currentLevelId > 0 && currentLevelId <= 10) {
-      const pointerPos = checkpoints[currentLevelId - 1];
-      this.createMapPointer(pointerPos.x, pointerPos.y - 60);
-    }
+    // Setup drag scrolling
+    this.setupDragScrolling();
   }
 
-  private drawRoadPath(checkpoints: Array<{ x: number; y: number }>): void {
+  private createParallaxBackground(): void {
+    // Sky layer - static, covers viewport
+    const sky = this.add.image(512, 384, 'kyiv_sky');
+    sky.setDisplaySize(MAP_CONFIG.MAP_WIDTH, 768);
+    sky.setScrollFactor(MAP_CONFIG.PARALLAX_SKY);
+    sky.setDepth(0);
+
+    // Far layer - distant landmarks, slow parallax
+    const far = this.add.image(512, MAP_CONFIG.MAP_HEIGHT / 2, 'kyiv_far');
+    far.setScrollFactor(MAP_CONFIG.PARALLAX_FAR);
+    far.setDepth(1);
+
+    // Mid layer - closer buildings, medium parallax
+    const mid = this.add.image(512, MAP_CONFIG.MAP_HEIGHT / 2, 'kyiv_mid');
+    mid.setScrollFactor(MAP_CONFIG.PARALLAX_MID);
+    mid.setDepth(2);
+  }
+
+  private drawRoadPath(): void {
     const path = this.add.graphics();
+    path.setDepth(3);
+
+    const nodes = MAP_CONFIG.LEVEL_NODES;
 
     // Draw base path (light gray)
     path.lineStyle(10, 0xdddddd, 1);
     path.beginPath();
-    path.moveTo(checkpoints[0].x, checkpoints[0].y);
-    for (let i = 1; i < checkpoints.length; i++) {
-      path.lineTo(checkpoints[i].x, checkpoints[i].y);
+    path.moveTo(nodes[0].x, nodes[0].y);
+    for (let i = 1; i < nodes.length; i++) {
+      path.lineTo(nodes[i].x, nodes[i].y);
     }
     path.strokePath();
 
@@ -121,11 +139,41 @@ export class LevelSelect extends Phaser.Scene {
     // For now, just draw the full path in a lighter color overlay
     path.lineStyle(6, 0xffb800, 0.4);
     path.beginPath();
-    path.moveTo(checkpoints[0].x, checkpoints[0].y);
-    for (let i = 1; i < checkpoints.length; i++) {
-      path.lineTo(checkpoints[i].x, checkpoints[i].y);
+    path.moveTo(nodes[0].x, nodes[0].y);
+    for (let i = 1; i < nodes.length; i++) {
+      path.lineTo(nodes[i].x, nodes[i].y);
     }
     path.strokePath();
+  }
+
+  private setupDragScrolling(): void {
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      this.isDragging = false;
+      this.dragStartY = pointer.y;
+    });
+
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (pointer.isDown) {
+        const deltaY = pointer.y - pointer.prevPosition.y;
+
+        // Check if drag threshold exceeded
+        if (Math.abs(pointer.y - this.dragStartY) > MAP_CONFIG.DRAG_THRESHOLD) {
+          this.isDragging = true;
+        }
+
+        // Scroll camera if dragging
+        if (this.isDragging) {
+          this.cameras.main.scrollY -= deltaY;
+        }
+      }
+    });
+
+    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+      if (!this.isDragging) {
+        console.log('[LevelSelect] Tap detected at', pointer.x, pointer.y);
+      }
+      this.isDragging = false;
+    });
   }
 
   private createEconomyHUD(width: number, economy: EconomyManager): void {
@@ -138,6 +186,8 @@ export class LevelSelect extends Phaser.Scene {
       fontSize: '24px',
     });
     heartIcon.setOrigin(0.5);
+    heartIcon.setScrollFactor(0);
+    heartIcon.setDepth(11);
 
     this.livesText = this.add.text(containerX - 40, containerY - 20, '5/5', {
       fontFamily: 'Arial, sans-serif',
@@ -146,6 +196,8 @@ export class LevelSelect extends Phaser.Scene {
       fontStyle: 'bold',
     });
     this.livesText.setOrigin(0, 0.5);
+    this.livesText.setScrollFactor(0);
+    this.livesText.setDepth(11);
 
     // Countdown text (hidden when lives = 5)
     this.countdownText = this.add.text(containerX - 70, containerY + 10, '', {
@@ -154,6 +206,8 @@ export class LevelSelect extends Phaser.Scene {
       color: '#666666',
     });
     this.countdownText.setOrigin(0, 0.5);
+    this.countdownText.setScrollFactor(0);
+    this.countdownText.setDepth(11);
 
     // Bonus icon + count
     const bonusIcon = this.add.text(containerX - 70, containerY + 40, '💎', {
@@ -161,6 +215,8 @@ export class LevelSelect extends Phaser.Scene {
       fontSize: '20px',
     });
     bonusIcon.setOrigin(0.5);
+    bonusIcon.setScrollFactor(0);
+    bonusIcon.setDepth(11);
 
     this.bonusText = this.add.text(containerX - 40, containerY + 40, '500', {
       fontFamily: 'Arial, sans-serif',
@@ -169,6 +225,8 @@ export class LevelSelect extends Phaser.Scene {
       fontStyle: 'bold',
     });
     this.bonusText.setOrigin(0, 0.5);
+    this.bonusText.setScrollFactor(0);
+    this.bonusText.setDepth(11);
 
     // Create 1-second timer for countdown updates
     this.timerEvent = this.time.addEvent({
@@ -224,6 +282,8 @@ export class LevelSelect extends Phaser.Scene {
     const backdrop = this.add.graphics();
     backdrop.fillStyle(0x000000, 0.6);
     backdrop.fillRect(0, 0, width, height);
+    backdrop.setScrollFactor(0);
+    backdrop.setDepth(100);
     overlayElements.push(backdrop);
 
     // White panel
@@ -235,6 +295,8 @@ export class LevelSelect extends Phaser.Scene {
     const panel = this.add.graphics();
     panel.fillStyle(KLO_WHITE, 1);
     panel.fillRoundedRect(panelX, panelY, panelW, panelH, 16);
+    panel.setScrollFactor(0);
+    panel.setDepth(101);
     overlayElements.push(panel);
 
     // Title
@@ -245,6 +307,8 @@ export class LevelSelect extends Phaser.Scene {
       fontStyle: 'bold',
     });
     title.setOrigin(0.5);
+    title.setScrollFactor(0);
+    title.setDepth(102);
     overlayElements.push(title);
 
     // Countdown
@@ -262,6 +326,8 @@ export class LevelSelect extends Phaser.Scene {
       }
     );
     countdownMsg.setOrigin(0.5);
+    countdownMsg.setScrollFactor(0);
+    countdownMsg.setDepth(102);
     overlayElements.push(countdownMsg);
 
     const canRefill = economy.getBonuses() >= 15;
@@ -291,6 +357,8 @@ export class LevelSelect extends Phaser.Scene {
         fontStyle: 'bold',
       });
       noBonus.setOrigin(0.5);
+      noBonus.setScrollFactor(0);
+      noBonus.setDepth(102);
       overlayElements.push(noBonus);
     }
 
@@ -331,6 +399,8 @@ export class LevelSelect extends Phaser.Scene {
     const container = this.add.container(x, y, [bg, text]);
     container.setSize(buttonWidth, buttonHeight);
     container.setInteractive({ useHandCursor: true });
+    container.setScrollFactor(0);
+    container.setDepth(102);
 
     container.on('pointerover', () => container.setScale(1.05));
     container.on('pointerout', () => container.setScale(1));
@@ -358,6 +428,8 @@ export class LevelSelect extends Phaser.Scene {
     const container = this.add.container(70, 30, [buttonBg, buttonText]);
     container.setSize(buttonWidth, buttonHeight);
     container.setInteractive({ useHandCursor: true });
+    container.setScrollFactor(0);
+    container.setDepth(11);
 
     container.on('pointerover', () => {
       this.tweens.add({
@@ -393,6 +465,7 @@ export class LevelSelect extends Phaser.Scene {
     const unlocked = progress.isLevelUnlocked(levelId);
     const stars = progress.getStars(levelId);
     const name = LEVEL_NAMES[levelId] || `Рівень ${levelId}`;
+    const landmark = MAP_CONFIG.LEVEL_NODES[levelId - 1].label;
 
     const size = 70;
 
@@ -423,7 +496,15 @@ export class LevelSelect extends Phaser.Scene {
     });
     starText.setOrigin(0.5);
 
-    const children: Phaser.GameObjects.GameObject[] = [bg, numText, starText];
+    // Kyiv landmark label below stars
+    const landmarkText = this.add.text(0, size / 2 + 45, landmark, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '14px',
+      color: '#666666',
+    });
+    landmarkText.setOrigin(0.5);
+
+    const children: Phaser.GameObjects.GameObject[] = [bg, numText, starText, landmarkText];
 
     // Crown decoration for 3-star levels
     if (stars === 3) {
@@ -447,6 +528,7 @@ export class LevelSelect extends Phaser.Scene {
 
     const container = this.add.container(x, y, children);
     container.setSize(size, size);
+    container.setDepth(5);
 
     if (unlocked) {
       container.setInteractive({ useHandCursor: true });
@@ -475,27 +557,14 @@ export class LevelSelect extends Phaser.Scene {
         });
       });
 
-      container.on('pointerup', () => {
-        const economy = this.registry.get('economy') as EconomyManager;
-        if (!economy.canStartLevel()) {
-          console.log('[LevelSelect] No lives, showing refill prompt');
-          this.showNoLivesPrompt(economy);
-          return;
-        }
-        console.log(`[LevelSelect] Starting level ${levelId}`);
-
-        // Fade out to black before starting level
-        this.cameras.main.fadeOut(300, 0, 0, 0);
-        this.cameras.main.once('camerafadeoutcomplete', () => {
-          this.scene.start('Game', { levelId });
-        });
-      });
+      // Note: pointerup handler removed - Plan 02 will add proper tap/drag distinction
     }
   }
 
   private createMapPointer(x: number, y: number): void {
     const pointer = this.add.image(x, y, GUI_TEXTURE_KEYS.mapPointer);
     pointer.setDisplaySize(40, 40);
+    pointer.setDepth(6);
 
     // Gentle bobbing animation
     this.tweens.add({
@@ -535,6 +604,8 @@ export class LevelSelect extends Phaser.Scene {
     });
     gearIcon.setOrigin(0.5);
     gearIcon.setInteractive({ useHandCursor: true });
+    gearIcon.setScrollFactor(0);
+    gearIcon.setDepth(11);
 
     // Hover effects
     gearIcon.on('pointerover', () => {
@@ -576,6 +647,8 @@ export class LevelSelect extends Phaser.Scene {
     backdrop.fillStyle(0x000000, 0.7);
     backdrop.fillRect(0, 0, width, height);
     backdrop.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
+    backdrop.setScrollFactor(0);
+    backdrop.setDepth(100);
     backdrop.on('pointerup', () => {
       // Click backdrop to close
       overlayElements.forEach(el => el.destroy());
@@ -592,6 +665,8 @@ export class LevelSelect extends Phaser.Scene {
     panel.fillStyle(0xF9F9F9, 1);
     panel.fillRoundedRect(panelX, panelY, panelW, panelH, 16);
     panel.setInteractive(new Phaser.Geom.Rectangle(panelX, panelY, panelW, panelH), Phaser.Geom.Rectangle.Contains);
+    panel.setScrollFactor(0);
+    panel.setDepth(101);
     overlayElements.push(panel);
 
     // Title
@@ -602,6 +677,8 @@ export class LevelSelect extends Phaser.Scene {
       fontStyle: 'bold',
     });
     title.setOrigin(0.5);
+    title.setScrollFactor(0);
+    title.setDepth(102);
     overlayElements.push(title);
 
     // ---- SFX Toggle (y offset ~100 from panel top) ----
@@ -613,13 +690,19 @@ export class LevelSelect extends Phaser.Scene {
       color: '#1A1A1A',
     });
     sfxLabel.setOrigin(0, 0.5);
+    sfxLabel.setScrollFactor(0);
+    sfxLabel.setDepth(102);
     overlayElements.push(sfxLabel);
 
     // Toggle switch: track state with mutable local variable
     let sfxEnabled = settings.get('sfxEnabled');
 
     const sfxToggleBg = this.add.graphics();
+    sfxToggleBg.setScrollFactor(0);
+    sfxToggleBg.setDepth(102);
     const sfxToggleThumb = this.add.circle(0, 0, 12, 0xFFFFFF);
+    sfxToggleThumb.setScrollFactor(0);
+    sfxToggleThumb.setDepth(103);
     const sfxToggleX = panelX + panelW - 80;
 
     const updateSfxToggle = () => {
@@ -639,6 +722,8 @@ export class LevelSelect extends Phaser.Scene {
     const sfxToggleHitArea = this.add.rectangle(sfxToggleX + 30, sfxRowY, 60, 30);
     sfxToggleHitArea.setInteractive({ useHandCursor: true });
     sfxToggleHitArea.setAlpha(0.001);
+    sfxToggleHitArea.setScrollFactor(0);
+    sfxToggleHitArea.setDepth(103);
     overlayElements.push(sfxToggleHitArea);
 
     sfxToggleHitArea.on('pointerup', () => {
@@ -667,6 +752,8 @@ export class LevelSelect extends Phaser.Scene {
       color: '#1A1A1A',
     });
     volumeLabel.setOrigin(0, 0.5);
+    volumeLabel.setScrollFactor(0);
+    volumeLabel.setDepth(102);
     overlayElements.push(volumeLabel);
 
     const sliderTrackX = panelX + panelW - 160;
@@ -675,11 +762,15 @@ export class LevelSelect extends Phaser.Scene {
     // Track background
     const sliderTrack = this.add.rectangle(sliderTrackX, volumeRowY, sliderTrackW, 6, 0xDDDDDD);
     sliderTrack.setOrigin(0, 0.5);
+    sliderTrack.setScrollFactor(0);
+    sliderTrack.setDepth(102);
     overlayElements.push(sliderTrack);
 
     // Fill (shows current volume)
     const sliderFill = this.add.rectangle(sliderTrackX, volumeRowY, 0, 6, 0xFFB800);
     sliderFill.setOrigin(0, 0.5);
+    sliderFill.setScrollFactor(0);
+    sliderFill.setDepth(102);
     overlayElements.push(sliderFill);
 
     // Thumb
@@ -687,6 +778,8 @@ export class LevelSelect extends Phaser.Scene {
     const thumbX = sliderTrackX + volume * sliderTrackW;
     const sliderThumb = this.add.circle(thumbX, volumeRowY, 10, 0xFFFFFF);
     sliderThumb.setStrokeStyle(2, 0xFFB800);
+    sliderThumb.setScrollFactor(0);
+    sliderThumb.setDepth(103);
     overlayElements.push(sliderThumb);
 
     // Initial fill width
@@ -719,13 +812,19 @@ export class LevelSelect extends Phaser.Scene {
       color: '#1A1A1A',
     });
     animLabel.setOrigin(0, 0.5);
+    animLabel.setScrollFactor(0);
+    animLabel.setDepth(102);
     overlayElements.push(animLabel);
 
     // Toggle switch: track state with mutable local variable
     let animEnabled = settings.get('animationsEnabled');
 
     const animToggleBg = this.add.graphics();
+    animToggleBg.setScrollFactor(0);
+    animToggleBg.setDepth(102);
     const animToggleThumb = this.add.circle(0, 0, 12, 0xFFFFFF);
+    animToggleThumb.setScrollFactor(0);
+    animToggleThumb.setDepth(103);
     const animToggleX = panelX + panelW - 80;
 
     const updateAnimToggle = () => {
@@ -745,6 +844,8 @@ export class LevelSelect extends Phaser.Scene {
     const animToggleHitArea = this.add.rectangle(animToggleX + 30, animRowY, 60, 30);
     animToggleHitArea.setInteractive({ useHandCursor: true });
     animToggleHitArea.setAlpha(0.001);
+    animToggleHitArea.setScrollFactor(0);
+    animToggleHitArea.setDepth(103);
     overlayElements.push(animToggleHitArea);
 
     animToggleHitArea.on('pointerup', () => {
