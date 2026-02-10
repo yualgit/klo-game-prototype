@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 12 of 16 (Responsive Layout Foundation)
-Plan: Needs re-planning
-Status: Scale.FIT approach reverted — needs responsive approach
-Last activity: 2026-02-10 — Scale.FIT attempt reverted (made UI unreadable on mobile, wrong scaling strategy)
+Plan: 02 of 02
+Status: Active — Plan 01 complete (responsive utility + Game scene)
+Last activity: 2026-02-10 — Completed 12-01: DPR-aware responsive layout with adaptive Game scene
 
 Progress: [███████████████░░░░░░░░░░░░░] 46% (11 of 16 phases complete)
 
@@ -40,6 +40,7 @@ Progress: [███████████████░░░░░░░░
 *Updated after roadmap creation*
 | Phase 11 P01 | 239 | 3 tasks | 19 files |
 | Phase 11 P02 | 409 | 3 tasks | 5 files |
+| Phase 12 P01 | 385 | 1 task | 3 files |
 
 ## Accumulated Context
 
@@ -55,6 +56,8 @@ Recent decisions affecting current work:
 - [Phase 11]: Generic Object.entries approach for spawn rules iteration (supports any tile types)
 - [Phase 11]: Booster sprites use unique idle animations per type (pulse/shimmer/rotation)
 - [Phase 11]: Inactive cell styling is conditional based on level config (block sprite vs transparent mask)
+- [Phase 12]: Responsive layout via cssToGame() DPR multiplier — all sizes in CSS pixels × DPR = Phaser coords
+- [Phase 12]: Tile size range 36-60px CSS (adapts to viewport width while maintaining touch targets)
 
 ### Pending Todos
 
@@ -77,7 +80,7 @@ None yet — v1.2 milestone starting fresh.
 ## Session Continuity
 
 Last session: 2026-02-10
-Stopped at: Phase 11 complete, verified, assets deployed
+Stopped at: Phase 12 Plan 01 complete — responsive utility + Game scene adapted
 Resume file: None
 
-**Next action:** `/gsd:plan-phase 12` to re-plan with responsive approach (Scale.RESIZE + adaptive layouts)
+**Next action:** Continue with Phase 12 Plan 02 (adapt Menu + LevelSelect scenes)
