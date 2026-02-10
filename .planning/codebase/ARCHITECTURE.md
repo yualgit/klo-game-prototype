@@ -1,171 +1,233 @@
 # Architecture
 
-**Analysis Date:** 2026-02-05
+**Analysis Date:** 2026-02-10
 
 ## Pattern Overview
 
-**Overall:** Layered PWA architecture with a backend-driven game client pattern
+**Overall:** Layered MVC with Phaser 3 scene management, game logic separation, and singleton managers for cross-scene state.
 
 **Key Characteristics:**
-- Phaser 3-based frontend (TypeScript) connected to Firebase backend
-- Game logic decoupled from UI/rendering
-- Firebase as source of truth for user state, level definitions, and remote configuration
-- Grid-based match-3 game engine with plugin-style booster and obstacle systems
-- Event-driven analytics integration
+- Pure game logic decoupled from rendering (Match3Engine handles all rules, Phaser handles display)
+- Singleton pattern for persistent game state (ProgressManager, EconomyManager, SettingsManager)
+- Scene-based state machine (Boot → Menu → LevelSelect → Game)
+- Registry-based dependency injection for scene access to managers
+- Reactive settings with subscription pattern for audio/VFX control
+- Firebase backend for user persistence (anonymous auth, progress/economy storage)
 
 ## Layers
 
-**Presentation (UI/Rendering):**
-- Purpose: Render game scenes, handle user input, display animations and transitions
-- Location: `src/scenes/`
-- Contains: Phaser scene classes (Boot, Menu, Game, UI)
-- Depends on: Game layer, Firebase services, Phaser 3 framework
-- Used by: Player directly; orchestrates all visible interactions
+**Core Game Logic Layer:**
+- Purpose: Pure match-3 mechanics without dependencies on rendering
+- Location: `src/game/Match3Engine.ts`
+- Contains: Grid state, tile matching algorithms, cascade resolution, booster logic
+- Depends on: Type definitions from `src/game/types.ts`
+- Used by: `src/scenes/Game.ts`, `src/game/BoosterActivator.ts`, unit tests
 
-**Game Engine:**
-- Purpose: Core match-3 mechanics (grid, swap, match detection, gravity, spawn)
-- Location: `src/game/`
-- Contains: Grid manager, Tile, Match logic, Booster logic, Obstacle logic
-- Depends on: Data formats, Phaser physics/graphics
-- Used by: Game scene, UI layer for state feedback
+**Rendering Layer:**
+- Purpose: Phaser-based visual display of game state
+- Location: `src/scenes/Game.ts` (main gameplay scene), `src/game/TileSprite.ts` (tile rendering)
+- Contains: Container objects, sprite positioning, animations, input handling
+- Depends on: Match3Engine output, assets loaded by Boot scene
+- Used by: Game scene lifecycle
 
-**Data/Configuration:**
-- Purpose: Load and manage game levels, remote configuration, local state
-- Location: `src/data/`
-- Contains: LevelLoader (parses JSON from `data/levels/`), RemoteConfig (Firebase Remote Config wrapper)
-- Depends on: Firebase SDK, file system (public/data)
-- Used by: Game engine, scenes for initialization
+**State Management Layer:**
+- Purpose: Persistent user state across scenes and sessions
+- Location: `src/game/ProgressManager.ts`, `src/game/EconomyManager.ts`, `src/game/SettingsManager.ts`
+- Contains: Progress tracking (levels/stars), resource management (lives/bonuses), user preferences (audio/animations)
+- Depends on: Firebase (ProgressManager, EconomyManager), localStorage (SettingsManager)
+- Used by: All scenes via `game.registry.get()`
 
-**Backend Services (Firebase):**
-- Purpose: Persist user state, manage coupons, track analytics, serve configuration
-- Location: `src/firebase/` (client), `functions/` (Cloud Functions)
-- Contains: Auth service, Firestore document operations, Analytics integration, Cloud Functions triggers
-- Depends on: Firebase SDK, Firestore rules
-- Used by: Entire application (cross-cutting)
+**Scene Management Layer:**
+- Purpose: Navigate app state, initialize scenes with managers
+- Location: `src/scenes/Boot.ts`, `src/scenes/Menu.ts`, `src/scenes/LevelSelect.ts`, `src/scenes/Game.ts`
+- Contains: Scene lifecycle (preload, create, update), scene transitions
+- Depends on: Phaser, managers from registry, level data
+- Used by: Main Phaser game instance
 
-**Utilities:**
-- Purpose: Shared constants, helper functions, enums
-- Location: `src/utils/`
-- Contains: Constants, math helpers
+**Backend/Persistence Layer:**
+- Purpose: Firebase integration for user data
+- Location: `src/firebase/index.ts`, `src/firebase/firestore.ts`, `src/firebase/auth.ts`
+- Contains: Anonymous auth, progress/economy read-write operations, offline persistence
+- Depends on: Firebase SDK
+- Used by: `src/main.ts` (bootstrap), managers (save/load operations)
+
+**Utility Layer:**
+- Purpose: Cross-cutting concerns
+- Location: `src/utils/responsive.ts`, `src/utils/constants.ts`
+- Contains: Responsive layout calculation (DPR-aware), game constants
 - Depends on: None
-- Used by: All layers
+- Used by: All scenes and managers
+
+**Supporting Services:**
+- Purpose: Specialized gameplay features
+- Location: `src/game/LevelManager.ts` (goal/move tracking), `src/game/BoosterActivator.ts` (booster effects), `src/game/VFXManager.ts` (particles), `src/game/AudioManager.ts` (sound)
+- Contains: Level state machines, booster combo logic, particle effects, sound playback
+- Depends on: Match3Engine, SettingsManager, Phaser
+- Used by: Game scene
 
 ## Data Flow
 
-**Level Initialization:**
+**Initialization Flow (Bootstrap):**
 
-1. App boots → `Boot` scene loads
-2. `LevelLoader.ts` fetches level JSON from `data/levels/level_NNN.json` (or Remote Config override)
-3. Level schema is parsed into `Level` interface
-4. `Grid.ts` initializes 8×8 grid with spawn rules from level definition
-5. Obstacles placed at positions specified in level JSON
-6. UI displays grid, goal counters, move counter
+1. `src/main.ts` starts execution
+2. Initialize Firebase (`src/firebase/index.ts`):
+   - Anonymous sign-in
+   - Enable offline persistence
+   - Create AuthService and FirestoreService
+3. Load/create user state:
+   - ProgressManager from Firestore (first-time defaults if needed)
+   - EconomyManager from Firestore (first-time defaults if needed)
+   - SettingsManager from localStorage
+4. Store all managers in `game.registry`:
+   - `registry.set('progress', progressManager)`
+   - `registry.set('economy', economyManager)`
+   - `registry.set('settings', settingsManager)`
+   - `registry.set('dpr', dpr)`
+5. Start Phaser Game with scene list: Boot → Menu → LevelSelect → Game
 
-**Player Move Execution:**
+**Gameplay Flow (Game Scene):**
 
-1. Player taps two adjacent tiles
-2. `Grid.swap()` validates move, swaps tile positions
-3. `Match.detectMatches()` scans for 3+ consecutive matching tiles
-4. Matched tiles removed, counters updated
-5. `Grid.applyGravity()` drops remaining tiles
-6. `Grid.spawn()` creates new tiles at top using spawn_rules probabilities
-7. Repeat detection until no matches found
-8. If combo occurred: `Booster.createBooster()` may be triggered
-9. Goals checked: `Match.checkGoals()`
-10. If goals complete: `level_win` event logged to Firebase Analytics
-11. If moves depleted: `level_fail` event logged
+1. User taps/swaps two tiles
+2. Input handler passes to Match3Engine:
+   - Engine validates swap legality
+   - Checks for matches after swap
+   - Returns MatchResult (tilesToRemove, boostersToSpawn)
+3. If matches found:
+   - VFXManager plays particle effects
+   - AudioManager plays match sound
+   - LevelManager updates goal progress
+   - Engine removes matched tiles, spawns boosters
+4. Gravity cascade:
+   - Engine applies gravity (tiles fall)
+   - Engine checks for new matches
+   - Repeats up to MAX_CASCADE_DEPTH (20)
+5. Level state:
+   - LevelManager decrements moves, checks win/lose conditions
+   - If goals complete before moves exhaust: level won, ProgressManager records stars
+   - If moves exhausted before goals: level lost, EconomyManager loses a life
+6. Scene transition:
+   - Save all state (ProgressManager.saveProgress(), EconomyManager persistent saves)
+   - Transition to LevelSelect or restart Game
 
-**Coupon Generation & Redemption:**
+**Settings Change Flow (Reactive):**
 
-1. Player wins level with coupon_chance triggered
-2. Client calls Firebase Cloud Function `generateCoupon`
-3. Function validates: user limits, campaign budget, antifraud checks
-4. Coupon document created in Firestore collection `coupons`
-5. Coupon returned to client, displayed in reward UI
-6. On redemption (at KLO station): `redeemCoupon` function called
-7. Coupon status updated to `redeemed`, metadata recorded (station_id, receipt_id, product_id)
+1. SettingsManager.set(key, value):
+   - Updates internal data
+   - Saves to localStorage
+   - Calls notify() to all subscribers
+2. Subscribers (VFXManager, AudioManager):
+   - Receive callback with new value
+   - Update internal state (animationsEnabled, muted, volume)
+   - Next gameplay event uses new settings
 
 **State Management:**
 
-- **Client-side volatile:** Current game session (grid state, remaining moves, goals progress) stored in Phaser scene properties
-- **Persistent (Firestore):** User profile, completed levels, booster inventory, earned coupons, stats
-- **Configuration (Firebase Remote Config):** Level data overrides, reward frequencies, coupon types, A/B test flags
-- **Analytics (Firebase Analytics):** All events logged synchronously; batched by Firebase SDK
+- **ProgressManager**: Tracks level completion, stars (0-3 per level), current level
+  - Persists to Firestore on completeLevel()
+  - Accessed by LevelSelect (unlock logic), Game (star calculation)
+
+- **EconomyManager**: Tracks lives (0-5 max), bonuses, regeneration timer
+  - Auto-recalculates lives on getLives() call (includes regen logic)
+  - Persists to Firestore on loseLife() or spendBonusesForRefill()
+  - Accessed by LevelSelect (HUD), Game (life loss on level start)
+
+- **SettingsManager**: Tracks sfxEnabled, sfxVolume, animationsEnabled
+  - Persists to localStorage only
+  - Subscribed to by VFXManager and AudioManager
 
 ## Key Abstractions
 
-**Grid:**
-- Purpose: Manages 8×8 tile matrix; orchestrates match detection, gravity, spawning
-- Examples: `src/game/Grid.ts`
-- Pattern: Singleton per level; maintains internal 2D array of Tile references
+**Match3Engine:**
+- Purpose: Pure game logic state machine
+- Examples: `src/game/Match3Engine.ts`
+- Pattern: Immutable grid operations (mutations return new state, no side effects)
+- Core methods: `swapTiles()`, `processMatches()`, `processCascade()`, `getTilesInRadius()`
 
-**Tile:**
-- Purpose: Represents a single grid cell with type (fuel, coffee, snack, road) and state (normal, frozen, exploding)
-- Examples: `src/game/Tile.ts`
-- Pattern: Composite with Phaser Sprite; can be normal tile or booster tile
+**TileSprite:**
+- Purpose: Phaser Container wrapper for tile display and interaction
+- Examples: `src/game/TileSprite.ts`
+- Pattern: Managed sprite lifecycle (update, animation, selection state)
+- Contains: tile image, booster overlay, obstacle overlay, obstacle layers text
 
-**Match:**
-- Purpose: Detects connected components of matching tiles; generates combo chains
-- Examples: `src/game/Match.ts`
-- Pattern: Pure logic (no side effects); returns match groups for Grid to process
+**LevelManager:**
+- Purpose: Level goal/move tracking with event emission
+- Examples: `src/game/LevelManager.ts`
+- Pattern: Observer pattern (listeners notified on state change)
+- Emits: moves_changed, goals_updated, level_won, level_lost
 
-**Booster:**
-- Purpose: Represents special effects (linear strip, bomb 3×3, rocket cross, KLO-sphere all-of-type)
-- Examples: `src/game/Booster.ts`
-- Pattern: Strategy pattern; each booster type implements `execute()` method
-
-**Obstacle:**
-- Purpose: Represents environmental challenges (ice layers, dirt, crates, blocked cells)
-- Examples: `src/game/Obstacle.ts`
-- Pattern: State-based; tracks health (layers), behavior on match impact
-
-**Level:**
-- Purpose: Immutable config for a single level (moves, grid, goals, obstacles, spawn rules)
-- Examples: Interface in `TECH_SPEC.md`; loaded from JSON by `LevelLoader.ts`
-- Pattern: Data transfer object; parsed once, referenced throughout level session
+**BoosterActivator:**
+- Purpose: Booster effect execution (single and combo)
+- Examples: `src/game/BoosterActivator.ts`
+- Pattern: Strategy pattern (different booster types = different tile selection algorithms)
+- Combos: Defined in BOOSTER_COMBO_TABLE lookup
 
 ## Entry Points
 
-**Application Boot:**
+**Application Start:**
 - Location: `src/main.ts`
-- Triggers: Browser loads index.html, JavaScript bundled by Vite
-- Responsibilities: Initialize Phaser game instance, load initial scene (Boot)
+- Triggers: Browser loads HTML, executes JS bundle
+- Responsibilities:
+  1. Initialize Phaser Game with Scale.RESIZE + DPR scaling
+  2. Bootstrap Firebase and user state managers
+  3. Create scene instances and register with game
+  4. Store managers in registry for scene access
 
-**Game Scene:**
-- Location: `src/scenes/Game.ts`
-- Triggers: Boot scene completes, Menu scene transitions to game on level select
-- Responsibilities: Instantiate Grid, render tiles, listen for player input, orchestrate win/loss logic
+**Scene Transitions:**
+- Boot → Menu: `this.scene.start('Menu')` after assets preload
+- Menu → LevelSelect: Play button triggers `this.scene.start('LevelSelect')`
+- LevelSelect → Game: Level node click triggers `this.scene.start('Game', { levelId })`
+- Game → LevelSelect: Back button or level complete/lost triggers `this.scene.start('LevelSelect')`
 
-**Firebase Initialization:**
-- Location: `src/firebase/auth.ts` (and other service files)
-- Triggers: Application startup
-- Responsibilities: Initialize Firebase SDK, establish auth state (anonymous or linked to loyalty_id)
-
-**Booster Activation:**
-- Location: `src/game/Booster.ts` (specific type classes)
-- Triggers: Either player manually uses pre-earned booster OR combo creates in-match booster
-- Responsibilities: Calculate affected tiles, apply destruction/effects, update goals
+**Input Entry Points:**
+- LevelSelect drag scroll: Pointer down/move/up listeners update camera scroll
+- Game tile select: Pointer move/down listeners track tile interactions for swaps
+- Button clicks: Pointer down on text/image areas with setInteractive()
 
 ## Error Handling
 
-**Strategy:** Try-catch at service boundaries (Firebase calls, level loading); graceful degradation in match detection
+**Strategy:** Try-catch wrapping async operations (Firebase), fallback defaults for missing data.
 
 **Patterns:**
 
-- **Firebase Errors:** Catch in async/await try-catch; fallback to offline mode (single player session) or retry with exponential backoff
-- **Level Load Failure:** Show error screen; allow retry or return to menu
-- **Firestore Rules Rejection:** User sees "permission denied" toast; client logs telemetry
-- **Grid Logic Errors:** Grid state reverts to pre-move snapshot if swap/match logic throws
-- **Booster Activation Failure:** Booster returned to inventory; player refunded move if applied mid-move
+1. **Firebase Operations** (`src/firebase/firestore.ts`, `src/main.ts`):
+   - `loadProgress()` returns null if user doc missing → main.ts creates new progress
+   - `saveProgress()` wrapped in try-catch, logs to console
+   - Offline persistence prevents throw on network errors
+
+2. **Asset Loading** (`src/scenes/Boot.ts`):
+   - Load event handlers manage progress bar
+   - Missing assets don't throw (Phaser silently uses missing texture)
+
+3. **Registry Access** (`src/scenes/Game.ts`):
+   - `registry.get('progress')` used without null-check (assumes bootstrap succeeded)
+   - Scene lifecycle ensures registry populated before scenes access
+
+4. **Settings Persistence** (`src/game/SettingsManager.ts`):
+   - localStorage.setItem wrapped in try-catch
+   - localStorage.getItem returns null → fall back to defaults
+   - Version migration logic allows future schema changes
 
 ## Cross-Cutting Concerns
 
-**Logging:** Firebase Analytics event dispatch in key game state transitions (level_start, level_win, booster_used, coupon_claimed). Custom events logged via `src/firebase/analytics.ts`
+**Logging:** Console.log with `[ModuleName]` prefix (e.g., `[Main]`, `[Match3Engine]`, `[EconomyManager]`)
+- No centralized logger; ad-hoc logging per module
+- Useful for debugging Firebase sync, cascade resolution, state changes
 
-**Validation:** Level JSON schema validated by TypeScript interfaces; Firestore security rules enforce user-scoped coupon access; Cloud Functions validate antifraud signals before coupon creation
+**Validation:** Input validation at scene boundaries
+- Match3Engine validates swap legality (adjacent check, empty cell check)
+- LevelManager validates goal state before win/lose (prevents double-completion)
+- BoosterActivator validates booster type before activation
 
-**Authentication:** Firebase Anonymous auth by default; optional phone auth to link loyalty_id and unlock real coupons. Auth state persisted in Firestore user doc.
+**Responsive Layout:** DPR-aware sizing via `getResponsiveLayout()`
+- Calculates tile size based on viewport width (40-60px CSS target)
+- Converts CSS pixels → Phaser pixels via `cssToGame()` multiplier
+- Used by Game scene for dynamic tile sizing, all UI text sizing
+
+**Memory Management:** Manual destruction of graphics/containers
+- Game scene destroys blockSprites array on shutdown
+- TileSprite containers destroyed on tile removal
+- VFXManager particle emitters recycled to prevent memory leak
 
 ---
 
-*Architecture analysis: 2026-02-05*
+*Architecture analysis: 2026-02-10*

@@ -1,237 +1,230 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-02-05
+**Analysis Date:** 2026-02-10
 
 ## Directory Layout
 
 ```
 klo-match-3/
-├── README.md                    # Project overview, business goals, architecture summary
-├── TECH_SPEC.md                 # Technical specification (stack, schemas, deployment)
-├── GAME_DESIGN.md               # Game design document (mechanics, level progression, economy)
-├── PROJECT_STATUS.md            # Current development status, next steps
-├── .planning/
-│   └── codebase/                # GSD codebase analysis documents
-├── src/                         # Frontend source code (Phaser + TypeScript)
-│   ├── main.ts                  # Entry point: Phaser game initialization
-│   ├── scenes/                  # Phaser scenes (game states)
-│   │   ├── Boot.ts              # Loading, auth, asset initialization
-│   │   ├── Menu.ts              # Main menu, level select
-│   │   ├── Game.ts              # Active level gameplay
-│   │   └── UI.ts                # HUD overlay (moves, goals, pause)
-│   ├── game/                    # Core match-3 game logic
-│   │   ├── Grid.ts              # 8×8 grid manager, match detection, gravity, spawn
-│   │   ├── Tile.ts              # Individual tile with type and state
-│   │   ├── Match.ts             # Match detection algorithm
-│   │   ├── Booster.ts           # Booster types (linear, bomb, rocket, sphere)
-│   │   └── Obstacle.ts          # Obstacle types (ice, dirt, crate, blocked)
-│   ├── data/                    # Data loading and management
-│   │   ├── LevelLoader.ts       # Parse level JSON, return typed Level object
-│   │   └── RemoteConfig.ts      # Firebase Remote Config wrapper
-│   ├── firebase/                # Backend services integration
-│   │   ├── auth.ts              # Firebase Auth (anonymous + phone)
-│   │   ├── firestore.ts         # Firestore operations (user, coupon documents)
-│   │   ├── analytics.ts         # Firebase Analytics event dispatch
-│   │   └── functions.ts         # Cloud Functions client calls
-│   └── utils/                   # Shared utilities
-│       ├── constants.ts         # Game enums, tile types, move directions
-│       └── helpers.ts           # Math, validation, formatting helpers
-├── functions/                   # Firebase Cloud Functions (backend)
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── src/
-│       ├── index.ts             # Cloud Functions entry point
-│       ├── coupons.ts           # generateCoupon, redeemCoupon logic
-│       └── antifraud.ts         # Fraud detection, device/IP rate limiting
-├── public/                      # Static assets served by Hosting
-│   ├── index.html               # PWA entry point
-│   ├── assets/                  # Game graphics, audio (PNG, MP3, etc.)
-│   └── data/
-│       └── levels/              # Copy of JSON levels (deployed with frontend)
-├── data/                        # Source level definitions (canonical)
-│   └── levels/
-│       ├── level_001.json       # Tutorial: fuel collection
-│       ├── level_002.json       # Tutorial: multi-type collection
-│       ├── level_003.json       # First obstacles (ice)
-│       ├── level_004.json       # Ice + multi-goal
-│       └── level_005.json       # Booster creation + first coupon
-├── docs/                        # Additional documentation
-│   ├── STYLE_GUIDE.md           # Visual design system (colors, components, animations)
-│   ├── ANALYTICS.md             # Event taxonomy, user properties, metrics
-│   └── COUPONS.md               # Coupon generation/redemption flows, integration
-├── assets/                      # Design source files (Figma, Illustrator, etc.)
-├── .env.example                 # Template for environment variables
-├── package.json                 # Frontend dependencies (Phaser, Firebase, TypeScript, Vite)
-├── tsconfig.json                # TypeScript configuration
-├── vite.config.ts               # Build tool config
-├── firebase.json                # Firebase Hosting/Functions deployment config
-└── .firebaserc                  # Firebase project alias
+├── src/                           # TypeScript source code
+│   ├── main.ts                    # Application entry point (bootstrap)
+│   ├── vite-env.d.ts              # Vite type definitions
+│   ├── game/                      # Core game logic and managers
+│   │   ├── Match3Engine.ts        # Pure match-3 mechanics
+│   │   ├── BoosterActivator.ts    # Booster effect execution
+│   │   ├── LevelManager.ts        # Goal/move tracking + level events
+│   │   ├── ProgressManager.ts     # User progress persistence (Firestore)
+│   │   ├── EconomyManager.ts      # Lives/bonuses management (Firestore)
+│   │   ├── SettingsManager.ts     # User preferences (localStorage)
+│   │   ├── TileSprite.ts          # Phaser sprite wrapper for tiles
+│   │   ├── VFXManager.ts          # Particle effects
+│   │   ├── AudioManager.ts        # Sound playback wrapper
+│   │   ├── types.ts               # TypeScript type definitions
+│   │   ├── constants.ts           # Game constants (colors, textures, etc)
+│   │   ├── *.test.ts              # Unit tests (Match3Engine, LevelManager, etc)
+│   │   └── .gitkeep
+│   ├── scenes/                    # Phaser scenes
+│   │   ├── Boot.ts                # Asset preload + progress bar
+│   │   ├── Menu.ts                # Animated title screen
+│   │   ├── LevelSelect.ts         # Level picker with winding path
+│   │   ├── Game.ts                # Main 8x8 gameplay
+│   │   ├── index.ts               # Scene exports
+│   │   └── .gitkeep
+│   ├── firebase/                  # Firebase integration
+│   │   ├── index.ts               # Init function + module singletons
+│   │   ├── config.ts              # Firebase config (uses vite env vars)
+│   │   ├── auth.ts                # AuthService (anonymous sign-in)
+│   │   ├── firestore.ts           # FirestoreService (save/load progress)
+│   │   └── .gitkeep
+│   ├── utils/                     # Utilities
+│   │   ├── responsive.ts          # DPR-aware layout calculation
+│   │   ├── constants.ts           # Global constants (tile size, gaps)
+│   │   └── .gitkeep
+│   └── data/                      # (placeholder for runtime data)
+│       └── .gitkeep
+├── public/                        # Static assets + level data
+│   ├── data/                      # Level JSON files
+│   │   └── levels/
+│   │       ├── level_001.json     # Level 1 definition (goals, moves, obstacles)
+│   │       ├── level_002.json     # ... (up to level_010.json)
+│   │       └── ...
+│   └── assets/                    # Image/audio assets
+│       ├── tiles/                 # Tile textures (burger, hotdog, etc)
+│       ├── boosters/              # Booster visuals (bomb, klo_horizontal, etc)
+│       ├── blockers/              # Obstacle visuals (ice, grass, crate)
+│       ├── blocks/                # Block background texture
+│       ├── gui/                   # UI elements (buttons, icons, progress bars)
+│       ├── bg/                    # Background layers (kyiv themed)
+│       ├── collections/           # Collection quest icons (car, coffee, food)
+│       ├── sound/                 # Audio effects (match, bomb, win, lose)
+│       └── .gitkeep
+├── dist/                          # Build output (generated)
+├── node_modules/                  # Dependencies
+├── .planning/                     # Project documentation
+│   ├── codebase/                  # Codebase analysis docs
+│   │   ├── ARCHITECTURE.md        # (this file)
+│   │   ├── STRUCTURE.md           # (this file)
+│   │   ├── STACK.md               # (tech stack)
+│   │   └── ...
+│   └── phases/                    # Implementation phase docs
+├── tsconfig.json                  # TypeScript config
+├── vite.config.ts                 # Vite bundler config
+├── jest.config.js                 # Jest test runner config
+├── package.json                   # Dependencies + scripts
+└── .gitignore                     # Ignored files
+
 ```
 
 ## Directory Purposes
 
-**Root-level docs:**
-- Purpose: Project governance and spec documents
-- Contains: README.md, TECH_SPEC.md, GAME_DESIGN.md, PROJECT_STATUS.md
-- Key files: These are single sources of truth for architecture, mechanics, status
+**`src/`:**
+- Purpose: All application source code (TypeScript)
+- Contains: Game logic, scenes, Firebase integration, utilities
+- Key files: `main.ts` (entry point), scene files, manager classes
 
-**src/:**
-- Purpose: All frontend application code
-- Contains: TypeScript source files for game logic, UI, Firebase integration
-- Key files: `src/main.ts` (entry point), `src/scenes/Game.ts` (core game loop)
+**`src/game/`:**
+- Purpose: Core game engine, state management, and supporting services
+- Contains: Match3Engine (pure logic), managers (Progress/Economy/Settings), rendering helpers (TileSprite, VFX, Audio)
+- Key files: `Match3Engine.ts`, `ProgressManager.ts`, `EconomyManager.ts`, `types.ts`
 
-**src/scenes/:**
-- Purpose: Phaser scene definitions (application states)
-- Contains: Game state management classes
-- Key files: `src/scenes/Game.ts` is the main game loop; `src/scenes/Boot.ts` initializes auth/assets
+**`src/scenes/`:**
+- Purpose: Phaser scene implementations for app flow
+- Contains: Boot (preload), Menu (title), LevelSelect (level picker), Game (gameplay)
+- Key files: One class per file, all export to `index.ts`
 
-**src/game/:**
-- Purpose: Core match-3 game mechanics (not Phaser-specific)
-- Contains: Grid, Tile, Match, Booster, Obstacle classes
-- Key files: `src/game/Grid.ts` orchestrates all match-3 logic; `src/game/Match.ts` is pure algorithm
+**`src/firebase/`:**
+- Purpose: Firebase SDK integration and backend communication
+- Contains: Config loading, anonymous auth, Firestore persistence operations
+- Key files: `index.ts` (bootstrap), `firestore.ts` (save/load), `auth.ts` (sign-in)
 
-**src/data/:**
-- Purpose: Data loading abstraction (level JSON, remote config)
-- Contains: LevelLoader (file I/O), RemoteConfig (Firebase SDK wrapper)
-- Key files: `src/data/LevelLoader.ts` parses `data/levels/*.json` files
+**`src/utils/`:**
+- Purpose: Reusable utilities (responsive layout, constants)
+- Contains: DPR-aware sizing calculations, game constant definitions
+- Key files: `responsive.ts`, `constants.ts`
 
-**src/firebase/:**
-- Purpose: All backend service calls and auth
-- Contains: Firebase SDK initialization, Firestore operations, Analytics dispatch
-- Key files: `src/firebase/auth.ts` (auth state), `src/firebase/functions.ts` (Cloud Function calls)
+**`public/data/`:**
+- Purpose: Level definition JSON files (loaded in Boot preload)
+- Contains: Grid dimensions, goal definitions, spawn rules, obstacles per level
+- Key files: `levels/level_NNN.json` (one per level 1-10)
 
-**src/utils/:**
-- Purpose: Shared constants and helper functions
-- Contains: Game constants (TILE_TYPES, DIRECTIONS), math helpers, validation
-- Key files: `src/utils/constants.ts` defines all game enums
+**`public/assets/`:**
+- Purpose: Game assets (images, sounds)
+- Contains: Tile textures, booster visuals, obstacles, GUI elements, backgrounds, audio
+- Key files: Organized by type (tiles/, boosters/, gui/, sound/, bg/)
 
-**functions/:**
-- Purpose: Firebase Cloud Functions (server-side)
-- Contains: generateCoupon, redeemCoupon, antifraud logic
-- Key files: `functions/src/coupons.ts` is primary business logic
-
-**public/:**
-- Purpose: Static assets deployed to Firebase Hosting
-- Contains: index.html, graphics, audio, level JSON copies
-- Key files: `public/index.html` is the PWA entry point
-
-**data/:**
-- Purpose: Canonical source for level definitions
-- Contains: Level JSON files (L1–L5 examples, template for L6–L100)
-- Key files: `data/levels/level_001.json` through `level_005.json` are reference implementations
-
-**docs/:**
-- Purpose: Design system and operational documentation
-- Contains: Style guide, analytics event taxonomy, coupon integration details
-- Key files: `docs/STYLE_GUIDE.md` for visual design, `docs/ANALYTICS.md` for event specs
+**`dist/`:**
+- Purpose: Build output (should not be committed)
+- Generated by: `npm run build`
+- Contents: Bundled JS, compiled assets, HTML
 
 ## Key File Locations
 
 **Entry Points:**
-- `src/main.ts`: Creates Phaser game instance; loads Boot scene
-- `public/index.html`: HTML template; mounts Phaser game
-- `functions/src/index.ts`: Exports Cloud Functions (generateCoupon, redeemCoupon)
+- `src/main.ts`: Browser execution starts here. Bootstraps Firebase, creates managers, starts Phaser.
+- `src/scenes/Boot.ts`: First scene. Preloads all assets (textures, sounds, level JSONs), shows progress bar.
 
 **Configuration:**
-- `package.json`: Frontend dependencies, build scripts
-- `tsconfig.json`: TypeScript compiler options
-- `vite.config.ts`: Build pipeline (bundling, dev server, output)
-- `firebase.json`: Hosting/Functions/Firestore deployment config
-- `.firebaserc`: Firebase project alias mapping
-- `.env.example`: Required environment variables (Firebase config, API keys)
+- `src/firebase/config.ts`: Firebase project credentials (loaded from vite env vars `VITE_FIREBASE_*`)
+- `src/utils/constants.ts`: TILE_SIZE, TILE_GAP, DPR cap
+- `src/game/constants.ts`: TILE_COLORS, TEXTURE_KEYS, SOUND_KEYS, GUI_TEXTURE_KEYS, MAP_CONFIG
 
 **Core Logic:**
-- `src/game/Grid.ts`: Grid state, match detection, gravity, spawn
-- `src/game/Match.ts`: Match detection algorithm (pure function)
-- `src/scenes/Game.ts`: Game loop, input handling, win/loss state
-- `functions/src/coupons.ts`: Coupon generation/redemption business logic
+- `src/game/Match3Engine.ts`: All match-3 mechanics (swap, match detection, cascade, gravity)
+- `src/game/types.ts`: TypeScript type definitions (TileData, BoosterType, LevelGoal, etc)
+- `src/game/LevelManager.ts`: Goal tracking, move counter, win/lose logic
 
-**Testing:**
-- `src/**/*.test.ts` or `src/**/*.spec.ts`: Unit tests (Jest, not yet created)
-- `functions/**/*.test.ts`: Cloud Functions unit tests (not yet created)
+**State & Persistence:**
+- `src/game/ProgressManager.ts`: Level completion, stars, persistence to Firestore
+- `src/game/EconomyManager.ts`: Lives, bonuses, regeneration logic, persistence to Firestore
+- `src/game/SettingsManager.ts`: Audio/animation toggles, persistence to localStorage
 
-**Data:**
-- `data/levels/level_NNN.json`: Level definitions (source of truth)
-- `public/data/levels/level_NNN.json`: Level copies (deployed)
+**Scenes:**
+- `src/scenes/Menu.ts`: Title screen with animated tiles, "Play" button
+- `src/scenes/LevelSelect.ts`: Level picker UI, winding path, star progress, locked levels
+- `src/scenes/Game.ts`: Main 8x8 grid gameplay, HUD (moves/goals), back button, game over dialogs
+
+**Supporting Services:**
+- `src/game/TileSprite.ts`: Phaser Container for tile rendering (tile + booster + obstacle layers)
+- `src/game/VFXManager.ts`: Particle bursts on match, sparkles on level complete
+- `src/game/AudioManager.ts`: Sound effect playback (match, bomb, win/lose)
+- `src/game/BoosterActivator.ts`: Booster effect logic (single + combo effects)
+
+**Firebase Integration:**
+- `src/firebase/index.ts`: Bootstrap function `initFirebase()`, exports getters for services
+- `src/firebase/firestore.ts`: `FirestoreService` class with `saveProgress()`, `loadProgress()`, `saveEconomy()`, `loadEconomy()`
+- `src/firebase/auth.ts`: `AuthService` class with `signInAnonymous()`
+
+**Level Data:**
+- `public/data/levels/level_001.json` through `level_010.json`: Level definitions
+  - Each file: grid dimensions, goals (collect/destroy/create), moves, spawn rules, obstacles
+  - Loaded by Boot preload as JSON
 
 ## Naming Conventions
 
 **Files:**
-
-- `PascalCase` for Phaser scene and game class files: `Game.ts`, `Grid.ts`, `Booster.ts`
-- `camelCase` for service/utility files: `auth.ts`, `analytics.ts`, `constants.ts`
-- `kebab-case` for data directories: `data/levels/`, `public/assets/`
-- Level JSONs: `level_NNN.json` with zero-padded 3-digit IDs (level_001, level_010, level_100)
+- Scene files: `CamelCase.ts` matching class name (e.g., `Game.ts` contains `export class Game`)
+- Manager files: `NameManager.ts` (e.g., `ProgressManager.ts`, `EconomyManager.ts`)
+- Service files: `NameService.ts` (e.g., `FirestoreService`, `AuthService`)
+- Test files: `FileName.test.ts` (e.g., `Match3Engine.test.ts`)
+- Type files: `types.ts`, `constants.ts`
 
 **Directories:**
-
-- `PascalCase` for multi-word feature domains (when used): Not currently used; directories are lowercase plural
-- lowercase plural for domain collections: `scenes/`, `game/`, `firebase/`, `functions/`
-- `data/levels/` for game content files
-- `public/assets/` for graphics and audio
-- `docs/` for additional specs and guides
+- Functional grouping: `src/game/`, `src/scenes/`, `src/firebase/`, `src/utils/`
+- Asset organization: By type (tiles/, boosters/, blockers/, gui/, bg/, sound/, collections/)
+- Level data: `public/data/levels/level_NNN.json` (zero-padded numbers)
 
 ## Where to Add New Code
 
-**New Feature (e.g., new booster type):**
-- Primary code: Extend `src/game/Booster.ts` with new booster class (implement `execute()` method)
-- Game loop integration: Update `src/game/Grid.ts` to handle new booster in combo detection or player activation
-- Level data: Update `data/levels/*.json` `rewards.boosters` field to include new type
-- Tests: Create `src/game/Booster.test.ts` with unit tests for new booster logic
+**New Gameplay Feature (e.g., new booster type):**
+- Define type in `src/game/types.ts` (BoosterType union)
+- Add visual key to `src/game/constants.ts` (BOOSTER_TEXTURE_KEYS)
+- Implement activation logic in `src/game/BoosterActivator.ts` (activateBooster method)
+- Add booster combo rules to `src/game/BoosterActivator.ts` (BOOSTER_COMBO_TABLE)
+- Load texture in `src/scenes/Boot.ts` preload
+- Add test cases in `src/game/BoosterActivator.test.ts`
 
-**New Game Scene (e.g., shop, settings):**
-- Implementation: Create new file in `src/scenes/` (e.g., `src/scenes/Shop.ts`)
-- Scene management: Register in `src/main.ts` Phaser scene list
-- Transitions: Update Menu and Game scenes to call `scene.start('Shop')` as needed
-- State: If persistent, use `src/firebase/firestore.ts` to read/write user config
+**New Level:**
+- Create JSON file: `public/data/levels/level_NNN.json`
+- Match schema in `src/game/types.ts` (LevelData interface)
+- Load in `src/scenes/Boot.ts` (add `this.load.json('level_NNN', '...')`)
+- Add level name to `src/scenes/LevelSelect.ts` (LEVEL_NAMES map)
+- Add level node position to `src/game/constants.ts` (MAP_CONFIG.LEVEL_NODES)
+- Update MAX_LEVELS in `src/scenes/Game.ts`
 
-**New Analytics Event:**
-- Event dispatch: Add call to `src/firebase/analytics.ts` `logEvent()` in the appropriate game location
-- Parameters: Document event schema in `docs/ANALYTICS.md`
-- Remote Config override: Add to Firebase Remote Config dashboard if A/B testing
+**New Manager (cross-scene state):**
+- Create class file: `src/game/NewManager.ts`
+- Initialize in `src/main.ts` after Firebase setup
+- Store in registry: `game.registry.set('newManager', instance)`
+- Access in scenes: `const manager = this.registry.get('newManager')`
 
-**New Obstacle Type:**
-- Implementation: Extend `src/game/Obstacle.ts` with new type class (implement `onHit()` method)
-- Level integration: Add type to level JSON `obstacles` array
-- Grid interaction: Update `src/game/Grid.ts` match detection to account for obstacle blocking behavior
-
-**Utilities:**
-- Shared helpers: Add to `src/utils/helpers.ts` with TypeScript type signatures
-- Constants: Add to `src/utils/constants.ts` (enums, magic numbers)
-
-**Cloud Functions:**
-- New callable function: Add to `functions/src/coupons.ts` or create new file (e.g., `missions.ts`)
-- Deploy: `firebase deploy --only functions`
-- Client call: Wrap in `functions/src/index.ts` export; call from scene via `src/firebase/functions.ts`
+**Utility Functions:**
+- Shared math/layout: `src/utils/responsive.ts` or new `src/utils/math.ts`
+- Game constants: `src/utils/constants.ts`
 
 ## Special Directories
 
-**data/levels/:**
-- Purpose: Canonical source for level definitions
-- Generated: No (manually created JSON)
-- Committed: Yes (part of git repo)
-- Build step: Copied to `public/data/levels/` during Vite build
+**`.planning/`:**
+- Purpose: Project documentation and phase planning
+- Generated: By GSD orchestrator
+- Committed: Yes (tracked in git for historical reference)
+- Contains: Architecture docs, phase plans, research, milestones
 
-**public/:**
-- Purpose: Static assets deployed to Firebase Hosting
-- Generated: Yes (Vite outputs bundled JS/CSS here)
-- Committed: No (generated, but level JSON copies are committed)
+**`dist/`:**
+- Purpose: Build output
+- Generated: By `npm run build` (Vite)
+- Committed: No (in .gitignore)
+- Contents: Bundled JS, HTML, assets
 
-**functions/:**
-- Purpose: Isolated backend environment
-- Generated: No (source code; build output goes to `functions/lib/`)
-- Committed: Yes (TypeScript source; `node_modules/` excluded)
+**`public/`:**
+- Purpose: Static files served as-is
+- Contents: Level JSONs, image/audio assets
+- How served: Vite dev server serves directly; build copies to dist/
 
-**node_modules/:**
-- Purpose: Installed packages
-- Generated: Yes
-- Committed: No (lockfile `package-lock.json` is committed)
-
-**.planning/codebase/:**
-- Purpose: GSD analysis documents
-- Generated: No (written by GSD tools)
-- Committed: Yes (guidance for future development)
+**`node_modules/`:**
+- Purpose: npm dependencies
+- Generated: By `npm install`
+- Committed: No (in .gitignore)
 
 ---
 
-*Structure analysis: 2026-02-05*
+*Structure analysis: 2026-02-10*

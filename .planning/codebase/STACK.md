@@ -1,130 +1,110 @@
 # Technology Stack
 
-**Analysis Date:** 2026-02-05
+**Analysis Date:** 2026-02-10
 
 ## Languages
 
 **Primary:**
-- TypeScript - Frontend (Phaser 3 PWA) and Cloud Functions implementation
+- TypeScript 5.7.0 - All source code (.ts files in `src/`)
 
-**Supporting:**
-- JSON - Level data format (`data/levels/*.json`)
+**Secondary:**
+- JavaScript - Configuration files (vite.config.ts compiled, jest.config.js)
+- HTML - Page structure (`index.html`)
+- CSS - Inline styles in HTML
 
 ## Runtime
 
 **Environment:**
-- Node.js 18+ (specified in `TECH_SPEC.md` for Firebase Cloud Functions)
+- Browser (modern ES2020+ support)
+- Node.js - Development and testing
 
 **Package Manager:**
-- npm (referenced in `TECH_SPEC.md` for project setup)
-- Lockfile: Not yet present (project in prototype phase)
+- npm
+- Lockfile: `package-lock.json` present
 
 ## Frameworks
 
 **Core:**
-- Phaser 3 [Version TBD] - Match-3 game engine, recommended over pixi.js per `TECH_SPEC.md`
-- Firebase [Latest] - Complete backend platform
+- Phaser 3.90.0 - Game framework (canvas rendering, scene management, input handling, animations)
+  - Used in all scenes: Boot, Menu, LevelSelect, Game
+  - Provides AUTO renderer (WebGL with Canvas fallback)
+
+**Testing:**
+- Jest 30.2.0 - Unit test runner
+- ts-jest 29.4.6 - TypeScript support for Jest
 
 **Build/Dev:**
-- Vite or Webpack - Build tool for bundling (recommended Vite per `TECH_SPEC.md`)
-
-**Backend Runtime:**
-- Firebase Cloud Functions - Serverless execution for `generateCoupon`, `redeemCoupon`, and antifraud logic
+- Vite 6.0.0 - Frontend build tool and dev server
+- TypeScript 5.7.0 - Static type checking and transpilation
 
 ## Key Dependencies
 
 **Critical:**
-- firebase-admin (for Cloud Functions server-side operations)
-- @firebase/app, @firebase/firestore, @firebase/auth, @firebase/analytics, @firebase/remote-config - Frontend SDKs
-- phaser [3.x] - Game engine (grid, swap, match, gravity, spawn mechanics)
+- firebase 11.0.0 - Backend platform for user authentication and data persistence
+  - Authentication: Anonymous sign-in
+  - Database: Cloud Firestore with offline IndexedDB persistence
+  - Requires 6 environment variables (VITE_FIREBASE_*)
 
 **Infrastructure:**
-- firebase-tools - CLI for development, deployment, and emulation
-- typescript - Language support for type-safe code
-- nodejs runtime - Execution environment for Cloud Functions
+- None beyond Node.js/npm toolchain
 
 ## Configuration
 
 **Environment:**
-- Firebase project configuration via `firebase.json` and `.firebaserc` (referenced in `TECH_SPEC.md`)
-- Environment variables: Not yet documented (project in early stage)
+- Vite-managed environment variables with VITE_ prefix
+- `.env` file required but not committed (per `.gitignore`)
+- Configuration validated at startup in `src/firebase/config.ts`
 
-**Build:**
-- `tsconfig.json` - TypeScript configuration
-- `vite.config.ts` or `webpack.config.js` - Build configuration
-- `firebase.json` - Firebase deployment config
+**Required Environment Variables:**
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+
+**Build Configuration Files:**
+- `tsconfig.json` - TypeScript compiler
+  - Target: ES2020
+  - Module: ES2020
+  - Module resolution: bundler
+  - Strict mode enabled
+- `vite.config.ts` - Vite bundler
+  - Output directory: `dist`
+  - Dev server port: 5173
+  - Source maps enabled in production build
+- `jest.config.js` - Test runner
+  - Preset: ts-jest
+  - Test environment: node
+  - Test file pattern: `**/*.test.ts`
 
 ## Platform Requirements
 
 **Development:**
-- Node.js 18+
-- npm
-- Firebase CLI (firebase-tools)
+- Node.js with npm
 - Modern browser with WebGL support
+- `.env` file with valid Firebase credentials
 
 **Production:**
-- Firebase Hosting (PWA deployment specified in `README.md`)
-- Firestore database
-- Cloud Functions runtime (Node.js 18)
-- Firebase Authentication
-- Firebase Analytics
-- Firebase Remote Config
+- Deployment via Vercel (configured in `vercel.json`)
+- Static hosting (single-page application)
+- Browser requirements: ES2020+ support
 
-## Deployment Infrastructure
+## Deployment
 
-**Hosting:**
-- Firebase Hosting - PWA serving at custom Firebase domain
+**Hosting Provider:**
+- Vercel
+  - Build command: `npm run build` (TypeScript compilation + Vite bundling)
+  - Output directory: `dist`
+  - Dev command: `npm run dev` (Vite dev server)
+  - Framework: Vite
 
-**Database:**
-- Firestore (NoSQL) - User data, progress, coupons, analytics
-
-**Storage:**
-- Firebase Storage (optional per `TECH_SPEC.md`) - Graphics, audio assets
-
-**Serverless Functions:**
-- Firebase Cloud Functions - Coupon generation, redemption, antifraud checks
-
-**Authentication:**
-- Firebase Authentication - Anonymous + phone verification for loyalty_id binding
-
-## Project Structure
-
-```
-klo-match3/
-├── package.json              # Frontend dependencies
-├── tsconfig.json             # TypeScript config
-├── vite.config.ts (or webpack.config.js)  # Build config
-├── firebase.json             # Firebase deployment config
-├── .firebaserc              # Firebase project reference
-├── src/                      # Frontend source code
-│   ├── main.ts              # Entry point
-│   ├── scenes/              # Phaser scenes
-│   ├── game/                # Game logic (Grid, Tile, Match, Booster, Obstacle)
-│   ├── data/                # Level loader, Remote Config
-│   ├── firebase/            # Firebase SDK integration
-│   └── utils/               # Constants, helpers
-├── public/                   # Static assets
-│   ├── index.html
-│   ├── assets/              # Graphics, sounds
-│   └── data/levels/         # JSON level copies
-├── functions/               # Cloud Functions source
-│   ├── package.json         # Functions dependencies
-│   ├── tsconfig.json        # Functions TypeScript config
-│   └── src/
-│       ├── index.ts
-│       ├── coupons.ts       # generateCoupon, redeemCoupon
-│       └── antifraud.ts
-└── data/                    # Original level JSON files
-    └── levels/              # Level_001.json through level_005.json
-```
-
-## Version Control & CI/CD
-
-**Status:** Not yet configured (project in documentation phase)
-
-- No CI/CD pipeline documented
-- Firebase automatic deployments available via `firebase deploy` command
+**Build Process:**
+1. TypeScript compilation to ES2020
+2. Vite bundling and minification
+3. Source maps generated for debugging
+4. Static artifacts in `dist/` directory
 
 ---
 
-*Stack analysis: 2026-02-05*
+*Stack analysis: 2026-02-10*

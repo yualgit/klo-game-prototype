@@ -1,283 +1,256 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-02-05
+**Analysis Date:** 2026-02-10
 
 ## Naming Patterns
 
 **Files:**
-- PascalCase for class/component files: `Grid.ts`, `Match.ts`, `Booster.ts`
-- camelCase for utility/helper files: `constants.ts`, `helpers.ts`
-- camelCase for firebase service files: `auth.ts`, `firestore.ts`, `analytics.ts`
-- kebab-case for scene files within scenes directory: `Boot.ts`, `Menu.ts`, `Game.ts`, `UI.ts` (following Phaser convention of PascalCase for scene classes)
-- Index files use lowercase: `index.ts` for barrel exports
+- PascalCase for class files: `Match3Engine.ts`, `SettingsManager.ts`, `ProgressManager.ts`, `TileSprite.ts`
+- camelCase for utility files: `responsive.ts`, `constants.ts`
+- Test files use pattern: `FileName.test.ts` (co-located with source): `Match3Engine.test.ts`, `BoosterActivator.test.ts`
+- Barrel export files: `index.ts` (e.g., `src/scenes/index.ts`, `src/firebase/index.ts`)
+- Scene files: PascalCase `Boot.ts`, `Menu.ts`, `LevelSelect.ts`, `Game.ts`
 
 **Functions:**
-- camelCase for all functions: `generateCoupon()`, `redeemCoupon()`, `loadLevel()`
-- Prefix action functions with verb: `loadLevel()`, `updateProgress()`, `validateCoupon()`
-- Firebase functions use camelCase: `generateCoupon`, `redeemCoupon`
-- Public methods are camelCase, private methods prefixed with underscore: `_calculateGridState()`
+- camelCase for all functions and methods: `getLives()`, `completeLevel()`, `activateBooster()`, `processTurn()`
+- Private methods use `private` keyword with camelCase: `private save(): void`, `private applyCellMap(): void`
+- Async functions follow same camelCase: `async loseLife()`, `async saveProgress()`
 
 **Variables:**
-- camelCase for all variables: `currentLevel`, `userProgress`, `isGameActive`
-- CONSTANT_CASE for module-level constants: `MAX_MOVES`, `GRID_WIDTH`, `COUPON_EXPIRY_DAYS`
-- Boolean variables prefixed with `is`, `has`, `can`, `should`: `isLevelComplete`, `hasActiveBooster`, `canSwapTiles`
-- Firebase document IDs use snake_case: `user_id`, `level_id`, `coupon_id`, `loyalty_id`
+- camelCase for const/let/var: `currentLevel`, `gridWidth`, `levelData`, `isProcessing`
+- SCREAMING_SNAKE_CASE for constants: `MAX_LIVES`, `REGEN_INTERVAL_MS`, `MAX_CASCADE_DEPTH`, `DEFAULT_LIVES`
+- Private class properties use camelCase: `private uid: string`, `private grid: TileData[][]`
 
 **Types:**
-- PascalCase for interfaces and types: `User`, `Level`, `CouponDoc`, `Goal`
-- Use `I` prefix for interfaces only if following strict interface pattern, otherwise omit
-- Generic type parameters use single uppercase letters or PascalCase: `T`, `K`, `V` for single letters; `TileType`, `ObstacleType` for complex types
+- PascalCase for interfaces: `UserProgress`, `EconomyState`, `TileData`, `MatchResult`, `SpawnRules`
+- Type unions use lowercase literal values: `type TileType = 'burger' | 'hotdog' | 'oil' | 'water' | 'snack' | 'soda' | 'empty'`
+- Type variables: `K extends SettingsKey`, `K extends BoosterType`
 
 ## Code Style
 
 **Formatting:**
-- 2-space indentation (standard for modern TypeScript/JavaScript projects)
-- Line length: 100 characters (soft limit, 120 hard limit)
-- Trailing commas in multiline objects/arrays/parameters
+- 2-space indentation (observed throughout)
+- Trailing commas in multiline arrays/objects
 - Semicolons required at end of statements
-- Single quotes for strings (unless interpolation required)
-- Use template literals for string interpolation: `` `Level ${levelId}` ``
+- No explicit formatter configured; TypeScript compiler is primary tool
 
 **Linting:**
-- Use ESLint with TypeScript parser
-- Recommend ESLint + Prettier for code formatting consistency
-- Configuration file: `.eslintrc.json` or `eslint.config.js`
-- TypeScript strict mode enabled (`strict: true` in tsconfig.json)
-
-**Phaser 3 Specifics:**
-- Scene classes extend `Phaser.Scene`
-- Use `create()`, `update()`, and `preload()` lifecycle methods per Phaser convention
-- Game configuration follows `Phaser.Types.Core.GameConfig` type
-- Event naming follows Phaser emitter pattern: `this.events.on('eventName', callback)`
+- No ESLint config file present
+- TypeScript strict mode enabled in `tsconfig.json`: `"strict": true`
+- Property initialization: `"strictPropertyInitialization": false` (explicitly relaxed for Phaser compatibility with lifecycle methods)
+- No module path aliases configured (all relative imports)
 
 ## Import Organization
 
-**Order:**
-1. External packages/libraries (Phaser, Firebase, third-party)
-2. Internal type definitions and interfaces (from `./types` or `./data` if dedicated folder)
-3. Services and utilities (from `./firebase`, `./utils`, `./services`)
-4. Game logic classes (from `./game`)
-5. Constants (from `./constants` or `./utils/constants`)
-6. Relative imports (siblings in same directory)
+**Order (observed in `src/scenes/Game.ts`):**
+1. External libraries: `import Phaser from 'phaser'`
+2. Engine/core classes: `import { Match3Engine } from '../game/Match3Engine'`
+3. Graphics/sprite classes: `import { TileSprite } from '../game/TileSprite'`
+4. Type definitions: `import { TileData, SpawnRules, LevelGoal } from '../game/types'`
+5. Game managers: `import { LevelManager } from '../game/LevelManager'`
+6. Utilities: `import { TILE_SIZE } from '../utils/constants'`, `import { getResponsiveLayout } from '../utils/responsive'`
 
-**Path Aliases:**
-- Use `@/` for root src directory imports (if configured in `tsconfig.json`)
-- Example: `import { LevelLoader } from '@/data/LevelLoader'`
-- This improves readability and reduces brittle relative paths
-
-**Example Import Structure:**
+**Pattern from `src/scenes/Game.ts`:**
 ```typescript
 import Phaser from 'phaser';
-import { initializeApp } from 'firebase/app';
-
-import { Level, Goal, Obstacle } from '@/types/level';
-import { FirebaseService } from '@/firebase/firestore';
-import { LevelLoader } from '@/data/LevelLoader';
-import { Grid } from '@/game/Grid';
-import { GRID_WIDTH, GRID_HEIGHT } from '@/utils/constants';
+import { Match3Engine } from '../game/Match3Engine';
+import { TileSprite } from '../game/TileSprite';
+import { TileData, SpawnRules, LevelGoal, LevelEvent, MatchResult, TileType } from '../game/types';
+import { TILE_SIZE } from '../utils/constants';
+import { TILE_COLORS, GUI_TEXTURE_KEYS, TEXTURE_KEYS, BLOCK_TEXTURE_KEY } from '../game/constants';
+import { LevelManager } from '../game/LevelManager';
+import { BoosterActivator } from '../game/BoosterActivator';
+import { ProgressManager } from '../game/ProgressManager';
+import { EconomyManager } from '../game/EconomyManager';
+import { AudioManager } from '../game/AudioManager';
+import { VFXManager } from '../game/VFXManager';
+import { getResponsiveLayout, cssToGame } from '../utils/responsive';
 ```
+
+**Barrel Exports:**
+- Used for scene modules: `src/scenes/index.ts` exports all four scenes
+- Firebase has barrel export: `src/firebase/index.ts`
 
 ## Error Handling
 
 **Patterns:**
-- Throw typed errors with meaningful messages for logical errors
-- Use try-catch blocks for async operations (Firebase calls, level loading)
-- Firebase errors: catch specific error codes (auth/user-not-found, firestore/permission-denied)
-- Level loading failures: wrap JSON parsing in try-catch, provide fallback behavior
-- Game state errors: validate state transitions before executing (e.g., can't start level if not loaded)
+- Try-catch blocks used in async initialization: `src/main.ts` entry point
+- Promise-based error propagation: `main().catch(console.error)`
+- Null coalescing with optional chaining: `this.state?.lives_regen_start?.toMillis()`
+- Non-null assertion used selectively: `existingProgress!` after null check
+- Firebase operations wrap in try-catch (see `FirestoreService`)
+- localStorage access wrapped: `src/game/SettingsManager.ts` catches parse errors
 
-**Example Error Pattern:**
+**Example from `src/main.ts`:**
 ```typescript
-async function loadLevel(levelId: number): Promise<Level> {
-  try {
-    const response = await fetch(`/data/levels/level_${String(levelId).padStart(3, '0')}.json`);
-    if (!response.ok) {
-      throw new Error(`Failed to load level ${levelId}: ${response.statusText}`);
-    }
-    const level = await response.json() as Level;
-    validateLevelSchema(level); // Custom validation
-    return level;
-  } catch (error) {
-    console.error(`Level loading failed for level ${levelId}`, error);
-    throw new Error(`Cannot load level ${levelId}`);
-  }
+try {
+  const { uid, firestoreService } = await initFirebase();
+  console.log('[Main] Firebase initialized, user:', uid);
+  // ... initialization
+} catch (error) {
+  console.error('[Main] Failed to initialize:', error);
+  throw error;
 }
 ```
 
-**Firebase Error Handling:**
+**Example from `src/game/SettingsManager.ts`:**
 ```typescript
-async function generateCoupon(userId: string, levelId: number): Promise<Coupon | null> {
+static load(): SettingsData {
   try {
-    const result = await functions.httpsCallable('generateCoupon')({ userId, levelId });
-    return result.data as Coupon;
-  } catch (error: any) {
-    if (error.code === 'functions/budget-exceeded') {
-      console.warn('Coupon budget exceeded, returning booster reward instead');
-      return null;
+    const stored = localStorage.getItem(SettingsManager.STORAGE_KEY);
+    if (!stored) {
+      return new SettingsManager().getDefaults();
     }
-    throw error;
+    return JSON.parse(stored);
+  } catch (error) {
+    console.warn('[SettingsManager] Failed to load from localStorage:', error);
+    return new SettingsManager().getDefaults();
   }
 }
 ```
 
 ## Logging
 
-**Framework:** console methods (console.log, console.warn, console.error)
+**Framework:** Native `console` object (no external logging library)
 
 **Patterns:**
-- Use `console.log()` for informational messages during development/debugging
-- Use `console.warn()` for non-fatal issues (coupon generation failures, level load delays)
-- Use `console.error()` for errors that should be tracked (missing assets, Firebase auth failures)
-- Include context in logs: include level_id, user_id, or operation name
-- Firebase Analytics is primary telemetry tool (not console)
+- Bracket module name prefix for context: `[Main]`, `[Game]`, `[FirestoreService]`, `[SettingsManager]`, `[EconomyManager]`, `[Boot]`, `[LevelSelect]`, `[Menu]`
+- Log levels: `console.log()` (info), `console.warn()` (warnings), `console.error()` (errors)
+- Log on critical paths: initialization, async operations, game state changes, level events
 
-**Log Levels by Feature:**
-- **Level Loading:** Info on success, error on failure
-- **Game State:** Warn on invalid transitions, error on critical state corruption
-- **Firebase:** Error on auth/connection failures, warn on rate limits
-- **Analytics:** Info on event tracking (optional, only during debugging)
-
-**Example Logging:**
-```typescript
-console.log(`Level ${levelId} started by user ${userId}`);
-console.warn(`Cannot create booster: insufficient items at level ${levelId}`);
-console.error(`Firebase authentication failed: ${error.message}`);
-```
+**Examples from codebase:**
+- `console.log('[Main] Firebase initialized, user:', uid);`
+- `console.log('[Game] Level data loaded:', this.levelData);`
+- `console.log('[Game] Level won!');`
+- `console.warn('[LevelSelect] SettingsManager not found in registry');`
+- `console.error('[Main] Failed to initialize:', error);`
+- `console.log('[FirestoreService] Saving progress for ${uid}');`
 
 ## Comments
 
 **When to Comment:**
-- Explain "why" not "what" — code should be clear about what it does
-- Comment non-obvious game logic (e.g., why fail rate is targeted at specific percentage)
-- Comment Firebase integration complexities (authentication flow, Cloud Function limitations)
-- Comment grid gravity and match detection algorithms (inherently complex)
-- Do NOT comment obvious code: `const x = 5; // set x to 5` (unnecessary)
+- JSDoc blocks on all public classes and methods
+- Explain purpose and behavior of managers and services
+- Inline comments for non-obvious algorithm logic (e.g., gravity simulation, match detection heuristics)
+- Single-line comments for implementation details in complex functions
 
 **JSDoc/TSDoc:**
-- Use JSDoc comments for public functions and exported types
-- Include `@param`, `@returns`, `@throws` tags for complex functions
-- Document Firebase function contracts (what data structure is expected/returned)
+- Classes: describe purpose, singleton pattern if applicable
+- Methods: @param and @returns for all public APIs
+- Format: `/** ... */` blocks above declarations
 
-**Example JSDoc:**
+**Examples:**
 ```typescript
 /**
- * Loads a level definition from JSON and validates schema.
- * @param levelId - The level ID (1-indexed)
- * @returns Parsed and validated Level object
- * @throws Error if level not found or schema invalid
+ * SettingsManager - Reactive settings with localStorage persistence.
+ * Provides subscription pattern for settings changes (audio, animations).
+ * Stores settings in localStorage for cross-session persistence.
  */
-async function loadLevel(levelId: number): Promise<Level> {
-  // ...
-}
+export class SettingsManager { ... }
 
 /**
- * Generates a coupon for user with fraud checks and budget validation.
- * @param userId - Firebase UID of the user
- * @param levelId - Level ID where coupon was earned
- * @returns Generated coupon or null if budget exhausted
- * @throws Error on critical failures (auth, database)
+ * Get current lives count.
+ * Automatically recalculates regeneration before returning.
  */
-async function generateCoupon(userId: string, levelId: number): Promise<Coupon | null> {
-  // ...
-}
+getLives(): number { ... }
+
+/**
+ * Save user progress to Firestore.
+ * Uses merge to update only provided fields.
+ *
+ * @param uid User's Firebase UID
+ * @param progress Progress data to save (partial update supported)
+ */
+async saveProgress(uid: string, progress: Partial<Omit<UserProgress, 'last_seen'>>): Promise<void> { ... }
+
+/**
+ * Match3Engine - Pure game logic for match-3 mechanics
+ *
+ * This class handles all core game algorithms as pure data operations,
+ * enabling unit testing and separation from rendering.
+ */
+export class Match3Engine { ... }
 ```
 
 ## Function Design
 
-**Size:**
-- Aim for functions <50 lines (soft limit)
-- Complex algorithms (grid matching, gravity) can be 50-100 lines if well-structured
-- If function exceeds 100 lines, consider breaking into helper functions
-- Phaser lifecycle methods (create, update) can be longer but should delegate to helper methods
+**Size:** Methods typically 10-50 lines; longer methods split into private helpers
+- Example: `Match3Engine` methods average 20-40 lines with clear responsibility
+- Complex logic broken into: `applyGravity()`, `spawnNewTiles()`, `findMatches()`, `processTurn()`, `removeMatches()`
 
 **Parameters:**
-- Maximum 3-4 parameters per function
-- If more needed, use object destructuring or configuration object
-- Example: `createGame({ levelId, userId, difficulty })` instead of `createGame(levelId, userId, difficulty, ...)`
+- Prefer individual parameters for 1-3 params
+- Type all parameters explicitly
+- Optional parameters use `?:` syntax: `cellMap?: number[][]`
+- Default values with `??` for null coalescing
 
 **Return Values:**
-- Single return type (avoid union types like `string | null` unless necessary)
-- Use optional chaining and nullish coalescing for safe null handling
-- For async operations, always return Promise<T>
-- For void operations (event handlers), explicitly type as `(): void`
-
-**Example Function Design:**
-```typescript
-// Good: clear parameters via destructuring
-function updateGridState(config: { grid: Tile[][]; gravity: boolean; spawn: boolean }): void {
-  const { grid, gravity, spawn } = config;
-  if (gravity) applyGravity(grid);
-  if (spawn) spawnNewTiles(grid);
-}
-
-// Good: single responsibility
-function calculateMatchesAt(grid: Tile[][], x: number, y: number): Tile[] {
-  return [
-    ...findHorizontalMatch(grid, x, y),
-    ...findVerticalMatch(grid, x, y)
-  ];
-}
-
-// Avoid: too many parameters
-function updateProgress(userId, levelId, stars, moves, time, boosterUsed, couponsEarned) {
-  // ❌ Too many params
-}
-
-// Good: configuration object
-function updateProgress(userId: string, config: ProgressUpdate): void {
-  const { levelId, stars, moves, time, boosterUsed, couponsEarned } = config;
-  // ✅ Clear, maintainable
-}
-```
+- Typed returns: `TileData[]`, `boolean`, `Promise<void>`, `Movement[]`
+- Return null for "not found" (FirestoreService pattern)
+- Return false for "operation failed" (EconomyManager.loseLife())
+- Void for side-effect-only methods
 
 ## Module Design
 
 **Exports:**
-- Export named exports from modules, not default exports (easier tree-shaking, explicit imports)
-- Example: `export class Grid { }` and `import { Grid } from '@/game/Grid'`
-- Avoid default exports in service files
-- Default exports acceptable for scene classes (Phaser convention): `export default class Game extends Phaser.Scene { }`
+- Named exports for classes and interfaces: `export class Match3Engine { ... }`
+- Single responsibility: ONE main class per file
+- Type definitions exported: `export interface TileData { ... }`, `export type TileType = ...`
 
 **Barrel Files:**
-- Use `index.ts` files to re-export from subdirectories for cleaner imports
-- Example in `src/game/index.ts`: `export { Grid } from './Grid'; export { Match } from './Match';`
-- Import as: `import { Grid, Match } from '@/game'` instead of individual paths
+- `src/scenes/index.ts`: exports Boot, Menu, LevelSelect, Game
+- `src/firebase/index.ts`: exports firebase initialization
+- Simplifies config imports: `import { Boot, Menu, LevelSelect, Game } from './scenes'`
 
-**Example Module Structure:**
+**Example `src/scenes/index.ts`:**
 ```typescript
-// src/game/index.ts (barrel file)
-export { Grid } from './Grid';
-export { Tile } from './Tile';
-export { Match } from './Match';
-export { Booster } from './Booster';
+/**
+ * Scene exports for game configuration.
+ */
 
-// Usage in another module
-import { Grid, Match, Booster } from '@/game';
+export { Boot } from './Boot';
+export { Menu } from './Menu';
+export { LevelSelect } from './LevelSelect';
+export { Game } from './Game';
 ```
 
-**Separation of Concerns:**
-- Game logic in `src/game/` (Grid, Match, Tiles)
-- Firebase integration in `src/firebase/` (auth, firestore, functions)
-- Data loading in `src/data/` (LevelLoader, RemoteConfig)
-- Phaser scenes in `src/scenes/` (Boot, Menu, Game, UI)
-- Utilities in `src/utils/` (constants, helpers, types if small)
+## Class Architecture
 
-## Firebase Integration Conventions
+**Singletons:**
+- Managers are pseudo-singletons created in `main.ts`, stored in Phaser registry
+- Pattern: constructor takes injected dependencies
+- Examples: `ProgressManager`, `EconomyManager`, `SettingsManager`
+- Accessed via: `this.registry.get('progress') as ProgressManager`
 
-**File Structure:**
-- `src/firebase/auth.ts` — Authentication (login, logout, user management)
-- `src/firebase/firestore.ts` — Database operations (user progress, coupons, stats)
-- `src/firebase/analytics.ts` — Event tracking (level_start, coupon_claimed, etc.)
-- `src/firebase/functions.ts` — Cloud Function calls (generateCoupon, redeemCoupon)
+**Pure Logic Classes:**
+- `Match3Engine`: No Phaser dependency, pure data operations for testing
+- `BoosterActivator`: Works with engine state, no rendering
+- `LevelManager`: Tracks goals and moves, emits events
 
-**Function Naming:**
-- Firebase Cloud Functions in `functions/src/` use camelCase: `generateCoupon`, `redeemCoupon`
-- Client-side wrapper functions are descriptive: `generateCouponForUser()`, `redeemCouponAtStation()`
+**Service Managers:**
+- Encapsulate domain logic: economy, progress, settings, audio, VFX
+- Firebase integration in `FirestoreService`: load/save operations
+- Separation: pure logic separate from Phaser rendering
+- `TileSprite`: Bridges engine state to Phaser graphics
 
-**Error Codes:**
-- Document Firebase error codes handled in catch blocks
-- Example: `functions/budget-exceeded`, `auth/user-not-found`, `firestore/permission-denied`
+## TypeScript-Specific Patterns
+
+**Strict Mode:**
+- All variables must have explicit types
+- Non-null assertions used carefully: `existingProgress!` after null checks
+- Type guards: `this.registry.get('economy') as EconomyManager`
+- Optional chaining: `this.state.lives_regen_start?.toMillis()`
+
+**Generics:**
+- SettingsManager: `subscribe<K extends SettingsKey>(key: K, callback: SettingsListener<K>)`
+- Typed subscriptions with discriminated unions
+
+**Type Unions (instead of Enums):**
+- `type TileType = 'burger' | 'hotdog' | 'oil' | 'water' | 'snack' | 'soda' | 'empty'`
+- `type BoosterType = 'linear_horizontal' | 'linear_vertical' | 'bomb' | 'klo_sphere'`
+- `type ObstacleType = 'ice' | 'grass' | 'crate' | 'blocked'`
+- Discriminated unions for events: `type LevelEvent = { type: 'moves_changed'; movesRemaining: number } | { type: 'goals_updated'; goals: LevelGoal[] } | ...`
 
 ---
 
-*Convention analysis: 2026-02-05*
+*Convention analysis: 2026-02-10*

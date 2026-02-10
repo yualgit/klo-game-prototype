@@ -1,298 +1,422 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-02-05
+**Analysis Date:** 2026-02-10
 
 ## Tech Debt
 
-**Incomplete prototype foundation:**
-- Issue: Project exists as documentation only—no actual code implementation in `src/` directory. Core match-3 engine, Firebase integration, and level loader all need to be built from scratch.
-- Files: `src/` is empty
-- Impact: 1–2 week timeline cannot be met without parallel development across multiple components. Risk of cutting corners on architecture early.
-- Fix approach: Immediately prioritize core match-3 grid/swap/match logic as Phase 1. Scaffold TypeScript project with Vite, Phaser 3, and Firebase SDKs before feature development. Establish code style guide and component patterns during Week 1 setup.
+**Type Safety Issues - Excessive `any` and `null!` Assertions:**
+- Issue: Multiple files use `any` types and non-null assertions (`null!`) to bypass TypeScript strict mode, bypassing compile-time checks
+- Files: `src/scenes/Game.ts` (lines 66, 209, 1219, 1255, 1280), `src/scenes/LevelSelect.ts` (line 34), `src/game/SettingsManager.ts`, `src/game/LevelManager.ts`
+- Impact: Prevents compile-time error detection, increases runtime bugs, makes code harder to refactor safely. Examples:
+  - `private levelData: any` (line 66) means accessing `levelData.grid.width` has no type safety
+  - `animateMatchRemoval(matches: any[])` (line 1219) - parameters lack structure validation
+  - `this.hudText = null!` (line 209) - signals broken initialization order
+- Fix approach: Replace `any` with proper TypeScript interfaces:
+  - Create `LevelData` interface from level JSON schema
+  - Type animation function parameters: `animateMatchRemoval(matches: Match[])`
+  - Fix initialization order instead of using `null!` - separate concerns into methods
 
-**Unvalidated game balance:**
-- Issue: Level progression (L1–20) is designed but never playtested. Fail rate targets (L1–5: <5%, L11–20: <40%) are aspirational, not measured.
-- Files: `GAME_DESIGN.md` (lines 89–209), `data/levels/*.json` (all levels)
-- Impact: First playtest may reveal entire progression curve is broken. Churn risk if early levels are too hard or too easy. Remote config flexibility exists but takes time to implement.
-- Fix approach: After basic match-3 logic works, immediately playtest L1–5 with at least 3–5 people. Measure actual fail rates. If <20% variance from targets, continue. Otherwise, halt L6+ content and rebalance L1–5 first. Use Firebase Remote Config to adjust `moves`, `spawn_rules`, and `obstacle` positions during testing—do NOT regenerate JSONs.
+**Excessive Console Logging in Production Code:**
+- Issue: 60+ `console.log()` statements with `[Module]` prefixes scattered throughout source code
+- Files: `src/scenes/Game.ts` (~20 logs), `src/game/Match3Engine.ts` (~12 logs), `src/game/EconomyManager.ts` (~8 logs), `src/firebase/firestore.ts` (~6 logs), others
+- Impact: Degrades performance on low-end devices, exposes internal game logic in browser console, makes debugging harder to parse through noise
+- Fix approach: Replace with conditional logging using environment variable:
+  ```typescript
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Module] message');
+  }
+  ```
 
-**Insufficient antifraud specification:**
-- Issue: `TECH_SPEC.md` (lines 309–335) defines antifraud patterns but no implementation details. How is `device_id` collected? What APIs check IP? How are suspicious patterns detected in real-time vs. batch?
-- Files: `TECH_SPEC.md` (lines 309–335)
-- Impact: Fraud vectors (multi-accounting, coupon farming) could become critical before launch. Early users will discover exploits if antifraud is bolted on late.
-- Fix approach: Before Cloud Functions are deployed, document exact antifraud logic: (1) Firebase Installation ID for `device_id`, (2) Cloud Functions logs for IP capture, (3) Firestore queries for rate-limiting checks. Implement checks inside `generateCoupon` function first. Test fraud scenarios (rapid account creation, bulk coupon claiming) in Firebase Emulator before live deployment.
+**Fire-and-Forget Async Save Operations Without Error Handling:**
+- Issue: EconomyManager.recalculateLives() (line 161) uses fire-and-forget pattern: `this.save().catch(err => console.error())`
+- Files: `src/game/EconomyManager.ts` (line 161)
+- Impact: If Firestore save fails, player's economy state becomes out-of-sync with backend. Player loses lives/bonuses without notification.
+- Fix approach:
+  1. Implement retry logic with exponential backoff (3 retries, 1s base delay)
+  2. Queue failed writes and retry on scene resume
+  3. Surface critical errors to UI with retry button
 
-**Missing Critical Dependencies Documentation:**
-- Issue: Stack uses Phaser 3, TypeScript, Vite, Firebase SDK, but no `package.json` or version specifications. Dependency versions can diverge significantly during development.
-- Files: `TECH_SPEC.md` (lines 10–30)
-- Impact: Team members will install different versions, breaking reproducibility. Firebase SDK incompatibilities between Frontend and Cloud Functions can cause integration failures.
-- Fix approach: Create `package.json` with locked dependencies during setup week. Enforce Node.js version with `.nvmrc` file. Create separate `functions/package.json` for Cloud Functions with explicitly compatible Firebase Admin SDK version.
-
-**Asynchronous/Concurrent Level Requests Not Addressed:**
-- Issue: `LevelLoader.ts` design assumes single sequential level loads, but players can spam "retry" or try to load next level while transition animation plays.
-- Files: `TECH_SPEC.md` (lines 49–56, implies sequential design)
-- Impact: State race conditions, dropped level progress saves, or duplicate coupon generation if loading and reward logic overlap.
-- Fix approach: Implement loading state machine: `IDLE → LOADING → LOADED → PLAYING`. Reject level switch requests while not in `IDLE`. Add mutex/lock around Firestore writes in `generateCoupon` Cloud Function.
-
----
+**Hardcoded Magic Numbers in Responsive Layout:**
+- Issue: Tile sizes, padding, button dimensions calculated with hardcoded pixel values scattered across code
+- Files: `src/scenes/Game.ts` (lines 125, 217, 222, 223, 317, 360, 361, 400-404), responsive measurements throughout
+- Impact: Makes layout brittle. Hard to adjust for new aspect ratios or device families without touching multiple files
+- Fix approach: Extract all magic numbers to a central `LayoutConstants` object in `utils/responsive.ts`. Example:
+  ```typescript
+  const LAYOUT_CONSTANTS = {
+    HUD_HEIGHT_CSS: 60,
+    HUD_PADDING_CSS: 4,
+    BUTTON_WIDTH_CSS: 180,
+    // ... etc
+  };
+  ```
 
 ## Known Bugs
 
-**Unspecified coupon expiration edge case:**
-- Symptoms: What happens if a coupon is generated at 2026-02-05 23:55 UTC with `expires_days: 7`? Expires 2026-02-12 23:55? Or start of next day? No timezone handling specified.
-- Files: `TECH_SPEC.md` (lines 141–147, 189–195), `GAME_DESIGN.md` (lines 245–250)
-- Trigger: Any coupon generation near day boundary or in different timezones
-- Workaround: Document that `expires_at = created_at + expires_days * 86400 seconds` (UTC). Ensure server generates all timestamps in UTC, never client time.
+**Scene Lifecycle Race Condition - Async Chains Continue After Scene Shutdown:**
+- Symptoms: If player rapidly switches scenes or device rotates during cascade animation, async promises can execute after scene is destroyed, causing null reference errors
+- Files: `src/scenes/Game.ts` (lines 99-103, 1082-1211)
+- Trigger: Rapid scene transitions (back button spam) or orientation change mid-cascade. Try: lose level, immediately click retry, then tap board before animations finish
+- Current mitigation: `sceneActive` flag checked at 7+ points in `processCascade()`. However:
+  - Flag check only happens before major operations, not between tweens within `Promise.all()`
+  - Scene may destroy in middle of animation chain, leaving dangling tweens
+  - No cleanup of pending tweens on shutdown
+- Workaround: Scene waits for cascades to complete. But edge cases exist if player alt-tabs or loses focus.
+- Fix approach:
+  1. Call `this.tweens.killAll()` in shutdown event handler
+  2. Check `sceneActive` before EVERY tween callback, not just before operations
+  3. Use Promise.race() with scene shutdown signal to cancel cascades
 
-**Grid index out of bounds risk in obstacle placement:**
-- Symptoms: Level JSON allows arbitrary `[x, y]` positions in `obstacles.positions` array with no validation that x < width or y < height. A malformed level (e.g., `[9, 9]` on 8×8 grid) will crash grid initialization or cause undefined behavior.
-- Files: `data/levels/level_*.json`, `TECH_SPEC.md` (lines 89–140)
-- Trigger: Any level JSON with positions outside grid bounds
-- Workaround: Implement strict JSON schema validation in `LevelLoader.ts`: clamp or reject any position `(x, y)` where `x >= grid.width or y >= grid.height`.
+**Tile Selection Persists Across Scene Restarts - Null Pointer Access:**
+- Symptoms: Null pointer errors when accessing `this.selectedTile` properties after scene restart
+- Files: `src/scenes/Game.ts` (lines 202-210 resetState, lines 782-787 input handler)
+- Trigger: Lose level, click retry immediately, tap board before fully loaded
+- Current mitigation: `resetState()` in create() sets `this.selectedTile = null`, but timing window exists between shutdown and create
+- Fix approach:
+  1. Use type guard: `if (this.selectedTile?.row !== undefined)` instead of just `if (this.selectedTile)`
+  2. Initialize all UI element references in resetState() BEFORE calling create() logic
+  3. Add guard at scene start: `if (!this.tileSprites.length) return` in input handlers
 
-**Missing null/undefined handling for optional reward fields:**
-- Symptoms: `coupon_chance` and `possible_coupons` in level JSON are optional (lines 118–119 TECH_SPEC). If undefined, reward logic may crash when trying to iterate coupons or calculate probability.
-- Files: `TECH_SPEC.md` (lines 110–120)
-- Trigger: Any level JSON missing `rewards.coupon_chance` or `rewards.possible_coupons`
-- Workaround: Set defaults in code: `coupon_chance ??= 0`, `possible_coupons ??= []` before use.
+**Unsafe Grid Access After Cell Inactivity Check Passes:**
+- Symptoms: Player can tap inactive cells (cell_map = 0), causing IndexError when accessing `tileSprites[row][col]`
+- Files: `src/scenes/Game.ts` (lines 857-868)
+- Trigger: Board with custom cell_map (level 9+), tap outside the playable grid area
+- Current mitigation: Line 863 checks `isCellActive()` before accessing sprite
+- Fix approach: This is actually safe. Verify with unit test.
 
----
+**Math.random() Unseeded - Non-Reproducible Levels:**
+- Symptoms: Cannot reproduce exact same board state for bug investigation
+- Files: `src/game/Match3Engine.ts` (lines 102, 180-189)
+- Trigger: Any level generation or reshuffle uses unseeded `Math.random()`
+- Current mitigation: None
+- Workaround: No way to replay same board for debugging player-reported bugs
+- Fix approach:
+  1. Add optional `seed` parameter to Match3Engine constructor
+  2. Implement seeded random (e.g., mulberry32 algorithm)
+  3. Store seed in level/cascade events for replays
 
 ## Security Considerations
 
-**Coupon validation bypass risk:**
-- Risk: `redeemCoupon` Cloud Function checks `coupon_id` validity, but frontend can still claim coupons the player shouldn't get (by calling `generateCoupon` multiple times or crafting requests). No server-side validation of whether the player earned the reward.
-- Files: `TECH_SPEC.md` (lines 231–259), `GAME_DESIGN.md` (lines 245–250)
-- Current mitigation: User must be authenticated to Firebase before calling Cloud Function. Firestore rules (not detailed) likely restrict reads.
+**Firestore Security Rules - Minimal / Incomplete:**
+- Risk: `firestore.rules` exists but likely very basic. No validation that written data conforms to business rules
+- Files: `/firestore.rules`, `src/firebase/firestore.ts`
+- Current mitigation: Client-side validation in EconomyManager and ProgressManager
 - Recommendations:
-  1. Add `user_id` parameter to `generateCoupon` function and verify it matches Firebase auth context.
-  2. Log coupon generation with level_id and player_id for audit trail.
-  3. Implement hard cooldown on `generateCoupon`: query Firestore to ensure no coupon was generated for this user in the last 5 minutes (prevents rapid-fire requests).
-  4. Restrict `redeemCoupon` to KLO backend only—do NOT allow frontend to call it directly.
+  1. Add strict Firestore rules that validate on every write:
+     ```
+     match /users/{uid} {
+       allow read: if request.auth.uid == uid;
+       allow write: if request.auth.uid == uid
+         && request.resource.data.lives >= 0
+         && request.resource.data.lives <= 5
+         && request.resource.data.bonuses >= 0
+         && request.resource.data.current_level >= 1
+         && request.resource.data.current_level <= 10;
+     }
+     ```
+  2. Add rate limiting to prevent bonus spam attacks
+  3. Server timestamp validation - ensure `last_seen` is from server, not client
 
-**Exposed user loyalty_id in client-side analytics:**
-- Risk: `loyalty_id` is sent to Firebase Analytics as user property (TECH_SPEC line 300). If Analytics data is not private, `loyalty_id` can be correlated with game behavior, leading to targeting or user profiling.
-- Files: `TECH_SPEC.md` (lines 296–305)
-- Current mitigation: Firebase Analytics has some privacy safeguards, but exact retention/visibility depends on Firebase project settings.
-- Recommendations:
-  1. Hash or pseudonymize `loyalty_id` before sending to Analytics. Keep raw mapping (user_id → loyalty_id) in Firestore only.
-  2. Set Firebase Analytics data retention to 14 days (minimum).
-  3. Document that raw loyalty_id should never appear in logs/metrics dashboards.
+**Client-Side Economy State is Mutable Shallow Copy:**
+- Risk: `EconomyManager.getState()` (line 116) returns `{ ...this.state }` - shallow copy only. Caller could theoretically mutate nested objects
+- Files: `src/game/EconomyManager.ts` (line 116)
+- Current mitigation: Callers don't directly modify state, but TypeScript doesn't prevent it
+- Fix approach:
+  1. Make state property truly read-only with `as const` assertion
+  2. Return immutable wrapper or Object.freeze()
+  3. Add JSDoc comment: `/** @readonly Returns immutable copy */`
 
-**No input sanitization on level descriptions/coupon values:**
-- Risk: Level JSON allows arbitrary strings in `description`, `goals.description`, `coupon.value`. If these are rendered as HTML without escaping, XSS is possible (e.g., `<img src=x onerror="fetch('/steal-token')">`).
-- Files: `data/levels/level_*.json` (all description fields), `TECH_SPEC.md` (lines 89–147)
-- Current mitigation: None specified.
-- Recommendations:
-  1. In frontend UI code, always use text interpolation (not innerHTML) when rendering level descriptions.
-  2. Define JSON schema that restricts description/value to alphanumeric + basic punctuation (no `<`, `>`, `&`).
-  3. Run levels JSON through JSON schema validator at build time.
+**No Input Validation on Level JSON Schema:**
+- Risk: If level JSON is corrupted, missing required fields, or has out-of-bounds positions, game crashes without graceful fallback
+- Files: `src/scenes/Game.ts` (lines 110-111, 157-165)
+- Trigger: Load level with malformed JSON (e.g., `grid.width: "abc"`, `goals: null`, `obstacles.positions: [[9,9]]`)
+- Current mitigation: None - direct property access with no checks
+- Fix approach:
+  1. Create `LevelSchema` Zod/Joi validation schema
+  2. Validate on load: `const level = LevelSchema.parse(rawData)`
+  3. Fallback to demo level if validation fails
+  4. Log validation errors to Sentry or error analytics
 
-**Firebase Firestore rules not provided:**
-- Risk: No Firestore security rules specified. Default rules allow/deny reads/writes arbitrarily. Player could potentially:
-  - Read other players' coupons
-  - Write to other players' progress
-  - Query all users' data
-- Files: `TECH_SPEC.md` (deployment section mentions `firestore.rules` but no content given)
-- Current mitigation: Assumed but not verified.
-- Recommendations:
-  1. Define strict Firestore rules before deployment:
-     - Users can only read/write their own document (`uid` field)
-     - Coupons can only be read by owner or redeemer (station backend)
-     - Admins have special permissions for analytics reads
-  2. Test rules in Firebase Emulator with adversarial reads/writes.
-
----
+**Lives Regeneration Timer Exploitable:**
+- Risk: Player can manually set device time forward to instantly regenerate lives
+- Files: `src/game/EconomyManager.ts` (lines 138-158)
+- Trigger: Advanced user opens dev tools, modifies `lives_regen_start` timestamp
+- Current mitigation: Timestamp from Firestore on load. But if offline, uses local time.
+- Fix approach:
+  1. Only use server timestamps from Firestore - never trust client time
+  2. On load, calculate lives based on `serverTimestamp()`, not device `Date.now()`
+  3. Clamp regeneration to max realistic time (e.g., "can't regen more than 2 hours worth")
 
 ## Performance Bottlenecks
 
-**8×8 grid rendering at 60 FPS unoptimized:**
-- Problem: Phaser 3 game loop will render every tile, animation, and particle every frame. No mention of object pooling, culling, or batch rendering. Match-3 grids with heavy animations (3+ simultaneous boosters, 20+ particles) can drop frames.
-- Files: `TECH_SPEC.md` (lines 44–54 game/ structure implies tile-per-frame rendering)
-- Cause: Naive rendering of 64 tiles + animations without optimization.
+**Match3Engine.hasValidMoves() - O(n³) Complexity During Reshuffle:**
+- Problem: Exhaustively checks all 128 adjacent swaps. Each calls `findMatches()` which is O(n²). Called in loop with 50 reshuffle attempts.
+- Files: `src/game/Match3Engine.ts` (lines 543-578, called from line 597 in reshuffleBoard)
+- Cause: Naive brute-force approach. Real cost: `50 attempts * 128 swaps * O(n²) findMatches = O(102,400)` operations
+- Impact: On low-end devices (iPhone 6S), reshuffle can take 500ms-1s
 - Improvement path:
-  1. Use Phaser 3's built-in `Container` for tile groups to batch render.
-  2. Pool particle emitters: reuse instead of create/destroy.
-  3. Profile with browser DevTools during Week 1. If FPS drops below 50 with 5+ boosters, implement viewport culling.
+  1. Use heuristic: randomly sample 20 positions instead of checking all 128
+  2. Memoize failed swap patterns to avoid re-checking
+  3. Early exit: if any 5 consecutive attempts find valid moves, stop trying
+  4. Profile with DevTools to confirm actual bottleneck
 
-**Firestore queries on every level load:**
-- Problem: No caching strategy for levels. Every level load will query Firestore (or Firebase Remote Config) even though level data rarely changes.
-- Files: `TECH_SPEC.md` (lines 56–57 RemoteConfig.ts design)
-- Cause: Remote Config calls add network latency (~100–500ms) per level start.
+**Cascade Depth Loop - Processes Entire Grid Multiple Times:**
+- Problem: `processCascade()` calls `applyGravity()`, `spawnNewTiles()`, `syncSpritesToEngine()` every iteration
+- Files: `src/scenes/Game.ts` (lines 1187-1206)
+- Cause: Each operation is O(n²) grid traversal. With up to 20 cascade depth, full grid scans 20+ times
+- Impact: Heavy animation chains (5+ boosters) can freeze screen for 2-3 seconds
 - Improvement path:
-  1. Cache Remote Config locally in IndexedDB or localStorage after first fetch.
-  2. Re-fetch only on app startup or every N hours.
-  3. Use Firebase SDK's built-in caching (set cache expiration to 1 hour).
+  1. Batch gravity + spawn in single pass (collect empty positions, fill once)
+  2. Only sync sprites that moved (track delta positions)
+  3. Add frame-rate guard: if FPS drops below 30, skip visual sync until cascade complete
+  4. Async cascade: process 2 depths per frame instead of all at once
 
-**Coupon generation latency during win screen:**
-- Problem: When player wins, game calls `generateCoupon` Cloud Function synchronously before showing win screen. If function is slow (antifraud checks, DB write), win animation is blocked.
-- Files: `TECH_SPEC.md` (lines 202–229)
-- Cause: Lack of async/background processing in reward flow.
+**50ms Hard Delay Between Cascades - Arbitrary & Wasteful:**
+- Problem: Line 1210 has hardcoded 50ms delay with no justification
+- Files: `src/scenes/Game.ts` (line 1210)
+- Cause: Likely added as quick fix to prevent frame drops, never optimized
+- Impact: Even on high-end devices, cascades take minimum 1-2 seconds unnecessarily
+- Improvement path: Replace fixed delay with frame-aware delay:
+  ```typescript
+  const startFPS = this.game.loop.actualFps;
+  const delay = startFPS < 45 ? 100 : startFPS < 55 ? 50 : 16; // 1 frame at 60fps
+  ```
+
+**Responsive Layout Recalculated Every Resize Event:**
+- Problem: `handleResize()` calls `getResponsiveLayout()` which recalculates tile size, font sizes, etc. on every window resize event
+- Files: `src/scenes/Game.ts` (line 1317), `src/utils/responsive.ts` (line 21)
+- Cause: No caching of layout results. Resize fires many times per second during device rotation
+- Impact: Expensive calculations (parseInt, Math.min/max) executed 100+ times per rotation
 - Improvement path:
-  1. Show win screen immediately (optimistic).
-  2. Call `generateCoupon` in background with `.then()` callback.
-  3. Show "Coupon!" toast after generation completes.
-  4. If generation fails, show "Try again" button but don't block gameplay.
-
----
+  1. Debounce resize handler (100ms minimum)
+  2. Cache layout results, only recalculate if viewport size actually changed
+  3. Memoize `getResponsiveLayout()` with viewport dimensions as key
 
 ## Fragile Areas
 
-**Match-3 logic not isolated from Phaser scene:**
-- Files: `TECH_SPEC.md` (lines 49–54 suggests Grid, Tile, Match as separate files but game/scene integration unclear)
-- Why fragile: Match logic (detecting matches, updating grid) is often tightly coupled to rendering in game engines. If grid logic is buried in `Game.ts` scene, moving to Unity or fixing a bug requires touching the entire scene.
-- Safe modification: Extract Grid, Match, Booster, Obstacle into pure TypeScript classes with no Phaser dependencies (use interfaces for events). Create `src/game/engine/` subfolder with unit-testable logic. Scene should only call engine methods and update view.
-- Test coverage: No match logic tests mentioned. Implement Jest tests for Grid.swap(), Match.findMatches(), Grid.applyGravity() before shipping.
+**Match3Engine Grid State Mutation - No Immutability Checks:**
+- Files: `src/game/Match3Engine.ts` (entire class, especially lines 210-236 swap, 402-414 removeMatches, 422-490 applyGravity)
+- Why fragile: Grid is directly mutated in place. If any method fails mid-operation or is called out of order, grid can be left inconsistent:
+  - Empty tiles with no spawn scheduled
+  - Tiles marked empty but still in sprite array
+  - Obstacle layers at negative counts
+- Safe modification:
+  1. Add invariant checks after each major operation:
+     ```typescript
+     private validateGridState(): void {
+       for each tile: if isEmpty, check no duplicate exists in non-empty cells
+       for each column: check gravity satisfied (empty below non-empty)
+     }
+     ```
+  2. Unit test each operation in isolation AND in sequence
+  3. Add undo/rollback capability for critical operations
+- Test coverage: Match3Engine.test.ts exists but only covers happy path (generator, swap, gravity). Missing:
+  - Error recovery scenarios
+  - Obstacle + booster interactions
+  - Edge cases (single empty tile, all same type)
 
-**Level progression hardcoded in JSON with no versioning:**
-- Files: `data/levels/level_*.json`, `GAME_DESIGN.md` (lines 89–209)
-- Why fragile: If level balance needs tweaking post-launch, developers must rebuild and redeploy. No A/B testing infrastructure.
-- Safe modification: All level data should go into Firebase Remote Config or Firestore `levels` collection on day 1, even if initially populated from JSON. Frontend fetches levels from backend, not shipped JSON.
-- Test coverage: No mechanism to test level changes without deploying. Use Firebase Emulator to load test configs.
+**Game Scene Initialization Order - 20+ Steps with Hidden Dependencies:**
+- Files: `src/scenes/Game.ts` (lines 79-200 create() method)
+- Why fragile: Dependencies between init steps not explicit. Example:
+  - `createTilesFromEngine()` (line 193) depends on `engine.generateGrid()` (line 130) and `gridWidth`/`gridHeight` set (lines 118-119)
+  - `setupInput()` (line 196) depends on `tileSprites` being populated
+  - `drawGridBackground()` (line 190) depends on `layout` calculated (line 84)
+  - Breaking order: if `drawGridBackground()` runs before `layout`, entire board invisible
+- Safe modification:
+  1. Group initialization into atomic phases: `initializeEngine()`, `initializeRendering()`, `initializeInput()`
+  2. Add assertions after each phase:
+     ```typescript
+     initializeEngine() { ... }
+     console.assert(this.engine.getGrid().length > 0, 'Engine not initialized');
+     ```
+  3. Unit test each phase independently
+  4. Add initialization state machine: `UNINITIALIZED → ENGINE_READY → RENDERING_READY → INPUT_READY`
+- Test coverage: Game scene not unit tested. 1480 lines, 0 Jest tests. Critical for stability.
 
-**Coupon generation logic assumes synchronous database writes:**
-- Files: `TECH_SPEC.md` (lines 202–229 generateCoupon function)
-- Why fragile: If Firestore write fails (network, quota, auth), function may return success but coupon isn't saved. Or coupon is saved but analytics event fails, causing redemption confusion.
-- Safe modification: Wrap entire coupon generation in transaction (`db.runTransaction()`). If any step fails, whole transaction rolls back. Return failure to client with clear error message.
-- Test coverage: Test Firebase Emulator with intentional quota exhaustion / network failure scenarios.
+**LevelData Type - Uses `any` Causing Cascading Errors:**
+- Files: `src/scenes/Game.ts` (line 66, used lines 110-155, 157-165, 679, 1196)
+- Why fragile: Accessing `this.levelData.goals`, `this.levelData.grid.width`, `this.levelData.spawn_rules` with no type safety. If any property missing:
+  - `goals.map()` crashes if `goals` is undefined
+  - `grid.width` returns undefined, breaks grid sizing
+  - Errors only caught at runtime during level play
+- Safe modification:
+  1. Create strict `LevelData` TypeScript interface:
+     ```typescript
+     interface LevelData {
+       moves: number;
+       grid: { width: number; height: number; inactive_cell_style?: string };
+       goals: LevelGoal[];
+       spawn_rules: SpawnRules;
+       // ... etc
+     }
+     ```
+  2. Validate on load: `const levelData = validateLevelSchema(raw)`
+  3. Provide fallback defaults for optional fields
+- Test coverage: No level data loading tests
 
-**State machine for gameplay not specified:**
-- Files: `TECH_SPEC.md` (scenes section lines 44–48)
-- Why fragile: Game can be in multiple states: LOADING, PLAYING, PAUSED, WIN, LOSE, TRANSITION. If states don't transition cleanly, players can soft-lock (swaps ignored, touches don't register).
-- Safe modification: Define explicit state enum in `src/game/types.ts`. Every input (touch, button) checks current state before processing. Scene transitions only happen from valid states.
-- Test coverage: Write integration tests for state transitions (PLAYING → WIN → TRANSITION → next level loads correctly).
-
----
+**Booster Activation Chain - Multiple Mutation Points in Cascade:**
+- Files: `src/scenes/Game.ts` (lines 1114-1176 cascade booster activation), `src/game/BoosterActivator.ts`
+- Why fragile: Tile removal, booster activation, obstacle damage, goal tracking happen in rapid succession. If ANY operation fails mid-cascade:
+  - Tile marked empty but booster sprite not updated
+  - Booster created but not synced to sprite
+  - Obstacle damaged but health not reflected in UI
+  - Goal progress incremented but sprite still shows old count
+- Safe modification:
+  1. Use transaction pattern: collect all mutations, validate, apply atomically
+  2. Separate concerns: `calculateNextState()` (pure), `applyState()` (mutations)
+  3. Add undo point: save grid state before cascade, restore on critical error
+- Test coverage: BoosterActivator.test.ts exists (218 lines) but tests only activation logic, not integration with Game scene cascade
 
 ## Scaling Limits
 
-**Firebase Firestore billing on read-heavy analytics:**
-- Current capacity: 50K players → ~500K–1M analytics reads/day
-- Limit: Firestore charges per read. Naive "every player loads level = 1+ reads" can exceed budget.
+**8x8 Grid Maximum - Not Designed for Variable Dimensions:**
+- Current capacity: Game assumes 8x8 throughout (line 25: `MAX_LEVELS = 10`, no variable grid support in scenes)
+- Limit: Extends to 10x10 theoretically, but:
+  - Tile size calculations assume 8-column grids (line 31 in responsive.ts: `maxGridCssWidth / 8`)
+  - hasValidMoves() becomes very slow on 12x8 (168 swaps instead of 128)
+  - HUD scales to fixed aspect ratio - 10x8 board might push HUD off screen
 - Scaling path:
-  1. Use Remote Config (cheaper) for global level data instead of Firestore queries.
-  2. Aggregate analytics server-side (batch write, not real-time per-event).
-  3. Set Firestore indexes carefully—avoid cartesian product queries.
-  4. Budget ~$100/month for small scale, $1K+/month for 1M daily active users. Validate early.
+  1. Parameterize grid dimensions from level data, not hardcoded
+  2. Update tile size calculation: `maxGridCssWidth / Math.max(width, 8)`
+  3. Test on 10x8, 8x10, 6x8 grids before committing
 
-**Firebase Cloud Functions cold start latency at scale:**
-- Current capacity: <100 concurrent users → acceptable latency
-- Limit: If 1K+ users try to claim coupons simultaneously (e.g., campaign launch), functions cold-start and requests timeout.
+**Cascade Processing - 20 Depth Limit May Be Insufficient:**
+- Current capacity: MAX_CASCADE_DEPTH = 20 (line 26 Match3Engine.ts, line 1084 Game.ts)
+- Limit: With 5+ boosters triggering simultaneously on dense board, 20 might not complete all cascades. Could leave player with unresolved matches.
 - Scaling path:
-  1. Use Firebase Pub/Sub to queue coupon requests instead of direct HTTP calls.
-  2. Dedicated functions instance with reserved concurrency (costs more but eliminates cold start).
-  3. Move high-volume logic (antifraud rate checks) to Firestore Realtime Database for speed.
+  1. Add telemetry: log actual cascade depths in 100 plays. If depth ≥ 18 in >1% of games, increase limit
+  2. Alternative: allow unlimited depth BUT timeout at 5 seconds - force completion, animate remaining matches
+  3. Consider mechanics redesign: cap simultaneous boosters to 3 to prevent exponential growth
 
-**Remote Config fetch bottleneck:**
-- Current capacity: 1 fetch per session (acceptable)
-- Limit: If level data grows to 100+ levels, JSON becomes large. Fetch + parse at session start adds 500ms+ latency.
+**No Memory Pooling for Sprites - Allocates Per Animation:**
+- Current capacity: 64 active tiles + 64+ animation tweens created/destroyed per cascade
+- Limit: On low-end devices (iPhone 6S), memory allocation/GC per cascade causes stutter. Heavy booster chains kill framerate.
 - Scaling path:
-  1. Cache aggressively (localStorage, IndexedDB).
-  2. Paginate Remote Config: fetch only levels 1–20 on start, lazy-load next 20.
-  3. Consider custom backend (not Firebase) for level data retrieval as scale increases.
-
----
+  1. Implement TileSprite pool: reuse 64 sprites across cascades instead of create/destroy
+  2. Pool tweens: reuse tween objects for common animations instead of `new Promise()`
+  3. Profile with Chrome DevTools memory recorder during heavy cascade to confirm GC pauses
 
 ## Dependencies at Risk
 
-**Phaser 3 version volatility:**
-- Risk: Phaser 3 is mature (v3.55+) but has non-breaking API changes. Plugins and examples may be outdated.
-- Impact: If Phaser 3 is used but significant bugs are found (e.g., memory leak in animation system), switching to pixi.js mid-project is expensive.
-- Migration plan: Before committing to Phaser 3, spike a working 8×8 grid swap/match in 4 hours. If it's smooth, proceed. If animations are janky, fallback to pixi.js + custom match-3 engine.
+**Firebase SDK - Pinned to ^11.0.0, Not Following SemVer:**
+- Risk: Firebase 11.x is recent, v12.x may have breaking API changes. No automated dependency update process.
+- Impact: When Firebase 12 releases, code may break silently. Project could be stuck on 11.x if unaware.
+- Migration plan:
+  1. Set up Dependabot or npm audit to notify on updates
+  2. Quarterly review cycle: check Firebase changelog, test upgrade in isolated branch
+  3. Document any API changes in MIGRATION.md file
 
-**Firebase SDK breaking changes:**
-- Risk: Firebase SDK v9+ has major API redesign (modular). old v8 code incompatible. Future v10 may break again.
-- Impact: Keeping up with SDK updates is maintenance burden. Functions SDK version must match frontend SDK version.
-- Migration plan: Pin Firebase versions explicitly in `package.json`. Set up Dependabot to notify on updates. Plan quarterly SDK upgrade sprints, not ad-hoc.
+**Phaser 3.90.0 - Input API May Change in v4:**
+- Risk: Phaser 3.x mature but v4.x planned. Input API (`setInteractive`, `pointerdown`, tweens) likely to change.
+- Impact: 1480-line Game.ts heavily tied to Phaser 3 API. Migration to v4 would require significant refactoring.
+- Migration plan:
+  1. Wrap Phaser input in adapter layer: `class GameInputManager` to decouple from v3 specifics
+  2. Document Phaser version in package.json with minimum version requirement
+  3. Create upgrade guide before Phaser 4 adoption
 
-**TypeScript <5.0 compatibility:**
-- Risk: TypeScript 5.0+ has better type narrowing. If locked to TS 4.x, advanced patterns may not work. Conversely, TS 5+ might have breaking changes.
-- Impact: Type errors in beta features or library incompatibility.
-- Migration plan: Use TS 5.0+ from start. Test with experimental flags during Week 1. Document minimum TS version in README.
-
----
+**TypeScript 5.7.0 - Type Strictness May Change:**
+- Risk: TS 5+ improvements in type narrowing and inference could expose latent type issues in codebase
+- Impact: Future TS upgrades may fail type checking due to `any` and `null!` usage
+- Migration plan:
+  1. Fix all `any` types before upgrading TS
+  2. Test with `strict: true` in tsconfig.json NOW (currently may have strict:false)
+  3. Run type checker in CI to catch regressions
 
 ## Missing Critical Features
 
-**No offline support (critical for KLO brand):**
-- Problem: PWA is marketed but game requires Firestore connectivity for every level load. No offline level caching or offline progress save.
-- Blocks: Users in low-signal areas (highway, tunnels) can't play. Network latency ruins gameplay feel.
-- Recommendation: Implement IndexedDB cache for levels + offline progress. Sync when online. Show offline badge to user.
+**No Error Boundary or Crash Recovery:**
+- Problem: If any error occurs during cascade (e.g., invalid grid state, missing level data), game becomes unresponsive. Player must refresh to recover.
+- Blocks: Cannot reliably deploy to production without error handling. Single bad level data breaks entire session.
+- Workaround: Debugging via console. No user-facing error messages.
+- Fix approach:
+  1. Wrap cascade in try-catch, restore grid from snapshot on error
+  2. Show error modal to player: "Game encountered an error. Tap to retry level."
+  3. Log errors to Sentry or Firebase Crashlytics
 
-**No in-game monetization path:**
-- Problem: Game design mentions "booster_prices" in Remote Config (TECH_SPEC line 395) but no IAP (in-app purchase) logic, no payment UI, no backend validation.
-- Blocks: Future monetization (if needed) requires significant rework.
-- Recommendation: Scaffold IAP skeleton (button, payment flow) during MVP phase even if disabled. Use Stripe or Firebase billing for safety.
+**No Analytics or Telemetry for Cascade Performance:**
+- Problem: Cannot see which levels have long cascades, where players get stuck, or if cascade timeout is hit
+- Blocks: Cannot optimize level difficulty or identify performance problems in production
+- Workaround: None - game is effectively blind to how it's performing
+- Fix approach:
+  1. Log cascade depth and duration to Firebase Analytics on level complete
+  2. Create dashboard showing 95th percentile cascade time per level
+  3. Alert if any level exceeds 3 seconds cascade (indicates balance issue or bug)
 
-**No analytics dashboard specified:**
-- Problem: Extensive analytics events are logged (15+ event types) but no dashboard to view them. Product team can't monitor KPIs in real-time.
-- Blocks: First live week, no one knows if fail rate is actually <40% or who's churning.
-- Recommendation: Set up Firebase Analytics dashboard with key metrics (L1–5 fail rate, D1 retention, coupon redemption rate) before launch. Brief product team on how to access.
-
-**No A/B testing framework:**
-- Problem: GAME_DESIGN (line 238) mentions "Variant A: coupon kHz every 5 levels, Variant B: every 10" but no framework to actually run A/B test.
-- Blocks: Can't measure impact of reward frequency on retention/redemption.
-- Recommendation: Use Firebase Remote Config variants feature. Define test on day 1 with success metrics. Run for 1 week post-launch.
-
----
+**No Offline Play - Always Requires Internet:**
+- Problem: Every level load requires Firestore connection. Losing connection mid-level causes crash.
+- Blocks: Cannot play on flights, subways, or poor signal areas. Contradicts mobile-first positioning.
+- Workaround: None - requires redesign of persistence layer
+- Fix approach:
+  1. Cache levels in IndexedDB on first load
+  2. Implement offline progress save to localStorage
+  3. Sync when online, resolve conflicts (prefer server if timestamp newer)
 
 ## Test Coverage Gaps
 
-**No unit tests for match-3 core logic:**
-- What's not tested: Grid.swap(), Match.findMatches(), Grid.applyGravity(), Obstacle.onMatch() behavior
-- Files: `src/game/Grid.ts`, `src/game/Match.ts`, `src/game/Obstacle.ts` (not yet written)
-- Risk: Core gameplay bugs can persist into live. Regression when adding new obstacle types.
-- Priority: **HIGH** — Match logic is the heart of the game.
-- Fix: Write Jest tests for Grid class:
+**Game Scene - Not Unit Tested (1480 lines, 0 tests):**
+- What's not tested: Input handling, cascade completion, win/lose conditions, scene lifecycle, responsive resizing, animation sequencing
+- Files: `src/scenes/Game.ts`
+- Risk: Core gameplay loop changes go undetected. Regression when refactoring input or cascade logic.
+- Priority: **CRITICAL** - This is the most critical piece of the entire codebase
+- Approach: Break Game.ts into testable units:
+  1. Extract cascade logic to pure class: `GameCascadeProcessor`
+  2. Extract input handling to `GameInputHandler`
+  3. Test each independently, then integration test Game scene
+  4. Aim for 80%+ coverage on Game.ts
+
+**Scene Lifecycle - Not Tested:**
+- What's not tested: Rapid scene transitions, shutdown during async operations, memory leaks from undestroyed objects, orientation changes mid-cascade
+- Files: `src/scenes/Game.ts`, `src/scenes/LevelSelect.ts`, `src/scenes/Menu.ts`, `src/scenes/Boot.ts`
+- Risk: Edge cases (device rotation during cascade, back button spam) not caught until field testing.
+- Priority: **HIGH** - Affects user experience on mobile
+- Approach: Write integration tests for state transitions using Phaser test utils
+
+**LevelManager Integration - Partially Tested:**
+- What's not tested: Goal tracking accuracy, win/lose condition logic with all goal types, star calculation, obstacle destruction counting
+- Files: `src/game/LevelManager.ts` (188 lines, test file exists but coverage unknown)
+- Risk: Players might earn stars incorrectly or lose levels they won. Goals don't increment properly.
+- Priority: **HIGH** - Affects progression and revenue
+- Approach: Expand LevelManager.test.ts with:
+  1. Test each goal type (collect items, destroy obstacles, etc.)
+  2. Test multi-goal combinations
+  3. Test star calculation at different move thresholds
+
+**Responsive Layout - Not Tested:**
+- What's not tested: Tile sizing on extreme aspect ratios (21:9, 4:3), HUD text overflow, button hit areas on mobile, resize handling
+- Files: `src/utils/responsive.ts`, responsive behavior in all scenes
+- Risk: On unusual aspect ratios (tablet landscape, ultra-wide monitor), layout breaks or becomes unusable.
+- Priority: **MEDIUM** - Affects accessibility on non-standard devices
+- Approach: Write parametrized tests for responsive.ts:
   ```typescript
-  describe('Grid', () => {
-    it('should swap adjacent tiles', () => {
-      const grid = new Grid(8, 8);
-      grid.swap(0, 0, 1, 0); // swap [0,0] with [1,0]
-      expect(grid.getTile(0, 0).type).toBe(grid.getTile(1, 0).type); // should be same after
-    });
-    it('should find 3-in-a-row matches', () => {
-      // place 3 red tiles in a row
-      // expect findMatches() to return that row
-    });
+  describe.each([
+    [1024, 768],   // iPad
+    [390, 844],    // iPhone 12
+    [2560, 1440],  // Desktop 16:9
+  ])('responsive layout %dx%d', (w, h) => {
+    it('should fit grid on screen', () => { ... });
   });
   ```
 
-**No integration tests for win/lose flow:**
-- What's not tested: Winning level → reward screen → coupon generation success/failure → next level loads
-- Files: `src/scenes/Game.ts` (not yet written), `src/firebase/functions.ts`
-- Risk: Reward screen bugs, coupon generation failures don't surface until live playtest.
-- Priority: **HIGH** — Players notice immediately if rewards are broken.
-- Fix: Write Cypress or Jest integration tests:
-  ```typescript
-  it('should show coupon on level win', async () => {
-    // load level, win immediately, assert reward screen shows coupon
-    // assert Firestore document is created
-  });
-  ```
+**Firebase Operations - Not Tested:**
+- What's not tested: Network errors, offline fallback, concurrent saves, auth edge cases, race conditions in regeneration
+- Files: `src/firebase/*.ts`, integration with `EconomyManager.ts` and `ProgressManager.ts`
+- Risk: Firestore errors not handled gracefully. Progress lost on network interruption. Lives regeneration corrupted by concurrent saves.
+- Priority: **MEDIUM** - Affects critical data persistence
+- Approach: Use Firebase Emulator Suite to test:
+  1. Simulate network timeout, verify retry + error UI
+  2. Simulate offline, verify local cache, sync on reconnect
+  3. Concurrent saves: call `loseLife()` twice simultaneously, verify single loss
 
-**No Firebase Cloud Function tests:**
-- What's not tested: `generateCoupon` antifraud logic, budget checking, `redeemCoupon` validation
-- Files: `functions/src/coupons.ts` (not yet written)
-- Risk: Antifraud can be trivially bypassed, coupons can be generated infinitely, budget overruns unchecked.
-- Priority: **CRITICAL** — Revenue/fraud risk.
-- Fix: Use Firebase Emulator Suite. Write tests:
-  ```typescript
-  it('should reject coupon generation if daily limit exceeded', async () => {
-    await generateCoupon({ user_id, level_id }); // first
-    await generateCoupon({ user_id, level_id }); // second
-    const result = await generateCoupon({ user_id, level_id }); // third
-    expect(result.error).toContain('limit exceeded');
-  });
-  ```
-
-**No playtesting of difficulty curve:**
-- What's not tested: Do actual players fail L1–5 <5% of the time? Does L20 feel like a boss?
-- Files: `GAME_DESIGN.md` (lines 89–209 are predictions, not measurements)
-- Risk: Entire progression could be broken. Churn if too hard early, boredom if too easy.
-- Priority: **CRITICAL** — KPI depends on this.
-- Fix: After L1–20 game code complete (Week 2), recruit 5–10 external testers. Collect metrics (moves used, time, fail reason). Compare to design targets. Rebalance before public launch.
+**Booster Combinations - Not Tested:**
+- What's not tested: Multiple boosters on same tile, booster + obstacle interactions, booster + goal interactions, rare cascade chains
+- Files: `src/game/BoosterActivator.ts`, `src/game/Match3Engine.ts` findMatchesWithBoosters section
+- Risk: Undiscovered bugs when all booster types are combined in late levels. Players report "wrong number of tiles cleared" for rare combinations.
+- Priority: **MEDIUM** - Late-game stability
+- Approach: Expand BoosterActivator.test.ts (218 lines) with:
+  1. Test bomb + line_horizontal activation
+  2. Test klo_sphere + bomb combo
+  3. Test booster on tile with obstacle
+  4. Test booster goal counting with simultaneous activations
 
 ---
 
-*Concerns audit: 2026-02-05*
+*Concerns audit: 2026-02-10*
