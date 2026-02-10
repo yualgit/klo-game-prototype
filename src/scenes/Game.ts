@@ -66,8 +66,6 @@ export class Game extends Phaser.Scene {
   }
 
   create(): void {
-    console.log('[Game] Creating game scene');
-
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
@@ -81,7 +79,6 @@ export class Game extends Phaser.Scene {
 
     // Mark scene as active (reset from previous shutdown)
     this.sceneActive = true;
-
     // Reset scene state for restarts
     this.resetState();
 
@@ -166,6 +163,9 @@ export class Game extends Phaser.Scene {
     this.tileSprites = [];
     this.isProcessing = false;
     this.selectedTile = null;
+    // Clear references to destroyed game objects from previous scene run
+    this.hudText = null!;
+    this.backButton = null!;
   }
 
   private createHUD(width: number): void {
@@ -216,6 +216,7 @@ export class Game extends Phaser.Scene {
    * Handle level events from LevelManager
    */
   private handleLevelEvent(event: LevelEvent): void {
+    if (!this.sceneActive) return;
     const width = this.cameras.main.width;
 
     switch (event.type) {
