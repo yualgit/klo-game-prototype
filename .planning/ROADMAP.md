@@ -72,8 +72,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — CollectionsManager singleton + card config + Firestore persistence
-- [ ] 14-02-PLAN.md — Collections scene UI with scrollable card grid + visual verification
+- [x] 14-01-PLAN.md — CollectionsManager singleton + card config + Firestore persistence
+- [x] 14-02-PLAN.md — Collections scene UI with scrollable card grid + visual verification
 
 ### Phase 15: Card Acquisition Flow
 **Goal**: Card drop mechanics with pick-1-of-2 UX, weighted rarity, and pity system
@@ -118,7 +118,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15 → 16
 | 11. Art & Asset Quality | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
 | 12. Responsive Layout | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
 | 13. Persistent UI Navigation | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
-| 14. Collection Data Model | v1.2 | 0/TBD | Not started | - |
+| 14. Collection Data Model | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
 | 15. Card Acquisition Flow | v1.2 | 0/TBD | Not started | - |
 | 16. Collection Exchange | v1.2 | 0/TBD | Not started | - |
 
