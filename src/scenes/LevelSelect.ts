@@ -9,6 +9,7 @@ import { EconomyManager } from '../game/EconomyManager';
 import { SettingsManager } from '../game/SettingsManager';
 import { GUI_TEXTURE_KEYS, MAP_CONFIG } from '../game/constants';
 import { getResponsiveLayout, cssToGame, getDpr } from '../utils/responsive';
+import eventsCenter from '../utils/EventsCenter';
 
 const KLO_YELLOW = 0xffb800;
 const KLO_BLACK = 0x1a1a1a;
@@ -28,22 +29,13 @@ const LEVEL_NAMES: Record<number, string> = {
 };
 
 export class LevelSelect extends Phaser.Scene {
-  private livesText: Phaser.GameObjects.Text;
-  private bonusText: Phaser.GameObjects.Text;
-  private countdownText: Phaser.GameObjects.Text;
-  private timerEvent: Phaser.Time.TimerEvent;
   private isDragging: boolean = false;
   private dragStartY: number = 0;
   private overlayActive: boolean = false;
   private levelNodes: Phaser.GameObjects.Container[] = [];
 
   // UI elements for resize repositioning
-  private hudBg: Phaser.GameObjects.Graphics;
-  private titleText: Phaser.GameObjects.Text;
-  private settingsIcon: Phaser.GameObjects.Text;
-  private heartIcon: Phaser.GameObjects.Text;
-  private bonusIcon: Phaser.GameObjects.Text;
-  private hudBarHeight: number;
+  private backButton: Phaser.GameObjects.Container;
   private layout: ReturnType<typeof getResponsiveLayout>;
 
   constructor() {
@@ -98,34 +90,8 @@ export class LevelSelect extends Phaser.Scene {
       this.createMapPointer(pointerPos.x, pointerPos.y - 60);
     }
 
-    // HUD background bar (fixed to camera)
-    this.hudBarHeight = cssToGame(50);
-    this.hudBg = this.add.graphics();
-    this.hudBg.fillStyle(0xFFFFFF, 0.8);
-    this.hudBg.fillRect(0, 0, width, this.hudBarHeight);
-    this.hudBg.setScrollFactor(0);
-    this.hudBg.setDepth(10);
-
-    // Title (fixed to camera)
-    this.titleText = this.add.text(width / 2, this.hudBarHeight / 2, 'Оберіть рівень', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(16)}px`,
-      color: '#1A1A1A',
-      fontStyle: 'bold',
-      shadow: { offsetX: 1, offsetY: 1, color: '#00000020', blur: 2, fill: true },
-    });
-    this.titleText.setOrigin(0.5);
-    this.titleText.setScrollFactor(0);
-    this.titleText.setDepth(11);
-
-    // Back button (fixed to camera)
+    // Back button (below UIScene header)
     this.createBackButton();
-
-    // Economy HUD (fixed to camera)
-    this.createEconomyHUD(width, economy);
-
-    // Settings gear icon (fixed to camera)
-    this.createSettingsButton(width);
 
     // Setup drag scrolling
     this.setupDragScrolling();
@@ -133,9 +99,36 @@ export class LevelSelect extends Phaser.Scene {
     // Auto-scroll to current level
     this.scrollToCurrentLevel();
 
+    // Launch UIScene with full navigation
+    this.scene.launch('UIScene', {
+      currentTab: 'levels',
+      showBottomNav: true,
+      showHeader: true,
+    });
+
+    // Listen for navigation events
+    eventsCenter.on('navigate-to', this.handleNavigation, this);
+    eventsCenter.on('open-settings', this.showSettingsOverlay, this);
+
     // Register resize handler
     this.scale.on('resize', this.handleResize, this);
   }
+
+  private handleNavigation = (target: string): void => {
+    this.scene.stop('UIScene');
+
+    switch (target) {
+      case 'levels':
+        // Already on levels, no-op
+        break;
+      case 'collections':
+        this.scene.start('Collections');
+        break;
+      case 'shop':
+        this.scene.start('Shop');
+        break;
+    }
+  };
 
   private createParallaxBackground(): void {
     const width = this.cameras.main.width;
@@ -280,100 +273,6 @@ export class LevelSelect extends Phaser.Scene {
     }
   }
 
-  private createEconomyHUD(width: number, economy: EconomyManager): void {
-    const containerX = width - cssToGame(50);
-    const containerY = this.hudBarHeight / 2;
-
-    // Heart icon + lives count
-    this.heartIcon = this.add.text(containerX - cssToGame(55), containerY - cssToGame(10), '❤', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(12)}px`,
-    });
-    this.heartIcon.setOrigin(0.5);
-    this.heartIcon.setScrollFactor(0);
-    this.heartIcon.setDepth(11);
-
-    this.livesText = this.add.text(containerX - cssToGame(35), containerY - cssToGame(10), '5/5', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(12)}px`,
-      color: '#1A1A1A',
-      fontStyle: 'bold',
-    });
-    this.livesText.setOrigin(0, 0.5);
-    this.livesText.setScrollFactor(0);
-    this.livesText.setDepth(11);
-
-    // Countdown text (hidden when lives = 5)
-    this.countdownText = this.add.text(containerX - cssToGame(55), containerY + cssToGame(8), '', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(9)}px`,
-      color: '#666666',
-    });
-    this.countdownText.setOrigin(0, 0.5);
-    this.countdownText.setScrollFactor(0);
-    this.countdownText.setDepth(11);
-
-    // Bonus icon + count
-    this.bonusIcon = this.add.text(containerX, containerY - cssToGame(10), '💎', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(12)}px`,
-    });
-    this.bonusIcon.setOrigin(0.5);
-    this.bonusIcon.setScrollFactor(0);
-    this.bonusIcon.setDepth(11);
-
-    this.bonusText = this.add.text(containerX + cssToGame(15), containerY - cssToGame(10), '500', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(12)}px`,
-      color: '#FFB800',
-      fontStyle: 'bold',
-    });
-    this.bonusText.setOrigin(0, 0.5);
-    this.bonusText.setScrollFactor(0);
-    this.bonusText.setDepth(11);
-
-    // Create 1-second timer for countdown updates
-    this.timerEvent = this.time.addEvent({
-      delay: 1000,
-      callback: this.updateEconomyDisplay,
-      callbackScope: this,
-      loop: true,
-    });
-
-    // Initial update
-    this.updateEconomyDisplay();
-
-    // Cleanup on scene shutdown
-    this.events.once('shutdown', () => {
-      if (this.timerEvent) {
-        this.timerEvent.remove();
-        this.timerEvent = null!;
-      }
-    });
-  }
-
-  private updateEconomyDisplay(): void {
-    const economy = this.registry.get('economy') as EconomyManager;
-    if (!economy) return;
-
-    // Update lives text
-    const lives = economy.getLives();
-    this.livesText.setText(`${lives}/5`);
-
-    // Update countdown if lives < 5
-    if (lives < 5) {
-      const seconds = economy.getSecondsUntilNextLife();
-      const minutes = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      this.countdownText.setText(`Далі: ${minutes}:${secs.toString().padStart(2, '0')}`);
-    } else {
-      this.countdownText.setText('');
-    }
-
-    // Update bonuses
-    const bonuses = economy.getBonuses();
-    this.bonusText.setText(`${bonuses}`);
-  }
 
   private showNoLivesPrompt(economy: EconomyManager): void {
     const width = this.cameras.main.width;
@@ -452,8 +351,6 @@ export class LevelSelect extends Phaser.Scene {
             // Clean up overlay
             overlayElements.forEach(el => el.destroy());
             this.overlayActive = false;
-            // Update HUD
-            this.updateEconomyDisplay();
           }
         }
       );
@@ -523,6 +420,7 @@ export class LevelSelect extends Phaser.Scene {
   private createBackButton(): void {
     const buttonWidth = cssToGame(60);
     const buttonHeight = cssToGame(28);
+    const buttonY = cssToGame(50) + cssToGame(15); // Below UIScene header
 
     // Button background using GUI sprite
     const buttonBg = this.add.image(0, 0, GUI_TEXTURE_KEYS.buttonYellow);
@@ -535,29 +433,29 @@ export class LevelSelect extends Phaser.Scene {
     });
     buttonText.setOrigin(0.5);
 
-    const container = this.add.container(cssToGame(40), this.hudBarHeight / 2, [buttonBg, buttonText]);
-    container.setSize(buttonWidth, buttonHeight);
-    container.setInteractive({ useHandCursor: true });
-    container.setScrollFactor(0);
-    container.setDepth(11);
+    this.backButton = this.add.container(cssToGame(40), buttonY, [buttonBg, buttonText]);
+    this.backButton.setSize(buttonWidth, buttonHeight);
+    this.backButton.setInteractive({ useHandCursor: true });
+    this.backButton.setScrollFactor(0);
+    this.backButton.setDepth(11);
 
-    container.on('pointerover', () => {
+    this.backButton.on('pointerover', () => {
       this.tweens.add({
-        targets: container,
+        targets: this.backButton,
         scale: 1.05,
         duration: 100,
       });
     });
 
-    container.on('pointerout', () => {
+    this.backButton.on('pointerout', () => {
       this.tweens.add({
-        targets: container,
+        targets: this.backButton,
         scale: 1,
         duration: 100,
       });
     });
 
-    container.on('pointerup', () => {
+    this.backButton.on('pointerup', () => {
       // Fade out to black before returning to menu
       this.cameras.main.fadeOut(300, 0, 0, 0);
       this.cameras.main.once('camerafadeoutcomplete', () => {
@@ -684,39 +582,6 @@ export class LevelSelect extends Phaser.Scene {
     return result;
   }
 
-  private createSettingsButton(width: number): void {
-    // Position gear icon in HUD bar, between back button and economy HUD
-    this.settingsIcon = this.add.text(width - cssToGame(120), this.hudBarHeight / 2, '⚙', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(18)}px`,
-      color: '#1A1A1A',
-    });
-    this.settingsIcon.setOrigin(0.5);
-    this.settingsIcon.setInteractive({ useHandCursor: true });
-    this.settingsIcon.setScrollFactor(0);
-    this.settingsIcon.setDepth(11);
-
-    // Hover effects
-    this.settingsIcon.on('pointerover', () => {
-      this.tweens.add({
-        targets: this.settingsIcon,
-        scale: 1.15,
-        duration: 100,
-      });
-    });
-
-    this.settingsIcon.on('pointerout', () => {
-      this.tweens.add({
-        targets: this.settingsIcon,
-        scale: 1,
-        duration: 100,
-      });
-    });
-
-    this.settingsIcon.on('pointerup', () => {
-      this.showSettingsOverlay();
-    });
-  }
 
   private showSettingsOverlay(): void {
     const settings = this.registry.get('settings') as SettingsManager;
@@ -980,7 +845,6 @@ export class LevelSelect extends Phaser.Scene {
 
     // Recompute layout for new viewport
     this.layout = getResponsiveLayout(width, height);
-    this.hudBarHeight = cssToGame(50);
 
     // Update camera viewport (CRITICAL for input)
     this.cameras.main.setViewport(0, 0, width, height);
@@ -1000,51 +864,27 @@ export class LevelSelect extends Phaser.Scene {
     );
     this.cameras.main.setScroll(scrollX, this.cameras.main.scrollY);
 
-    // Redraw HUD background to new width
-    if (this.hudBg) {
-      this.hudBg.clear();
-      this.hudBg.fillStyle(0xFFFFFF, 0.8);
-      this.hudBg.fillRect(0, 0, width, this.hudBarHeight);
+    // Reposition back button
+    if (this.backButton) {
+      this.backButton.setPosition(cssToGame(40), cssToGame(50) + cssToGame(15));
     }
-
-    // Reposition fixed HUD elements (scrollFactor=0, use viewport coords)
-    if (this.titleText) this.titleText.setPosition(width / 2, this.hudBarHeight / 2);
-
-    // Settings gear repositions relative to width
-    if (this.settingsIcon) this.settingsIcon.setPosition(width - cssToGame(120), this.hudBarHeight / 2);
-
-    // Economy HUD repositions relative to width
-    this.repositionEconomyHUD(width);
-  }
-
-  private repositionEconomyHUD(width: number): void {
-    const containerX = width - cssToGame(50);
-    const containerY = this.hudBarHeight / 2;
-
-    // Heart icon
-    if (this.heartIcon) this.heartIcon.setPosition(containerX - cssToGame(55), containerY - cssToGame(10));
-
-    // Lives text
-    if (this.livesText) this.livesText.setPosition(containerX - cssToGame(35), containerY - cssToGame(10));
-
-    // Countdown text
-    if (this.countdownText) this.countdownText.setPosition(containerX - cssToGame(55), containerY + cssToGame(8));
-
-    // Bonus icon
-    if (this.bonusIcon) this.bonusIcon.setPosition(containerX, containerY - cssToGame(10));
-
-    // Bonus text
-    if (this.bonusText) this.bonusText.setPosition(containerX + cssToGame(15), containerY - cssToGame(10));
   }
 
   shutdown(): void {
     // Cleanup resize handler
     this.scale.off('resize', this.handleResize, this);
 
+    // Cleanup event listeners
+    eventsCenter.off('navigate-to', this.handleNavigation, this);
+    eventsCenter.off('open-settings', this.showSettingsOverlay, this);
+
     // Cleanup pointer event listeners
     this.input.off('pointerdown');
     this.input.off('pointermove');
     this.input.off('pointerup');
+
+    // Stop UIScene
+    this.scene.stop('UIScene');
 
     // Clear level nodes array
     this.levelNodes = [];

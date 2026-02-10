@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { initFirebase } from './firebase';
-import { Boot, Menu, LevelSelect, Game } from './scenes';
+import { Boot, Menu, LevelSelect, Game, UIScene, Collections, Shop } from './scenes';
 import { ProgressManager } from './game/ProgressManager';
 import { EconomyManager } from './game/EconomyManager';
 import { SettingsManager } from './game/SettingsManager';
@@ -24,7 +24,7 @@ const config: Phaser.Types.Core.GameConfig = {
     pixelArt: false,
     roundPixels: true,
   },
-  scene: [Boot, Menu, LevelSelect, Game],
+  scene: [Boot, Menu, LevelSelect, Game, UIScene, Collections, Shop],
 };
 
 /**
