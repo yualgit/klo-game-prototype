@@ -4,15 +4,17 @@
  */
 
 // Tile types for match-3 game (KLO fuel stations)
-export const TILE_TYPES = ['fuel', 'coffee', 'snack', 'road'] as const;
+export const TILE_TYPES = ['burger', 'hotdog', 'oil', 'water', 'snack', 'soda'] as const;
 export type TileType = typeof TILE_TYPES[number];
 
 // Tile colors mapped to KLO brand and thematic colors
 export const TILE_COLORS: Record<TileType, number> = {
-  fuel: 0xffb800,    // KLO yellow - fuel pumps
-  coffee: 0x8b4513,  // Brown - coffee
-  snack: 0x3498db,   // Blue - snacks
-  road: 0x27ae60,    // Green - road/travel
+  burger: 0xFFB800,   // KLO yellow
+  hotdog: 0xFF6B35,   // Orange
+  oil: 0x1A1A1A,      // Dark/black
+  water: 0x4A90E2,    // Blue
+  snack: 0xF39C12,    // Golden
+  soda: 0xE74C3C,     // Red
 };
 
 // Tile dimensions (import from utils/constants for consistency)
@@ -22,13 +24,25 @@ export { TILE_SIZE } from '../utils/constants';
 export const TILE_GAP = 4;
 
 // Tile texture keys (mapping game types to asset filenames)
-// Mapping: fuel -> fuel_can (semantic), coffee -> coffee, snack -> wheel (road trip), road -> light (driving)
 export const TEXTURE_KEYS: Record<TileType, string> = {
-  fuel: 'tile_fuel_can',
-  coffee: 'tile_coffee',
-  snack: 'tile_wheel',
-  road: 'tile_light',
+  burger: 'tile_burger',
+  hotdog: 'tile_hotdog',
+  oil: 'tile_oil',
+  water: 'tile_water',
+  snack: 'tile_snack',
+  soda: 'tile_soda',
 };
+
+// Booster texture keys
+export const BOOSTER_TEXTURE_KEYS: Record<string, string> = {
+  bomb: 'booster_bomb',
+  linear_horizontal: 'booster_klo_horizontal',
+  linear_vertical: 'booster_klo_vertical',
+  klo_sphere: 'booster_klo_sphere',
+};
+
+// Block texture key
+export const BLOCK_TEXTURE_KEY = 'block_texture';
 
 // Obstacle texture keys
 // Per user decision: bubble.png = 1-hit blocker. The game's 'crate' type IS the 1-hit blocker.

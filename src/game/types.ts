@@ -2,7 +2,7 @@
  * Core Match-3 game type definitions
  */
 
-export type TileType = 'fuel' | 'coffee' | 'snack' | 'road' | 'empty';
+export type TileType = 'burger' | 'hotdog' | 'oil' | 'water' | 'snack' | 'soda' | 'empty';
 
 export type BoosterType = 'linear_horizontal' | 'linear_vertical' | 'bomb' | 'klo_sphere';
 
@@ -57,10 +57,12 @@ export interface MatchResult {
 }
 
 export interface SpawnRules {
-  fuel: number;
-  coffee: number;
+  burger: number;
+  hotdog: number;
+  oil: number;
+  water: number;
   snack: number;
-  road: number;
+  soda: number;
 }
 
 export interface LevelGoal {
@@ -96,6 +98,7 @@ export interface LevelData {
     height: number;
     blocked_cells: [number, number][];
     cell_map?: number[][];
+    inactive_cell_style?: 'block' | 'transparent';
   };
   goals: LevelGoal[];
   spawn_rules: SpawnRules;
