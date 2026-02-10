@@ -158,8 +158,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 10-01-PLAN.md — DPR-aware scale config + viewport meta + Boot/Menu resize handlers
-- [ ] 10-02-PLAN.md — LevelSelect and Game scene responsive resize handlers
+- [x] 10-01-PLAN.md — DPR-aware scale config + viewport meta + Boot/Menu resize handlers
+- [x] 10-02-PLAN.md — LevelSelect and Game scene responsive resize handlers
 
 **Research Flags:** None (Phaser Scale.RESIZE + resolution config well-documented)
 
@@ -173,9 +173,9 @@ Plans:
 | 7 - Settings | ✅ Complete (2026-02-10) | 4 (SETT-01..04) | 2/2 | 100% |
 | 8 - Advanced Level Mechanics | ✅ Complete (2026-02-10) | 7 (OBST-05..07, LVLD-01..04) | 2/2 | 100% |
 | 9 - Kyiv Map Experience | ✅ Complete (2026-02-10) | 3 (VISL-01..03) | 2/2 | 100% |
-| 10 - Mobile Polish | Planned | 2 (VISL-04..05) | 0/2 | 0% |
+| 10 - Mobile Polish | ✅ Complete (2026-02-10) | 2 (VISL-04..05) | 2/2 | 100% |
 
-**Overall:** 80% complete (4/5 phases)
+**Overall:** 100% complete (5/5 phases)
 
 ### Coverage
 
