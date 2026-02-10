@@ -1,546 +1,423 @@
-# Technology Stack Additions
+# Technology Stack
 
-**Project:** KLO Match-3 Demo — Milestone 2
+**Project:** KLO Match-3 Collection Cards Milestone
 **Researched:** 2026-02-10
-**Confidence:** HIGH
 
-## Executive Summary
+## Recommended Stack
 
-New features (lives system, settings, variable boards, scrollable map, canvas DPI) require **NO additional npm packages**. All capabilities exist within the current stack: Phaser 3.90, TypeScript, Firebase 11.0, and native Web APIs. Implementation is architecture and API usage, not dependency changes.
+### Core Framework (No Changes)
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| Phaser | 3.90.0 | Game engine | Already validated, DPR-aware rendering working (zoom: 1/dpr) |
+| TypeScript | 5.7.0 | Type safety | Already in use, continue with existing setup |
+| Vite | 6.0.0 | Build tool | Already in use, fast HMR for dev workflow |
+| Firebase | 11.0.0 | Backend (Auth, Firestore) | Already validated for progress/economy persistence |
 
----
+**Rationale:** Existing stack handles current features well. NO framework changes needed.
 
-## Validated Current Stack (No Changes)
+### Collection Cards — Gacha/Probability Engine
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **Phaser** | ^3.90.0 | Game framework | Handles all new features natively: variable grid rendering, camera scrolling with parallax, canvas DPI configuration, scene registry for global state |
-| **Firebase** | ^11.0.0 | Auth + Firestore persistence | Existing `UserProgress` interface extends cleanly for lives/bonuses, Firestore TTL policies available for timer cleanup |
-| **TypeScript** | ^5.7.0 | Type safety | Strong typing for new data structures (lives state, settings schema, level metadata) |
-| **Vite** | ^6.0.0 | Build tooling | No changes needed, dev server remains fast with new assets |
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| random-seed-weighted-chooser | ^1.1.1 | Weighted random selection | Mature, TypeScript support, custom seed for reproducibility, zero dependencies |
 
-**Result:** No `npm install` commands required. All new features use existing dependencies.
+**Why NOT custom implementation:** Gacha probability is error-prone. Existing library handles edge cases (empty arrays, zero weights, floating-point precision). Custom PRNG seed support enables server-side validation if needed later.
 
----
+**Why NOT other alternatives:**
+- `weighted` — No TypeScript types by default
+- `random-weighted-choice` — Older, fewer features
+- Custom math — Reinventing wheel, pity system math is complex
 
-## NEW Capabilities by Feature
-
-### 1. Lives System with Progressive Regeneration
-
-**Stack:** Firestore + TypeScript + Web APIs (performance.now)
-
-#### Firestore Schema Extension
-Extend `UserProgress` interface (no new collections):
-
+**Integration pattern:**
 ```typescript
-interface UserProgress {
-  // Existing fields...
-  current_level: number;
-  completed_levels: number[];
-  stars: number;
-  level_stars: Record<string, number>;
-  last_seen: Date | Timestamp;
+// In new CollectionManager.ts
+import { weightedChooseIndex } from 'random-seed-weighted-chooser';
 
-  // NEW: Lives system
-  lives: number;                    // Current lives (0-5)
-  max_lives: number;                // Cap (default: 5)
-  last_life_lost: Timestamp | null; // When last life was consumed
-  next_life_at: Timestamp | null;   // When next life regenerates
-}
-```
+class CollectionManager {
+  private pityCounter: Record<string, number> = {}; // Track pity per collection
 
-**Why no separate collection:** Lives are user-scoped state, not shared data. Storing in `users/{uid}` doc avoids joins, reduces Firestore reads (cost optimization), and simplifies offline handling.
-
-#### Timer Implementation: performance.now() + Phaser Scene Update Loop
-
-**Why NOT setInterval:**
-- setInterval drifts over time (system clock adjustments)
-- Not paused when browser tab backgrounded (battery drain)
-- Requires manual cleanup to avoid memory leaks
-
-**Why YES Phaser `this.time.now` (wrapper for performance.now):**
-- Monotonic clock: never skips backward ([MDN High Precision Timing](https://developer.mozilla.org/en-US/docs/Web/API/Performance_API/High_precision_timing))
-- Microsecond precision (vs Date.now's millisecond)
-- Auto-pauses when scene inactive (built-in lifecycle)
-- No cleanup needed (Phaser manages lifecycle)
-
-**Pattern:**
-```typescript
-// In LevelSelect scene update loop
-update(time: number) {
-  const now = this.time.now; // performance.now() wrapper
-  if (livesManager.shouldRegenerate(now)) {
-    livesManager.regenerateLife();
-    this.updateLivesDisplay();
+  pickCard(collectionId: string): CardData {
+    // Increase rarity weights based on pity counter
+    const weights = this.calculateWeights(collectionId);
+    const index = weightedChooseIndex(weights);
+    // Reset pity if rare obtained, increment otherwise
   }
 }
 ```
 
-**Sources:**
-- [Performance.now() method - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now)
-- [Scheduling: setTimeout and setInterval](https://javascript.info/settimeout-setinterval)
+Store in Phaser registry like existing managers: `game.registry.set('collection', collectionManager)`.
 
-#### Firestore TTL Policies (Optional Cleanup)
+### UI Navigation — Bottom Nav + Global Header
 
-Use for expired bonus timers, not live regeneration (client-side calculation more responsive).
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| phaser3-rex-plugins | ^1.80.18 | UI components (tabs, badges, containers) | Actively maintained, Phaser 3.80+ compatible, comprehensive UI toolkit |
 
-**Sources:**
-- [Manage data retention with TTL policies | Firestore](https://firebase.google.com/docs/firestore/ttl)
+**Why rexUI:** Official Phaser examples recommend separate UI scene pattern. RexUI provides production-ready components (Buttons, Sizer, Label, BadgeLabel) that integrate seamlessly with Phaser scene system.
 
----
+**Why NOT custom UI:** Bottom nav requires complex layout logic (responsive sizing, active state management, icon positioning). RexUI solves this with Sizer containers and event emitters.
 
-### 2. Bonus Economy
+**Why NOT HTML overlay:** Mixing DOM and Canvas breaks Phaser's rendering pipeline, complicates touch handling, and creates z-index issues. Pure Phaser UI maintains consistent DPR scaling.
 
-**Stack:** Firestore (extend UserProgress)
-
+**Integration pattern:**
 ```typescript
-interface UserProgress {
-  // NEW: Bonuses
-  bonuses: {
-    bomb: number;           // Count of available bomb boosters
-    linear_h: number;       // Horizontal line boosters
-    linear_v: number;       // Vertical line boosters
-    klo_sphere: number;     // KLO-sphere boosters
-  };
-  bonus_history: {
-    earned_total: number;   // Lifetime earned
-    used_total: number;     // Lifetime used
-  };
-}
-```
+// New scene: src/scenes/UI.ts
+export class UI extends Phaser.Scene {
+  create() {
+    // Persistent UI scene runs alongside Game/LevelSelect/Menu
+    this.createBottomNav(); // Using rexUI.Buttons container
+    this.createGlobalHeader(); // Lives, bonuses, settings icon
 
-**Why separate from level stars:** Bonuses are consumable currency, stars are achievement markers. Decoupling enables future IAP (in-app purchases) for bonus packs without touching star logic.
-
-**Sources:**
-- [Firebase for games | Supercharge your games with Firebase](https://firebase.google.com/games)
-
----
-
-### 3. Settings Menu with Persistence
-
-**Stack:** localStorage (NOT Firestore)
-
-#### Why localStorage over Firestore
-
-| Criterion | localStorage | Firestore |
-|-----------|--------------|-----------|
-| **Latency** | 0ms (synchronous) | 50-200ms (network) |
-| **Offline** | Always available | Requires cache setup |
-| **Cost** | Free | $0.36/100K reads |
-| **Use case** | UI preferences | Cross-device sync |
-
-Settings are UI-scoped (volume, SFX on/off, language) — no cross-device sync needed. localStorage wins on speed and cost.
-
-**Schema:**
-```typescript
-interface GameSettings {
-  volume: number;         // 0.0 - 1.0
-  sfx_enabled: boolean;
-  music_enabled: boolean;
-  language: 'uk' | 'en';  // Ukrainian (default) | English
-  version: string;        // Schema version for migrations
-}
-```
-
-**Implementation pattern:**
-```typescript
-// Singleton SettingsManager
-class SettingsManager {
-  private static readonly STORAGE_KEY = 'klo_match3_settings';
-
-  load(): GameSettings {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : DEFAULT_SETTINGS;
-    } catch (e) {
-      console.warn('localStorage unavailable (private browsing?), using defaults');
-      return DEFAULT_SETTINGS;
-    }
-  }
-
-  save(settings: GameSettings): void {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    } catch (e) {
-      // Quota exceeded or private browsing - fail silently
-    }
+    // Listen to scene changes via registry events
+    this.game.events.on('scenechange', this.updateNavState, this);
   }
 }
+
+// In main.ts config:
+scene: [Boot, UI, Menu, LevelSelect, Game],
+
+// Boot scene launches UI:
+this.scene.launch('UI'); // Runs concurrently
+this.scene.start('Menu');
 ```
 
-**Best practices enforced:**
-- Try-catch for private browsing mode (localStorage throws)
-- Version field for future schema migrations
-- Default fallback when storage unavailable
+**Installation:**
+```bash
+npm install phaser3-rex-plugins
+```
 
-**Storage quota:** 10 MiB max across all localStorage. Settings JSON ~200 bytes, no risk of quota issues.
+**Key components for milestone:**
+- `Sizer` — Layout container for responsive bottom nav
+- `Buttons` — Radio-button group for nav tabs
+- `Label` — Icon + text combos for nav items
+- `BadgeLabel` — Notification badges on tabs
 
-**Sources:**
-- [localStorage in JavaScript: A complete guide - LogRocket](https://blog.logrocket.com/localstorage-javascript-complete-guide/)
-- [Using localStorage in Modern Applications - RxDB](https://rxdb.info/articles/localstorage.html)
-- [Storage quotas and eviction criteria - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria)
+### Art Pipeline — 1024px Retina Tiles
 
----
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| Free Texture Packer | Web app | Sprite sheet generation | Free, open-source, supports Phaser 3 JSON format, rotation/trimming |
 
-### 4. Variable-Size Game Boards
+**Current state:** Assets are 1024x1024 PNG (tiles), 696x1158 PNG (collection cards), 256x256 PNG (GUI). Already retina-ready.
 
-**Stack:** Phaser 3 (existing) + JSON level data
+**Why NOT TexturePacker Pro:** $40 license unnecessary for 100-asset project. Free Texture Packer handles rotation, trimming, multiple formats.
 
-#### Current Implementation (Fixed 8x8)
+**Why sprite sheets NOW:** Collection cards milestone adds 18+ new card PNGs (3 collections × 6 cards). Individual image loading = 30+ HTTP requests. Atlas reduces to 1 JSON + 1 PNG.
 
+**Migration strategy:**
+1. Continue individual PNGs for tiles (only 10 tile types, already loaded)
+2. **Create atlas for collection cards** (18+ cards, loaded on-demand)
+3. **Create atlas for new GUI elements** (nav icons, collection UI)
+
+**Workflow:**
+1. AI-generate 1024x1024 PNGs (existing pipeline)
+2. Upload to [free-tex-packer.com](https://free-tex-packer.com/app/)
+3. Select "Phaser 3" format, enable trim/rotation
+4. Download `cards.json` + `cards.png`
+5. Load in Phaser: `this.load.atlas('cards', 'assets/cards.png', 'assets/cards.json')`
+
+**Why 1024px:** DPR scaling (zoom: 1/dpr) means 1024px renders at 512px on 2x displays. Avoids blurriness on retina. File size acceptable (<200KB per PNG with compression).
+
+**Optimization:** Use PNG-8 (indexed color) for flat-color GUI elements via Free Texture Packer export settings. Reduces file size 70% vs PNG-24.
+
+### Responsive Layout Improvements
+
+**No new dependencies.** Use existing Phaser scale system.
+
+**Current approach (already validated):**
 ```typescript
 // main.ts
-const GRID_WIDTH = 8;
-const GRID_HEIGHT = 8;
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+scale: {
+  mode: Phaser.Scale.RESIZE,
+  autoCenter: Phaser.Scale.CENTER_BOTH,
+  zoom: 1 / dpr,
+}
 ```
 
-#### NEW: Dynamic Grid from Level Data
+**Enhancements for milestone:**
+1. **Orientation handling:** Detect portrait/landscape, adjust UI scene layout
+2. **Safe area insets:** Account for mobile notches in header/nav positioning
+3. **Breakpoints:** Define layout constants for phone/tablet/desktop
 
-```json
-// level_006.json (NEW advanced level)
-{
-  "level_id": 6,
-  "grid": {
-    "width": 6,
-    "height": 9,
-    "blocked_cells": [[0,0], [0,5], [8,0], [8,5]]
+**Implementation (no new libs):**
+```typescript
+// In UI scene resize handler
+handleResize(gameSize: Phaser.Structs.Size) {
+  const width = gameSize.width;
+  const height = gameSize.height;
+  const isPortrait = height > width;
+
+  // Bottom nav: full width on portrait, sidebar on landscape
+  if (isPortrait) {
+    this.bottomNav.setPosition(0, height - NAV_HEIGHT);
+    this.bottomNav.layout(); // rexUI reflow
+  } else {
+    this.bottomNav.setPosition(width - NAV_WIDTH, 0);
+  }
+
+  // Global header: account for safe area (iPhone notch = 44px)
+  const safeTop = isPortrait ? 44 : 0;
+  this.header.setPosition(0, safeTop);
+}
+```
+
+**Why NOT viewport meta tag changes:** Already using `viewport-fit=cover` (checked in index.html). Phaser scale handles rest.
+
+## Supporting Libraries
+
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| (none) | — | — | Milestone needs NO additional libraries beyond rexUI and random-seed-weighted-chooser |
+
+## Alternatives Considered
+
+| Category | Recommended | Alternative | Why Not |
+|----------|-------------|-------------|---------|
+| Gacha engine | random-seed-weighted-chooser | Custom math | Error-prone, pity system requires complex probability curves |
+| Gacha engine | random-seed-weighted-chooser | gacha-engine npm | Abandoned (last update 2023), no TypeScript types |
+| UI components | phaser3-rex-plugins | HTML overlay (React/Vue) | Breaks DPR scaling, complicates touch handling, z-index hell |
+| UI components | phaser3-rex-plugins | Custom Phaser UI | 500+ LOC for layout logic, rexUI solves this |
+| Sprite sheets | Free Texture Packer | TexturePacker Pro | $40 license unnecessary, free tool sufficient |
+| Sprite sheets | Free Texture Packer | Leshy SpriteSheet Tool | Less reliable, crashes on >50 images |
+| State management | Existing registry pattern | Redux/MobX | Overkill, Phaser registry + manager singletons already working |
+
+## Installation
+
+```bash
+# Collection cards — probability engine
+npm install random-seed-weighted-chooser
+
+# UI components — navigation + layout
+npm install phaser3-rex-plugins
+
+# Art pipeline — web-based, no install needed
+# Visit https://free-tex-packer.com/app/
+```
+
+## Integration with Existing Architecture
+
+### 1. New Manager: CollectionManager
+
+**File:** `src/game/CollectionManager.ts`
+
+**Pattern:** Singleton in Phaser registry (like ProgressManager, EconomyManager)
+
+```typescript
+// In main.ts after EconomyManager init:
+const collectionManager = new CollectionManager(firestoreService, uid, collectionState);
+game.registry.set('collection', collectionManager);
+```
+
+**Responsibilities:**
+- Load collection state from Firestore (owned cards, pity counters)
+- Pick random cards using weighted probability
+- Track pity system (guarantee rare after X picks)
+- Save collection progress to Firestore
+
+**Firestore schema (new subcollection):**
+```typescript
+// users/{uid}/collections/{collectionId}
+interface CollectionState {
+  owned_cards: string[]; // ['coffee_01', 'coffee_02', ...]
+  pity_counter: number;   // Increments on non-rare, resets on rare
+  last_pick_at: Timestamp;
+}
+```
+
+### 2. New Scene: UI (Persistent Overlay)
+
+**File:** `src/scenes/UI.ts`
+
+**Launch:** Boot scene launches UI, then starts Menu:
+```typescript
+// In Boot.create():
+this.scene.launch('UI'); // Runs concurrently
+this.scene.start('Menu');
+```
+
+**Components:**
+- **Global header:** Lives counter, bonuses, settings icon (top-right)
+- **Bottom nav:** 4 tabs (Map, Cards, Shop, Profile) with active state
+
+**Communication with other scenes:**
+```typescript
+// UI scene listens to registry changes:
+const economy = this.registry.get('economy') as EconomyManager;
+economy.subscribe('lives', (lives) => this.updateLivesDisplay(lives));
+
+// Other scenes emit events:
+this.scene.get('Game').events.emit('level-complete');
+// UI scene reacts (show animation, etc.)
+```
+
+### 3. rexUI Plugin Registration
+
+**File:** `src/main.ts`
+
+```typescript
+import RexUIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin.js';
+
+const config: Phaser.Types.Core.GameConfig = {
+  // ... existing config
+  plugins: {
+    scene: [{
+      key: 'rexUI',
+      plugin: RexUIPlugin,
+      mapping: 'rexUI'
+    }]
+  }
+};
+```
+
+**Usage in scenes:**
+```typescript
+// In UI.ts
+create() {
+  const sizer = this.rexUI.add.sizer({
+    orientation: 'horizontal',
+    space: { item: 10 }
+  });
+
+  const navButton = this.rexUI.add.label({
+    background: this.add.image(0, 0, 'gui_button_orange'),
+    icon: this.add.image(0, 0, 'icon_map'),
+    space: { icon: 10 }
+  });
+
+  sizer.add(navButton);
+  sizer.layout();
+}
+```
+
+### 4. Asset Loading Updates
+
+**File:** `src/scenes/Boot.ts`
+
+```typescript
+preload() {
+  // NEW: Load collection card atlas
+  this.load.atlas('cards', 'assets/cards.png', 'assets/cards.json');
+
+  // NEW: Load nav icons atlas
+  this.load.atlas('nav', 'assets/nav.png', 'assets/nav.json');
+
+  // Existing individual tile loads continue (no change)
+}
+```
+
+**Why NOT load all atlases upfront:** Collection cards loaded on-demand when user opens Cards scene. Keeps initial boot fast.
+
+```typescript
+// In new Cards scene:
+preload() {
+  if (!this.textures.exists('cards')) {
+    this.load.atlas('cards', 'assets/cards.png', 'assets/cards.json');
   }
 }
 ```
 
-**Changes:**
-1. Game scene reads `grid.width` and `grid.height` from level JSON
-2. Match3Engine constructor takes dimensions as parameters (already does)
-3. Grid rendering loop uses level dimensions instead of constants
+## What NOT to Add
 
-**Phaser capabilities validated:**
-- Grid rendering: Manual loop over `width × height`, no built-in Grid object needed ([Phaser Grid docs](https://docs.phaser.io/api-documentation/class/gameobjects-grid))
-- Dynamic positioning: Centering calculation works for any dimensions
+| Technology | Why Skip |
+|-----------|----------|
+| Zustand/Redux | Phaser registry + manager singletons already handle state. Adding external state = duplicate sources of truth. |
+| React/Vue overlay | DPR scaling breaks, z-index issues, complicates touch handling. Pure Phaser UI maintains consistency. |
+| Lodash | Only need weighted random (1 function). Full utility library = 70KB overhead. |
+| GSAP | Phaser tweens handle all animation needs. GSAP = $99/year commercial license + learning curve. |
+| Spine/DragonBones | No skeletal animation needed. Collection cards = static PNGs with scale/fade tweens. |
+| Socket.io | Milestone has no multiplayer. Premature to add real-time infrastructure. |
+| i18next | Game already Ukrainian-only per spec. Internationalization deferred to later milestone. |
 
-**No new dependencies.** Pure logic change.
+## Confidence Assessment
 
-**Sources:**
-- [Grid - Phaser 3 API Documentation](https://newdocs.phaser.io/docs/3.80.0/focus/Phaser.GameObjects.GameObjectFactory-grid)
+| Area | Confidence | Reason |
+|------|------------|--------|
+| Gacha engine | HIGH | random-seed-weighted-chooser actively maintained, 1.1.1 released 2025, TypeScript support verified |
+| UI components | HIGH | phaser3-rex-plugins 1.80.18 compatible with Phaser 3.90, official examples use UI scene pattern |
+| Art pipeline | MEDIUM | Free Texture Packer works, but web-based = no CLI automation. Manual export OK for 18 cards, may need CLI tool if asset count grows >100. |
+| Responsive | HIGH | Existing DPR scaling works. Orientation handling = standard Phaser resize events. |
 
----
+## Gaps and Risks
 
-### 5. Scrollable Kyiv Map Level Select
+### 1. Pity System Math Validation
 
-**Stack:** Phaser 3 Camera + TileSprite for parallax
+**Gap:** random-seed-weighted-chooser handles weighted selection, but pity logic (increase weights after N failures) is custom business logic.
 
-#### Camera Scrolling (Built-in)
+**Mitigation:** Unit test pity curves before integration. Validate with gacha math resources:
+- [Gacha probability algorithms](https://kylechen.net/writing/gacha-probability/)
+- [Genshin Impact pity system analysis](https://library.keqingmains.com/general-mechanics/gacha)
 
-Phaser 3.90 cameras support scrolling natively:
+**Test case:** Guarantee rare card within 10 pulls (90% confidence interval).
 
+### 2. rexUI Learning Curve
+
+**Gap:** Team unfamiliar with rexUI API. Documentation is comprehensive but scattered across 100+ plugin pages.
+
+**Mitigation:**
+- Start with official examples: [UI Overview](https://rexrainbow.github.io/phaser3-rex-notes/docs/site/ui-overview/)
+- Prototype bottom nav in isolated scene BEFORE integrating with main game
+- Budget 4-6 hours for experimentation
+
+**Fallback:** If rexUI too complex, build custom bottom nav with 5 Image buttons + manual layout (fallback = +200 LOC, worse DX).
+
+### 3. Atlas Generation Workflow
+
+**Gap:** Free Texture Packer is web-based. No CLI = manual export on each art update.
+
+**Risk:** Art iteration cycle slows (designer generates PNGs → dev manually exports atlas → commit).
+
+**Mitigation (now):** Acceptable for milestone (18 cards = one-time export).
+
+**Future:** If asset count grows >100, migrate to CLI tool:
+- [free-tex-packer-core](https://github.com/odrick/free-tex-packer-core) — Node.js version, scriptable
+- Or TexturePacker Pro ($40) with CLI
+
+### 4. Scene Lifecycle with Persistent UI
+
+**Gap:** UI scene runs concurrently with Game/Menu/LevelSelect. Potential race conditions if scenes emit events before UI scene ready.
+
+**Mitigation:**
 ```typescript
-// LevelSelect scene
+// In UI scene:
 create() {
-  // Set world bounds larger than viewport
-  this.cameras.main.setBounds(0, 0, 2048, 1536); // Kyiv map size
+  this.registry.set('uiReady', true); // Signal other scenes
+}
 
-  // Enable drag scrolling
-  this.input.on('pointermove', (pointer) => {
-    if (pointer.isDown) {
-      this.cameras.main.scrollX -= pointer.velocity.x / 10;
-      this.cameras.main.scrollY -= pointer.velocity.y / 10;
-    }
+// In other scenes:
+create() {
+  this.registry.events.once('changedata-uiReady', () => {
+    // Safe to emit UI events now
   });
 }
 ```
 
-**Mobile touch:** Phaser unifies mouse and touch via `pointer` events — same code works on desktop and mobile ([Phaser Input docs](https://docs.phaser.io/phaser/concepts/input)).
-
-#### Parallax Background (TileSprite + setScrollFactor)
-
-```typescript
-// Background layer (slow scroll)
-const bg = this.add.tileSprite(0, 0, 2048, 1536, 'kyiv_map_bg');
-bg.setScrollFactor(0.3); // Moves 3.3x slower than camera
-
-// Mid-layer (landmarks)
-const landmarks = this.add.image(1024, 768, 'kyiv_landmarks');
-landmarks.setScrollFactor(0.6); // Moves 1.67x slower
-
-// Foreground (level nodes) - default scrollFactor = 1
-```
-
-**setScrollFactor logic:** Value < 1 = slower than camera (background effect), Value = 1 = moves with camera (foreground).
-
-**No plugins needed.** Phaser 3 core API.
-
-**Sources:**
-- [Add Pizazz with Parallax Scrolling in Phaser 3](https://blog.ourcade.co/posts/2020/add-pizazz-parallax-scrolling-phaser-3/)
-- [Parallax Background with Zoom and Drag - Phaser 3](https://phaser.discourse.group/t/parallax-background-with-zoom-and-drag/11017)
-
----
-
-### 6. Canvas DPI / High-Resolution Support
-
-**Stack:** Phaser 3 config (resolution property)
-
-#### Problem: Blurry on Retina Displays
-
-Default Phaser canvas renders at CSS pixel size (e.g., 1024×768). On 2x DPI displays (Retina MacBook, high-end Android), canvas is upscaled by browser → blurry.
-
-#### Solution: Phaser 3 `resolution` Config
-
-```typescript
-// main.ts
-const config: Phaser.Types.Core.GameConfig = {
-  type: Phaser.AUTO,
-  width: 1024,
-  height: 768,
-
-  // NEW: Match device pixel ratio
-  resolution: window.devicePixelRatio || 1,
-
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-  },
-};
-```
-
-**What it does:**
-- `resolution: 2` → Canvas internal size = 2048×1536 (2× game size)
-- CSS size stays 1024×768 (via `scale.mode`)
-- Result: Crisp rendering on 2× displays, no blurriness
-
-**Device pixel ratios:**
-- Standard displays: 1
-- Retina MacBook / iPad: 2
-- High-end Android: 2.5-3
-- Desktop 4K monitors (150% scaling): 1.5
-
-**Performance note:** Higher resolution = more pixels to render. Test on low-end devices. If FPS drops, clamp resolution:
-
-```typescript
-resolution: Math.min(window.devicePixelRatio, 2), // Cap at 2× for performance
-```
-
-**Sources:**
-- [Support retina with Phaser 3](https://supernapie.com/blog/support-retina-with-phaser-3/)
-- [Renderer resolution is blurry for devices with devicePixelRatio > 1](https://github.com/photonstorm/phaser/issues/3198)
-- [How to Use Retina Graphics in HTML5 Phaser Games](https://www.joshmorony.com/how-to-use-retina-graphics-in-html5-phaser-games/)
-
----
-
-## What NOT to Add
-
-### ❌ RxJS for Timer Management
-**Why avoid:** Adds 350KB bundle size for features already in Phaser (time.now, scene lifecycle). Overkill for simple regeneration timer.
-
-### ❌ Redux / Zustand for State Management
-**Why avoid:** Phaser registry (`this.registry.set/get`) provides global state already. Adding external state lib duplicates functionality, increases complexity.
-
-**Existing pattern works:**
-```typescript
-// main.ts
-game.registry.set('progress', progressManager);
-game.registry.set('settings', settingsManager); // NEW
-game.registry.set('lives', livesManager);       // NEW
-
-// Any scene
-const lives = this.registry.get('lives') as LivesManager;
-```
-
-**Sources:**
-- [Phaser Scene Registry docs](https://docs.phaser.io/phaser/concepts/scenes)
-- [Data Manager - Phaser](https://docs.phaser.io/phaser/concepts/data-manager)
-
-### ❌ Moment.js / Day.js for Time Calculations
-**Why avoid:** Lives regeneration uses duration math (ms since last life lost), not date formatting. Native `Date` + `Timestamp` sufficient.
-
-```typescript
-// Native solution (no lib needed)
-const msSinceLastLife = Date.now() - lastLifeLost.toMillis();
-const livesRegened = Math.floor(msSinceLastLife / LIFE_REGEN_MS);
-```
-
-### ❌ i18next for Localization
-**Why avoid:** Only 2 languages (Ukrainian/English), 50-100 strings total. Simple object lookup faster and smaller than i18next (70KB).
-
-**Lightweight pattern:**
-```typescript
-const STRINGS = {
-  uk: { level_select: 'Вибрати рівень', lives: 'Життя' },
-  en: { level_select: 'Select Level', lives: 'Lives' },
-};
-const t = (key: string) => STRINGS[settings.language][key];
-```
-
----
-
-## Integration Points
-
-### Lives System ↔ Game Scene
-**Entry point:** Game scene checks lives before start via `this.registry.get('lives')`.
-
-**Flow:**
-1. User taps level in LevelSelect
-2. LevelSelect checks `livesManager.canPlay()` → returns boolean + remaining lives
-3. If false, show "No Lives" overlay with regeneration timer
-4. If true, `livesManager.consumeLife()` → decrement, update Firestore, start Game scene
-
-**Exit point:** On level complete/fail, do NOT refund lives (consumed on entry, not exit).
-
-### Settings ↔ Audio Managers
-**Initialization:** Boot scene loads settings → passes to AudioManager singleton.
-
-**Pattern:**
-```typescript
-// Boot scene
-const settings = settingsManager.load();
-const audioManager = new AudioManager(this, settings);
-this.registry.set('audio', audioManager);
-
-// Settings scene (when user changes volume slider)
-audioManager.setVolume(newVolume);
-settingsManager.save({ ...settings, volume: newVolume });
-```
-
-**Phaser Audio API:** `this.sound.volume = settings.volume` (global volume control).
-
-**Sources:**
-- [Web Audio API best practices - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices)
-
-### Variable Boards ↔ Match3Engine
-**Current:** Engine constructor already accepts `(rows, cols)` parameters.
-
-**Change:** Pass level data dimensions instead of constants.
-
-```typescript
-// Game scene create()
-const levelData = this.cache.json.get(`level_${levelId}`);
-const { width, height } = levelData.grid;
-
-this.engine = new Match3Engine(height, width); // Already supports this
-```
-
-**Blocked cells:** Handled by existing `blocked_cells` array in level JSON, rendered as permanent obstacles.
-
-### Scrollable Map ↔ Progress Manager
-**Level unlock logic:** Unchanged (sequential unlock: level N requires level N-1 complete).
-
-**Visual:** Camera centers on highest unlocked level node on scene start.
-
-```typescript
-// LevelSelect create()
-const maxLevel = progressManager.getMaxUnlockedLevel();
-const levelNode = this.levelNodes[maxLevel - 1]; // Array of level sprites
-this.cameras.main.centerOn(levelNode.x, levelNode.y);
-```
-
----
-
-## Mobile Responsiveness Additions
-
-### Touch Input (Already Handled)
-Phaser unifies mouse/touch as `pointer` events — existing swipe code works on mobile without changes.
-
-**Validation:** Current `input.on('pointerdown')` handlers in Game scene are touch-compatible.
-
-**Sources:**
-- [Phaser Input - Unified mouse/touch API](https://docs.phaser.io/phaser/concepts/input)
-
-### Viewport Meta Tag (Already Set)
-```html
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-```
-Present in `index.html` — prevents mobile browser zoom issues.
-
-### Scale Mode (Already Configured)
-```typescript
-scale: {
-  mode: Phaser.Scale.FIT, // Maintains aspect ratio, fits in viewport
-  autoCenter: Phaser.Scale.CENTER_BOTH,
-}
-```
-Handles portrait/landscape orientation automatically.
-
-**Sources:**
-- [Responsive Phaser Game | Medium](https://medium.com/@mattcolman/responsive-phaser-game-54a0e2dafba7)
-- [Full-Screen Size and Responsive Game in Phaser 3 | Medium](https://medium.com/@tajammalmaqbool11/full-screen-size-and-responsive-game-in-phaser-3-e563c2d60eab)
-
----
-
-## Version Verification Summary
-
-| Dependency | Current | Required | Status |
-|------------|---------|----------|--------|
-| Phaser | 3.90.0 | ≥3.80 (resolution, camera API) | ✅ Compatible |
-| Firebase | 11.0.0 | ≥9.0 (Firestore modular SDK) | ✅ Compatible |
-| TypeScript | 5.7.0 | ≥5.0 (strong typing) | ✅ Compatible |
-| Vite | 6.0.0 | ≥5.0 (build perf) | ✅ Compatible |
-
-**No upgrades needed.**
-
----
-
-## Implementation Checklist
-
-- [ ] Extend `UserProgress` interface in `firebase/firestore.ts` (lives, bonuses)
-- [ ] Create `LivesManager` class using Phaser `time.now` for regeneration
-- [ ] Create `SettingsManager` class with localStorage persistence
-- [ ] Update Game scene to read grid dimensions from level JSON
-- [ ] Convert LevelSelect scene to camera-scrollable world
-- [ ] Add parallax background layers with `setScrollFactor`
-- [ ] Add `resolution: window.devicePixelRatio` to Phaser config
-- [ ] Test DPI rendering on 2× display (Retina MacBook or high-DPI Android)
-- [ ] Wire lives check into level entry flow (LevelSelect → Game)
-- [ ] Wire settings into AudioManager initialization (Boot → Scenes)
-
----
-
-## Confidence Assessment
-
-| Area | Level | Rationale |
-|------|-------|-----------|
-| **Lives/Bonus Persistence** | HIGH | Firestore schema extension is straightforward, validated pattern from existing `UserProgress` |
-| **Timer Implementation** | HIGH | Phaser `time.now` (performance.now wrapper) is documented, battle-tested for game timers |
-| **Settings Persistence** | HIGH | localStorage is standard Web API, 10 MiB quota exceeds needs by 50,000× |
-| **Variable Boards** | HIGH | Match3Engine already supports dynamic dimensions, level JSON schema validated |
-| **Scrollable Map** | HIGH | Phaser camera API is core framework feature, parallax via `setScrollFactor` is well-documented |
-| **Canvas DPI** | HIGH | `resolution` config property exists since Phaser 3.16, widely used for Retina support |
-
-**Overall Confidence: HIGH** — All features use existing stack capabilities, no experimental APIs or third-party libraries.
-
----
-
 ## Sources
 
-### Phaser 3 Architecture & APIs
-- [Phaser v3.90 Technical Preview 1](https://phaser.io/news/2024/05/phaser-390-technical-preview-1)
-- [What are Phaser 3 bad/best practices?](https://phaser.discourse.group/t/what-are-phaser-3-bad-best-practices/5088)
-- [Grid - Phaser 3 API Documentation](https://newdocs.phaser.io/docs/3.80.0/focus/Phaser.GameObjects.GameObjectFactory-grid)
-- [Phaser Input - Concepts](https://docs.phaser.io/phaser/concepts/input)
-- [Phaser Scene Registry](https://docs.phaser.io/phaser/concepts/scenes)
-- [Data Manager - Phaser](https://docs.phaser.io/phaser/concepts/data-manager)
+### Gacha/Probability
+- [random-seed-weighted-chooser npm](https://www.npmjs.com/package/random-seed-weighted-chooser)
+- [Weighted Random in JavaScript](https://trekhleb.medium.com/weighted-random-in-javascript-4748ab3a1500)
+- [Gacha probability algorithms](https://kylechen.net/writing/gacha-probability/)
+- [Genshin Impact gacha mechanics](https://library.keqingmains.com/general-mechanics/gacha)
 
-### Parallax & Camera
-- [Add Pizazz with Parallax Scrolling in Phaser 3](https://blog.ourcade.co/posts/2020/add-pizazz-parallax-scrolling-phaser-3/)
-- [Parallax Background with Zoom and Drag - Phaser 3](https://phaser.discourse.group/t/parallax-background-with-zoom-and-drag/11017)
+### Phaser UI
+- [Phaser 3 persistent UI discussion](https://phaser.discourse.group/t/persistent-ui-objects-components-on-scenes/2359)
+- [Phaser UI Scene example](https://phaser.io/examples/v3/view/scenes/ui-scene)
+- [phaser3-rex-plugins npm](https://www.npmjs.com/package/phaser3-rex-plugins)
+- [rexUI Overview](https://rexrainbow.github.io/phaser3-rex-notes/docs/site/ui-overview/)
 
-### Canvas DPI / Resolution
-- [Support retina with Phaser 3](https://supernapie.com/blog/support-retina-with-phaser-3/)
-- [Renderer resolution is blurry for devices with devicePixelRatio > 1](https://github.com/photonstorm/phaser/issues/3198)
-- [How to Use Retina Graphics in HTML5 Phaser Games](https://www.joshmorony.com/how-to-use-retina-graphics-in-html5-phaser-games/)
+### Responsive/Retina
+- [Phaser 3 retina support](https://supernapie.com/blog/support-retina-with-phaser-3/)
+- [Responsive Phaser games](https://medium.com/@mattcolman/responsive-phaser-game-54a0e2dafba7)
+- [Retina graphics in Phaser](https://www.joshmorony.com/how-to-use-retina-graphics-in-html5-phaser-games/)
 
-### Firebase / Firestore
-- [Manage data retention with TTL policies | Firestore](https://firebase.google.com/docs/firestore/ttl)
-- [Firebase for games | Supercharge your games with Firebase](https://firebase.google.com/games)
+### Art Pipeline
+- [Free Texture Packer](https://free-tex-packer.com/app/)
+- [TexturePacker Phaser 3 tutorial](https://phaser.io/news/2018/03/texturepacker-and-phaser-3-tutorial)
+- [Sprite sheet optimization](https://www.codeandweb.com/texturepacker/tutorials/how-to-create-sprite-sheets-for-phaser)
 
-### Web APIs
-- [Performance.now() method - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now)
-- [High precision timing - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Performance_API/High_precision_timing)
-- [localStorage in JavaScript: A complete guide - LogRocket](https://blog.logrocket.com/localstorage-javascript-complete-guide/)
-- [Storage quotas and eviction criteria - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria)
-- [Web Audio API best practices - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices)
+---
 
-### Timers & Performance
-- [Scheduling: setTimeout and setInterval](https://javascript.info/settimeout-setinterval)
-- [Accurate Timing with performance.now in JavaScript](https://medium.com/@AlexanderObregon/getting-accurate-time-with-javascript-performance-now-ccd658a97ab3)
-
-### Mobile Responsiveness
-- [Responsive Phaser Game | Medium](https://medium.com/@mattcolman/responsive-phaser-game-54a0e2dafba7)
-- [Full-Screen Size and Responsive Game in Phaser 3](https://medium.com/@tajammalmaqbool11/full-screen-size-and-responsive-game-in-phaser-3-e563c2d60eab)
+**Version:** 1.0
+**Confidence:** HIGH (gacha, UI, responsive), MEDIUM (art workflow automation)
+**Researched:** 2026-02-10

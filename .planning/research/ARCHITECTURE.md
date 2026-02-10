@@ -1,1071 +1,1096 @@
-# Architecture Integration Patterns
+# Architecture Patterns: Collection Cards, Persistent UI, Art Pipeline
 
-**Project:** KLO Match-3 Subsequent Milestone
+**Domain:** Match-3 with collection card meta-progression and persistent navigation UI
 **Researched:** 2026-02-10
 **Confidence:** HIGH
 
+---
+
 ## Executive Summary
 
-This document details how new features (lives system, bonus economy, settings, variable boards, progressive obstacles, pre-placed tiles, Kyiv map level select, DPI scaling) integrate with the existing Phaser 3 architecture without requiring major refactoring. All additions are additive—extending existing managers or adding new ones—preserving the current scene flow and manager pattern.
+Integration of collection cards, bottom navigation, global header, and art pipeline upgrades into existing Phaser 3 match-3 architecture requires **three new major components** and **modifications to existing scene lifecycle**. The research identifies proven Phaser patterns for persistent UI (dedicated UI scene pattern), singleton manager architecture for collections (consistent with existing ProgressManager/EconomyManager), and art pipeline considerations for higher-resolution sprites.
 
-**Key Integration Points:**
-1. **Lives/Bonus Economy** → New `EconomyManager` singleton in registry (parallel to `ProgressManager`)
-2. **Settings** → New `SettingsManager` using localStorage + Phaser registry
-3. **Variable Boards** → Extend `LevelData` JSON format + Board class constructor params
-4. **Progressive Obstacles** → Extend `ObstacleData` interface + modify `ObstacleManager`
-5. **Pre-placed Tiles** → Extend level JSON + new `Board.initializeFromConfig()` method
-6. **Kyiv Map** → Modify `LevelSelectScene` with camera + parallax layers
-7. **DPI Scaling** → Modify `main.ts` config + scene responsive calculations
+**Critical architectural decision:** Persistent UI elements (bottom nav, global header) should live in a **dedicated UI Scene** running parallel to game scenes, NOT recreated per-scene. This prevents duplication and maintains state across transitions.
 
-**Architecture Stability:** No changes to core Match3Engine, GravityEngine, MatchEngine. Only additive extensions to managers and scene presentation logic.
+**Integration complexity:** MEDIUM. New systems integrate cleanly with existing registry-based singleton pattern. Main risk: scene lifecycle coordination between UI scene and game scenes.
 
-## Existing Architecture Recap
+---
 
-### Current Manager Pattern
-```
-Registry Singletons (created in main.ts, accessed via scene.registry):
-├── ProgressManager (Firebase persistence, level unlock/stars)
-├── [NEW] EconomyManager (lives, coins, bonus tracking)
-└── [NEW] SettingsManager (audio, notifications, locale)
+## Current Architecture (Baseline)
 
-Per-Scene Managers (created in scene.create()):
-├── LevelManager (goals, moves, win/lose)
-├── BoosterActivator (booster logic)
-├── AudioManager (sound playback)
-├── VFXManager (particle effects)
-└── [MODIFIED] ObstacleManager (progressive obstacles)
-
-Game Engine (stateless logic classes):
-├── Match3Engine (board state, match detection)
-├── GravityEngine (tile falling physics)
-└── BoosterManager (combo matrix)
-```
-
-### Current Scene Flow
+### Scene Flow
 ```
 Boot → Menu → LevelSelect → Game
-         ↑        ↓           ↓
-         └────────┴───────────┘
-         (all can return to any)
+         ↑_______________|
 ```
 
-### Current Data Flow
+**Characteristics:**
+- Linear scene transitions via `scene.start()` (destroys previous scene)
+- Each scene recreates UI elements in `create()`
+- Camera fade transitions (300ms black fade)
+- No scene parallelism currently
+
+### Singleton Manager Pattern
 ```
-main.ts: Firebase init → ProgressManager → game.registry
-Scene: registry.get('progress') → isLevelUnlocked(), getStars()
-Game: LevelManager → ProgressManager.completeLevel() → saveProgress()
+main.ts:
+  ├─ initFirebase() → FirestoreService
+  ├─ ProgressManager(firestoreService, uid, progress)
+  ├─ EconomyManager(firestoreService, uid, economy)
+  ├─ SettingsManager(localStorage)
+  └─ game.registry.set('progress'|'economy'|'settings', manager)
+
+Scenes access via:
+  const progress = this.registry.get('progress') as ProgressManager
 ```
+
+**Storage:**
+- Firestore: user progress, economy, (future: collection cards)
+- localStorage: settings only
+
+### Overlay Pattern (Current)
+```typescript
+// LevelSelect.ts, Game.ts pattern for modals
+private overlayElements: Phaser.GameObjects.GameObject[] = [];
+
+showOverlay() {
+  this.overlayActive = true; // Block scene input
+  const backdrop = this.add.graphics()...;
+  overlayElements.push(backdrop, panel, buttons...);
+}
+
+closeOverlay() {
+  overlayElements.forEach(el => el.destroy());
+  this.overlayActive = false;
+}
+```
+
+**Limitations:**
+- Overlays destroyed on scene transition
+- Cannot persist across scenes (e.g., notification banner)
+- Each scene reimplements overlay logic
+
+### Asset Loading (Current)
+```typescript
+// Boot.ts
+this.load.image('tile_fuel_can', 'assets/tiles/fuel_can.png');
+this.load.image('obstacle_ice01', 'assets/blockers/ice01.png');
+```
+
+**Characteristics:**
+- All assets loaded upfront in Boot scene
+- PNG sprites loaded as-is (no atlases)
+- DPR-aware rendering (zoom: 1/dpr, capped at 2x)
 
 ---
 
-## 1. Lives System + Timer Regeneration
+## Recommended Architecture: Collection Cards System
 
-### Architecture Pattern
+### Component: CollectionManager Singleton
 
-**Component:** `EconomyManager` (singleton in registry)
-**Pattern:** Timer-based regeneration with localStorage cache
-**Integration:** Parallel to ProgressManager, no engine changes
+**Responsibility:** Card inventory, drop probability, unlock tracking, Firestore persistence
 
-### Data Structure
 ```typescript
-interface EconomyData {
-  lives: number;              // Current lives (max 5)
-  lastLifeLostTime: number;   // Timestamp for regeneration
-  coins: number;              // Soft currency
-  bonuses: {                  // Pre-level boosters
-    tnt: number;
-    lightBall: number;
-    colorBomb: number;
+// src/game/CollectionManager.ts
+export class CollectionManager {
+  private firestoreService: FirestoreService;
+  private uid: string;
+  private inventory: CardInventory; // { [cardId]: { count, unlocked_at } }
+  private metadata: CardMetadata[];  // Static card definitions
+
+  constructor(firestoreService, uid, inventory, metadata) {...}
+
+  // Card drop logic
+  rollForCard(context: DropContext): CardDrop | null {
+    // context: { levelId, stars, isFirstWin, ... }
+    // Probability engine: weighted random, pity counter
+  }
+
+  // Inventory management
+  hasCard(cardId: string): boolean {...}
+  getCardCount(cardId: string): number {...}
+  addCard(cardId: string): void {...}
+
+  // Firestore persistence
+  async saveInventory(): Promise<void> {...}
+
+  // Card metadata queries
+  getCardsByRarity(rarity: CardRarity): Card[] {...}
+  getCollectionProgress(): { owned: number, total: number } {...}
+}
+```
+
+**Integration points:**
+1. **Initialization:** Load in `main.ts` alongside ProgressManager
+   ```typescript
+   const cardMetadata = await fetch('/data/cards.json').then(r => r.json());
+   const cardInventory = await firestoreService.loadCardInventory(uid);
+   const collectionManager = new CollectionManager(firestoreService, uid, cardInventory, cardMetadata);
+   game.registry.set('collection', collectionManager);
+   ```
+
+2. **Drop trigger:** Game scene win overlay
+   ```typescript
+   // Game.ts - in showVictoryOverlay()
+   const collection = this.registry.get('collection') as CollectionManager;
+   const drop = collection.rollForCard({
+     levelId,
+     stars,
+     isFirstWin: !progress.getStars(levelId)
+   });
+   if (drop) {
+     this.showCardDropAnimation(drop);
+     await collection.saveInventory();
+   }
+   ```
+
+3. **Viewing:** New scene or overlay
+   - Option A: `CollectionScene` (full screen, launched from menu)
+   - Option B: Collection button in persistent bottom nav → overlay
+
+**Probability Engine Pattern:**
+
+```typescript
+interface DropContext {
+  levelId: number;
+  stars: number;
+  isFirstWin: boolean;
+  pityCounter: number; // Increments on no-drop, resets on drop
+}
+
+interface CardRarity {
+  type: 'common' | 'rare' | 'epic' | 'legendary';
+  baseDropRate: number; // 0.0-1.0
+}
+
+rollForCard(context: DropContext): CardDrop | null {
+  // 1. Check if drop occurs (base rate + pity modifier)
+  const dropChance = this.calculateDropChance(context);
+  if (Math.random() > dropChance) {
+    this.pityCounter++;
+    return null;
+  }
+
+  // 2. Select rarity tier (weighted random)
+  const rarity = this.selectRarity();
+
+  // 3. Select card from rarity pool (avoid duplicates, weighted by theme)
+  const card = this.selectCardFromPool(rarity, context);
+
+  this.pityCounter = 0; // Reset pity
+  return { card, isNew: !this.hasCard(card.id) };
+}
+```
+
+**Pity System:**
+- Common pattern: guarantee drop after N consecutive no-drops
+- Example: 5 wins without drop → 100% drop on 6th win
+- Implementation: `pityCounter` in Firestore, checked in `calculateDropChance()`
+
+**Firestore Schema:**
+
+```typescript
+// Collection: users/{uid}
+interface UserDoc {
+  // ... existing progress, economy fields ...
+  card_inventory: {
+    [cardId: string]: {
+      count: number;
+      unlocked_at: Timestamp;
+    }
   };
+  card_pity_counter: number;
+}
+
+// Collection: card_metadata (static, shared across users)
+interface CardDoc {
+  id: string; // 'kyiv_fuel_01', 'lviv_coffee_02'
+  name: string; // 'Києва заправка'
+  description: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  theme: 'kyiv' | 'lviv' | 'fuel' | 'coffee'; // For thematic drops
+  art_url: string; // 'assets/cards/kyiv_fuel_01.png'
 }
 ```
 
-### Manager Implementation
-```typescript
-export class EconomyManager {
-  private readonly MAX_LIVES = 5;
-  private readonly REGEN_TIME_MS = 30 * 60 * 1000; // 30 minutes
-  private data: EconomyData;
-  private regenTimer: Phaser.Time.TimerEvent | null = null;
-  private scene: Phaser.Scene;
+**Why subcollection vs nested field:**
+- **Nested field** (card_inventory as map): RECOMMENDED for this use case
+  - Pros: Atomic updates, single document read, simpler queries
+  - Cons: 1MB document size limit (not a concern for ~100 cards)
+- **Subcollection** (users/{uid}/cards/{cardId}):
+  - Only needed if 100+ cards or cards have complex nested data
 
-  constructor(scene: Phaser.Scene, initialData: EconomyData) {
-    this.scene = scene;
-    this.data = initialData;
-    this.startRegenTimer();
-  }
-
-  private startRegenTimer(): void {
-    // Calculate lives to regenerate based on elapsed time
-    const now = Date.now();
-    const elapsed = now - this.data.lastLifeLostTime;
-    const livesToAdd = Math.min(
-      Math.floor(elapsed / this.REGEN_TIME_MS),
-      this.MAX_LIVES - this.data.lives
-    );
-
-    if (livesToAdd > 0) {
-      this.data.lives = Math.min(this.MAX_LIVES, this.data.lives + livesToAdd);
-      this.data.lastLifeLostTime = now - (elapsed % this.REGEN_TIME_MS);
-      this.save();
-    }
-
-    // Start Phaser timer for UI updates
-    if (this.data.lives < this.MAX_LIVES) {
-      const nextRegenIn = this.REGEN_TIME_MS - (now - this.data.lastLifeLostTime);
-      this.regenTimer = this.scene.time.addEvent({
-        delay: nextRegenIn,
-        callback: () => {
-          this.addLife();
-          if (this.data.lives < this.MAX_LIVES) {
-            this.startRegenTimer();
-          }
-        },
-      });
-    }
-  }
-
-  spendLife(): boolean {
-    if (this.data.lives > 0) {
-      this.data.lives--;
-      if (this.data.lives === this.MAX_LIVES - 1) {
-        this.data.lastLifeLostTime = Date.now();
-        this.startRegenTimer();
-      }
-      this.save();
-      return true;
-    }
-    return false;
-  }
-
-  private save(): void {
-    localStorage.setItem('klo_economy', JSON.stringify(this.data));
-  }
-}
-```
-
-### Integration Points
-
-| Location | Change Type | Implementation |
-|----------|-------------|----------------|
-| `main.ts` | NEW | Create EconomyManager after ProgressManager, store in registry |
-| `LevelSelectScene` | MODIFY | Check `economy.getLives()` before allowing level start, show lives UI |
-| `GameScene` | MODIFY | On level lose: `economy.spendLife()`, show "out of lives" if false |
-| `MenuScene` | NEW | Show lives counter with timer countdown in top-right HUD |
-
-### localStorage Schema
-```json
-{
-  "klo_economy": {
-    "lives": 4,
-    "lastLifeLostTime": 1707552000000,
-    "coins": 150,
-    "bonuses": { "tnt": 2, "lightBall": 1, "colorBomb": 0 }
-  }
-}
-```
-
-### Build Order
-1. Create `EconomyManager.ts` with lives + timer logic
-2. Add to `main.ts` initialization (load from localStorage or defaults)
-3. Add lives display to `MenuScene` HUD
-4. Modify `LevelSelectScene` to check lives before level start
-5. Add "out of lives" overlay to `GameScene` lose condition
-
-**Source:** [Timer - Notes of Phaser 3](https://rexrainbow.github.io/phaser3-rex-notes/docs/site/timer/), [DESIGN ANALYSIS: MATCH-3](https://snoukdesignnotes.blog/2018/06/21/design-analysis-match-3/)
+**Sources:**
+- [Firestore Data Structure](https://firebase.google.com/docs/firestore/manage-data/structure-data)
+- [Firestore Data Model](https://cloud.google.com/firestore/docs/concepts/structure-data)
 
 ---
 
-## 2. Bonus Economy (Coins, Pre-Level Boosters)
+## Recommended Architecture: Persistent UI Navigation
 
-### Architecture Pattern
+### Component: UI Scene (Dedicated Persistent Layer)
 
-**Component:** Extension of `EconomyManager`
-**Pattern:** Earn from levels, spend on boosters/lives
-**Integration:** Add earning logic to ProgressManager callbacks, spending UI in scenes
+**Pattern:** Parallel UI scene that runs alongside game scenes, managing persistent navigation elements.
 
-### Earning System
+**Justification:** Phaser best practice for persistent UI is a **dedicated UI scene** rendered above game scenes. From official patterns:
+> "A common practice is to have a Scene dedicated entirely to handling the UI for your game, that is rendered above all other Scenes."
+
+**Architecture:**
+
 ```typescript
-// In ProgressManager.completeLevel():
-completeLevel(levelId: number, movesUsed: number, totalMoves: number): CompletionResult {
-  const { stars, isNewBest } = this.calculateStars(movesUsed, totalMoves);
+// src/scenes/UIOverlay.ts
+export class UIOverlay extends Phaser.Scene {
+  private bottomNav: Phaser.GameObjects.Container;
+  private globalHeader: Phaser.GameObjects.Container;
+  private activeSceneName: string;
 
-  // Award coins based on stars
-  const coins = stars * 10; // 10/20/30 coins for 1/2/3 stars
-  const economy = this.registry.get('economy') as EconomyManager;
-  economy.addCoins(coins);
-
-  // First-time bonus
-  if (isNewBest && !this.progress.completed_levels.includes(levelId)) {
-    economy.addCoins(50); // First completion bonus
+  constructor() {
+    super({ key: 'UIOverlay', active: false });
   }
-
-  return { stars, isNewBest, coinsEarned: coins };
-}
-```
-
-### Spending System
-```typescript
-// In EconomyManager:
-spendCoins(amount: number): boolean {
-  if (this.data.coins >= amount) {
-    this.data.coins -= amount;
-    this.save();
-    return true;
-  }
-  return false;
-}
-
-buyLife(): boolean {
-  const LIFE_COST = 100;
-  if (this.spendCoins(LIFE_COST)) {
-    this.data.lives = Math.min(this.MAX_LIVES, this.data.lives + 1);
-    this.save();
-    return true;
-  }
-  return false;
-}
-
-buyBonus(type: 'tnt' | 'lightBall' | 'colorBomb'): boolean {
-  const BONUS_COST = 50;
-  if (this.spendCoins(BONUS_COST)) {
-    this.data.bonuses[type]++;
-    this.save();
-    return true;
-  }
-  return false;
-}
-```
-
-### Integration Points
-
-| Location | Change Type | Implementation |
-|----------|-------------|----------------|
-| `ProgressManager` | MODIFY | Call `economy.addCoins()` on level completion |
-| `GameScene` (pre-level) | NEW | Show bonus selection overlay, spend bonuses, apply to board |
-| `GameScene` (lose overlay) | NEW | "+5 moves for 50 coins" button |
-| `MenuScene` | NEW | Show coin count in HUD |
-| `ShopScene` | NEW | Optional: Dedicated shop scene for buying bonuses/lives |
-
-### Pre-Level Bonus Application
-```typescript
-// In GameScene, before generateGrid():
-applyPreLevelBonuses(): void {
-  const economy = this.registry.get('economy') as EconomyManager;
-  const bonuses = economy.getActiveBonuses(); // User-selected bonuses
-
-  this.engine.generateGrid(spawnRules);
-
-  if (bonuses.tnt > 0) {
-    const randomCell = this.getRandomEmptyCell();
-    this.engine.placeBooster(randomCell.row, randomCell.col, 'bomb');
-  }
-
-  if (bonuses.lightBall > 0) {
-    const randomCell = this.getRandomEmptyCell();
-    this.engine.placeBooster(randomCell.row, randomCell.col, 'klo_sphere');
-  }
-
-  // ... similar for other bonuses
-}
-```
-
-### Build Order
-1. Extend `EconomyManager` with coin methods
-2. Modify `ProgressManager.completeLevel()` to award coins
-3. Add coin display to `MenuScene` and `GameScene` HUD
-4. Create pre-level bonus selection overlay in `GameScene`
-5. Implement bonus application logic in `GameScene.create()`
-6. Add "+5 moves" purchase option to lose overlay
-
-**Source:** [How Does Royal Match Make Money?](https://www.blog.udonis.co/mobile-marketing/mobile-games/royal-match-analysis), [Design Deep Dive #02- Royal Match!](https://medium.com/ironsource-levelup/design-deep-dive-02-royal-match-948f7af96f04)
-
----
-
-## 3. Settings Persistence
-
-### Architecture Pattern
-
-**Component:** `SettingsManager` (singleton in registry)
-**Pattern:** localStorage with reactive updates to AudioManager
-**Integration:** Created in main.ts, consumed by all scenes
-
-### Data Structure
-```typescript
-interface SettingsData {
-  soundEnabled: boolean;
-  musicEnabled: boolean;
-  notificationsEnabled: boolean;
-  locale: 'uk' | 'en'; // Ukrainian or English
-  version: number; // For migration if settings schema changes
-}
-```
-
-### Manager Implementation
-```typescript
-export class SettingsManager {
-  private data: SettingsData;
-  private listeners: Map<string, Set<(value: any) => void>> = new Map();
-
-  constructor(initialData?: SettingsData) {
-    this.data = initialData || this.getDefaults();
-  }
-
-  private getDefaults(): SettingsData {
-    return {
-      soundEnabled: true,
-      musicEnabled: true,
-      notificationsEnabled: true,
-      locale: 'uk',
-      version: 1,
-    };
-  }
-
-  set(key: keyof SettingsData, value: any): void {
-    this.data[key] = value;
-    this.save();
-    this.notify(key, value);
-  }
-
-  get<K extends keyof SettingsData>(key: K): SettingsData[K] {
-    return this.data[key];
-  }
-
-  subscribe(key: keyof SettingsData, callback: (value: any) => void): void {
-    if (!this.listeners.has(key)) {
-      this.listeners.set(key, new Set());
-    }
-    this.listeners.get(key)!.add(callback);
-  }
-
-  private notify(key: keyof SettingsData, value: any): void {
-    this.listeners.get(key)?.forEach(cb => cb(value));
-  }
-
-  private save(): void {
-    localStorage.setItem('klo_settings', JSON.stringify(this.data));
-  }
-
-  static load(): SettingsData {
-    const stored = localStorage.getItem('klo_settings');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      // Version migration logic here if needed
-      return parsed;
-    }
-    return new SettingsManager().data;
-  }
-}
-```
-
-### AudioManager Integration
-```typescript
-// In AudioManager constructor:
-constructor(scene: Phaser.Scene) {
-  this.scene = scene;
-  const settings = scene.registry.get('settings') as SettingsManager;
-
-  // Set initial volume based on settings
-  scene.sound.mute = !settings.get('soundEnabled');
-
-  // Subscribe to changes
-  settings.subscribe('soundEnabled', (enabled: boolean) => {
-    scene.sound.mute = !enabled;
-  });
-
-  settings.subscribe('musicEnabled', (enabled: boolean) => {
-    // Control background music separately if needed
-  });
-}
-```
-
-### Integration Points
-
-| Location | Change Type | Implementation |
-|----------|-------------|----------------|
-| `main.ts` | NEW | Create SettingsManager from localStorage, store in registry |
-| `MenuScene` | NEW | Add settings button, create SettingsOverlay scene |
-| `SettingsOverlay` | NEW | Popup scene with toggle switches for sound/music/notifications |
-| `AudioManager` | MODIFY | Subscribe to settings changes, update sound.mute accordingly |
-| All scenes | MODIFY | Use `settings.get('locale')` for text translations |
-
-### Build Order
-1. Create `SettingsManager.ts` with localStorage persistence
-2. Add to `main.ts` initialization
-3. Create `SettingsOverlay.ts` scene with toggle UI
-4. Add settings button to `MenuScene`
-5. Modify `AudioManager` to subscribe to settings changes
-6. Add locale-based text system (optional if only Ukrainian)
-
-**Source:** [LocalStorage - Notes of Phaser 3](https://rexrainbow.github.io/phaser3-rex-notes/docs/site/localstorage/), [Phaser Game Settings using localStorage](https://braelynnn.medium.com/phaser-game-settings-using-localstorage-1cf6a9fa6f2c)
-
----
-
-## 4. Variable Board Shapes (Per-Row Cell Count)
-
-### Architecture Pattern
-
-**Component:** Extend `LevelData` JSON + modify `Board` class initialization
-**Pattern:** Blocked cells → explicit per-row column counts
-**Integration:** Engine agnostic, purely presentation layer
-
-### Current Board Architecture
-```typescript
-// Current: Fixed 8x8 grid with blocked_cells array
-{
-  "grid": {
-    "width": 8,
-    "height": 8,
-    "blocked_cells": [[0, 0], [0, 7], [7, 0], [7, 7]]
-  }
-}
-
-// Board renders all cells, marks some as blocked
-```
-
-### New Variable Board Format
-```typescript
-// Option A: Per-row column definitions
-{
-  "grid": {
-    "rows": [
-      { "cols": 6, "offset": 1 },  // Row 0: 6 cells, offset by 1 (centered)
-      { "cols": 7, "offset": 0.5 },
-      { "cols": 8, "offset": 0 },
-      { "cols": 8, "offset": 0 },
-      { "cols": 8, "offset": 0 },
-      { "cols": 8, "offset": 0 },
-      { "cols": 7, "offset": 0.5 },
-      { "cols": 6, "offset": 1 }
-    ]
-  }
-}
-
-// Option B: Explicit cell map (more flexible)
-{
-  "grid": {
-    "cells": [
-      [0, 0, 1, 1, 1, 1, 0, 0],  // 1 = active, 0 = empty
-      [0, 1, 1, 1, 1, 1, 1, 0],
-      [1, 1, 1, 1, 1, 1, 1, 1],
-      // ... etc
-    ]
-  }
-}
-```
-
-**Recommendation:** Use Option B (cell map) for maximum flexibility and clarity. Match3Engine already handles isEmpty flag.
-
-### Engine Integration
-```typescript
-// Match3Engine modification (minimal):
-generateGrid(spawnRules: SpawnRules, cellMap?: number[][]): void {
-  this.grid = [];
-
-  for (let row = 0; row < this.rows; row++) {
-    this.grid[row] = [];
-    for (let col = 0; col < this.cols; col++) {
-      const isActive = cellMap ? cellMap[row][col] === 1 : true;
-
-      if (!isActive) {
-        this.grid[row][col] = this.createEmptyTile(row, col);
-        this.grid[row][col].isEmpty = true; // Permanent empty
-      } else {
-        this.grid[row][col] = this.createRandomTile(row, col, spawnRules);
-      }
-    }
-  }
-
-  // Existing: Ensure no initial matches
-  this.resolveInitialMatches();
-}
-```
-
-### Rendering Changes
-```typescript
-// GameScene.createTilesFromEngine() - already handles isEmpty:
-private createTilesFromEngine(): void {
-  const grid = this.engine.getGrid();
-
-  for (let row = 0; row < GRID_HEIGHT; row++) {
-    this.tileSprites[row] = [];
-    for (let col = 0; col < GRID_WIDTH; col++) {
-      const tileData = grid[row][col];
-
-      if (tileData.isEmpty) {
-        this.tileSprites[row][col] = null; // Don't create sprite
-        continue;
-      }
-
-      // Create sprite as normal
-      const tile = new TileSprite(this, row, col, tileData.type, ...);
-      this.tileSprites[row][col] = tile;
-    }
-  }
-}
-```
-
-### Integration Points
-
-| Location | Change Type | Implementation |
-|----------|-------------|----------------|
-| `types.ts` | MODIFY | Extend `LevelData.grid` to support `cells: number[][]` |
-| `Match3Engine` | MODIFY | Accept optional cellMap in generateGrid(), mark cells isEmpty |
-| `GameScene` | MODIFY | Pass cellMap from levelData to engine |
-| Level JSONs | NEW | Add `cells` array to grid definition for shaped levels |
-
-### Build Order
-1. Extend `LevelData` interface with cells map option
-2. Modify `Match3Engine.generateGrid()` to accept cellMap
-3. Test with existing levels (no cellMap = default 8x8 behavior)
-4. Create new level JSONs with variable shapes
-5. Verify gravity and match detection work correctly
-
-**Source:** [Match - Notes of Phaser 3](https://rexrainbow.github.io/phaser3-rex-notes/docs/site/board-match/), existing codebase analysis
-
----
-
-## 5. Progressive Obstacles (3-State Ice/Dirt)
-
-### Architecture Pattern
-
-**Component:** Extend `ObstacleData` interface + `ObstacleManager`
-**Pattern:** Multi-layer damage system already exists, add visual variants
-**Integration:** Modify obstacle rendering in TileSprite
-
-### Current Obstacle System
-```typescript
-interface ObstacleData {
-  type: ObstacleType; // 'ice' | 'dirt' | 'crate' | 'blocked'
-  layers: number;     // 1-3 layers
-}
-
-// In Match3Engine.damageObstacles():
-// Each match adjacent to obstacle reduces layers by 1
-// At layers = 0, obstacle is removed
-```
-
-**Current State:** Architecture already supports progressive obstacles! Only visual feedback missing.
-
-### Visual Mapping
-```typescript
-// In TileSprite.setObstacle():
-setObstacle(obstacle?: ObstacleData): void {
-  this.clearObstacle();
-
-  if (!obstacle) return;
-
-  let textureKey: string;
-
-  switch (obstacle.type) {
-    case 'ice':
-      textureKey = obstacle.layers === 3 ? 'obstacle_ice03' :
-                   obstacle.layers === 2 ? 'obstacle_ice02' : 'obstacle_ice01';
-      break;
-    case 'dirt':
-      textureKey = obstacle.layers === 3 ? 'obstacle_grss03' :
-                   obstacle.layers === 2 ? 'obstacle_grss02' : 'obstacle_grss01';
-      break;
-    case 'crate':
-      textureKey = 'obstacle_bubble'; // Single sprite (1 layer only)
-      break;
-    case 'blocked':
-      textureKey = 'obstacle_blocked'; // Non-damageable
-      break;
-  }
-
-  this.obstacleSprite = this.scene.add.image(0, 0, textureKey);
-  this.add(this.obstacleSprite);
-}
-```
-
-### Level JSON Format
-```json
-{
-  "obstacles": [
-    {
-      "type": "ice",
-      "layers": 3,
-      "positions": [[2, 3], [2, 4]],
-      "description": "3-layer ice - requires 3 adjacent matches"
-    },
-    {
-      "type": "dirt",
-      "layers": 2,
-      "positions": [[5, 5]],
-      "description": "2-layer dirt - requires 2 adjacent matches"
-    }
-  ]
-}
-```
-
-### Integration Points
-
-| Location | Change Type | Implementation |
-|----------|-------------|----------------|
-| `TileSprite` | MODIFY | Map obstacle layers to correct sprite variant in setObstacle() |
-| `Boot.ts` | ALREADY DONE | Sprites already loaded (ice01-03, grss01-03) |
-| Level JSONs | MODIFY | Set layers: 1/2/3 for progressive obstacles |
-| `ObstacleManager` | NO CHANGE | Damage logic already correct |
-
-### Build Order
-1. Modify `TileSprite.setObstacle()` to select sprite based on layers
-2. Update level JSONs to use 3-layer obstacles
-3. Test damage progression visually
-4. Add VFX for obstacle layer breaking (optional polish)
-
-**Source:** [Match-3 Game Design](https://vsquad.art/blog/match-3-game-design-what-is-it-how-to-make), [45 Match-3 Mechanics](https://www.gamedeveloper.com/design/45-match-3-mechanics)
-
----
-
-## 6. Pre-Placed Tiles (Boosters, Specific Types)
-
-### Architecture Pattern
-
-**Component:** Extend level JSON + new Board initialization method
-**Pattern:** Override random generation for specific cells
-**Integration:** Add to LevelData, apply after generateGrid() but before initial match resolution
-
-### Level JSON Extension
-```typescript
-interface LevelData {
-  // ... existing fields
-  initial_tiles?: {
-    row: number;
-    col: number;
-    type: TileType;
-    booster?: BoosterType;
-  }[];
-}
-
-// Example:
-{
-  "initial_tiles": [
-    { "row": 4, "col": 4, "type": "fuel", "booster": "bomb" },
-    { "row": 3, "col": 3, "type": "coffee" },
-    { "row": 3, "col": 4, "type": "coffee" },
-    { "row": 3, "col": 5, "type": "coffee" }
-  ]
-}
-```
-
-### Engine Method
-```typescript
-// In Match3Engine:
-applyInitialTiles(initialTiles: InitialTileConfig[]): void {
-  for (const config of initialTiles) {
-    const tile = this.grid[config.row][config.col];
-
-    // Override type
-    tile.type = config.type;
-
-    // Apply booster if specified
-    if (config.booster) {
-      tile.booster = config.booster;
-    }
-  }
-
-  // Re-check for initial matches (in case pre-placed tiles create matches)
-  this.resolveInitialMatches();
-}
-```
-
-### Integration Sequence
-```typescript
-// In GameScene.create():
-this.engine.generateGrid(spawnRules, cellMap);
-
-if (this.levelData.obstacles) {
-  this.engine.initializeObstacles(this.levelData.obstacles);
-}
-
-// NEW: Apply pre-placed tiles
-if (this.levelData.initial_tiles) {
-  this.engine.applyInitialTiles(this.levelData.initial_tiles);
-}
-
-this.createTilesFromEngine();
-```
-
-### Integration Points
-
-| Location | Change Type | Implementation |
-|----------|-------------|----------------|
-| `types.ts` | MODIFY | Extend LevelData with initial_tiles field |
-| `Match3Engine` | NEW | Add applyInitialTiles() method |
-| `GameScene` | MODIFY | Call applyInitialTiles() after obstacle initialization |
-| Level JSONs | NEW | Add initial_tiles for tutorial/special levels |
-
-### Use Cases
-1. **Tutorial levels:** Pre-place match to teach mechanics
-2. **Challenge levels:** Start with specific booster combinations
-3. **Puzzle levels:** Exact tile configuration for solution-based gameplay
-
-### Build Order
-1. Extend `LevelData` interface
-2. Implement `Match3Engine.applyInitialTiles()`
-3. Call in `GameScene.create()` initialization sequence
-4. Create tutorial level with pre-placed match (level 1)
-5. Test that initial match resolution still works
-
-**Source:** [Smart & Casual: Match 3 Level Design](https://room8studio.com/news/smart-casual-the-state-of-tile-puzzle-games-level-design-part-1/), [Playrix: Creating levels](https://gameworldobserver.com/2019/09/27/playrix-levels-elements-match-3)
-
----
-
-## 7. Scrollable Kyiv Map with Parallax
-
-### Architecture Pattern
-
-**Component:** Modify LevelSelectScene with camera scrolling + parallax layers
-**Pattern:** TileSprite backgrounds with different scroll factors
-**Integration:** Replace static level select with scrollable camera view
-
-### Current LevelSelectScene
-```typescript
-// Current: Static 5 checkpoints in fixed positions
-const checkpoints = [
-  { x: width * 0.2, y: height * 0.78 },
-  { x: width * 0.5, y: height * 0.65 },
-  // ... fixed positions
-];
-```
-
-### New Scrollable Architecture
-```typescript
-class LevelSelect extends Phaser.Scene {
-  private camera: Phaser.Cameras.Scene2D.Camera;
-  private parallaxLayers: Phaser.GameObjects.TileSprite[];
-  private levelCheckpoints: Phaser.GameObjects.Container[];
 
   create(): void {
-    const WORLD_HEIGHT = 3000; // Tall vertical map
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
 
-    // Set world bounds
-    this.cameras.main.setBounds(0, 0, width, WORLD_HEIGHT);
-    this.physics.world.setBounds(0, 0, width, WORLD_HEIGHT);
+    // Create bottom navigation bar (60px height)
+    this.createBottomNav(width, height);
 
-    // Create parallax background layers
-    this.createParallaxBackground(WORLD_HEIGHT);
+    // Create global header (lives/bonuses HUD, 80px height)
+    this.createGlobalHeader(width);
 
-    // Create Kyiv landmarks as decorative elements
-    this.createKyivLandmarks();
+    // Fixed to camera, depth above all game content
+    this.bottomNav.setScrollFactor(0).setDepth(1000);
+    this.globalHeader.setScrollFactor(0).setDepth(1000);
 
-    // Create winding path with checkpoints
-    this.createScrollingPath(WORLD_HEIGHT);
+    // Listen for scene transitions to update visibility
+    this.game.events.on('scenechange', this.handleSceneChange, this);
 
-    // Setup camera controls (drag + bounds)
-    this.setupCameraControls();
-
-    // Scroll to current level on entry
-    this.scrollToCurrentLevel();
+    // Register resize handler
+    this.scale.on('resize', this.handleResize, this);
   }
 
-  private createParallaxBackground(worldHeight: number): void {
-    // Layer 1: Sky (slowest - far background)
-    const sky = this.add.tileSprite(width / 2, 0, width, worldHeight, 'bg_sky');
-    sky.setOrigin(0.5, 0);
-    sky.setScrollFactor(0.2); // Moves 5x slower than camera
-    this.parallaxLayers.push(sky);
+  private createBottomNav(width: number, height: number): void {
+    const navY = height - 30; // Center of 60px bottom bar
 
-    // Layer 2: Distant buildings (medium)
-    const buildings = this.add.tileSprite(width / 2, 0, width, worldHeight, 'bg_buildings');
-    buildings.setOrigin(0.5, 0);
-    buildings.setScrollFactor(0.5); // Moves 2x slower
-    this.parallaxLayers.push(buildings);
+    // Navigation container
+    this.bottomNav = this.add.container(0, 0);
 
-    // Layer 3: Near landmarks (almost 1:1)
-    const landmarks = this.add.tileSprite(width / 2, 0, width, worldHeight, 'bg_landmarks');
-    landmarks.setOrigin(0.5, 0);
-    landmarks.setScrollFactor(0.8); // Moves slightly slower
-    this.parallaxLayers.push(landmarks);
-  }
+    // Background bar
+    const bg = this.add.graphics();
+    bg.fillStyle(0xFFFFFF, 0.95);
+    bg.fillRect(0, height - 60, width, 60);
+    bg.lineStyle(1, 0xDDDDDD, 1);
+    bg.strokeRect(0, height - 60, width, 1);
 
-  private setupCameraControls(): void {
-    // Enable drag scrolling
-    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.isDown) {
-        this.cameras.main.scrollY -= pointer.velocity.y / 10;
-      }
+    // Navigation buttons (icon + label)
+    const buttons = [
+      { x: width * 0.2, icon: '🏠', label: 'Головна', scene: 'Menu' },
+      { x: width * 0.4, icon: '🗺️', label: 'Рівні', scene: 'LevelSelect' },
+      { x: width * 0.6, icon: '🎴', label: 'Колекція', scene: 'Collection' },
+      { x: width * 0.8, icon: '⚙️', label: 'Налаштування', scene: 'Settings' },
+    ];
+
+    buttons.forEach(btn => {
+      const container = this.createNavButton(btn.x, navY, btn.icon, btn.label, btn.scene);
+      this.bottomNav.add(container);
     });
 
-    // Clamp camera to bounds
-    this.cameras.main.setBounds(0, 0, width, WORLD_HEIGHT);
+    this.bottomNav.add(bg); // Add bg last so buttons are on top
+  }
+
+  private createNavButton(x: number, y: number, icon: string, label: string, targetScene: string): Phaser.GameObjects.Container {
+    const iconText = this.add.text(0, -10, icon, { fontSize: '24px' }).setOrigin(0.5);
+    const labelText = this.add.text(0, 12, label, { fontSize: '12px', color: '#666' }).setOrigin(0.5);
+
+    const container = this.add.container(x, y, [iconText, labelText]);
+    container.setSize(60, 50);
+    container.setInteractive({ useHandCursor: true });
+
+    container.on('pointerup', () => {
+      this.scene.start(targetScene); // Transition to target scene
+    });
+
+    return container;
+  }
+
+  private createGlobalHeader(width: number): void {
+    // Similar to current LevelSelect HUD but persistent across scenes
+    this.globalHeader = this.add.container(0, 0);
+
+    const bg = this.add.graphics();
+    bg.fillStyle(0xFFFFFF, 0.9);
+    bg.fillRect(0, 0, width, 80);
+
+    // Lives counter (right side)
+    const livesIcon = this.add.text(width - 100, 40, '❤', { fontSize: '24px' }).setOrigin(0.5);
+    const livesText = this.add.text(width - 60, 40, '5/5', { fontSize: '20px', color: '#1A1A1A' }).setOrigin(0, 0.5);
+
+    // Bonuses counter (below lives)
+    const bonusIcon = this.add.text(width - 100, 65, '💎', { fontSize: '18px' }).setOrigin(0.5);
+    const bonusText = this.add.text(width - 60, 65, '500', { fontSize: '18px', color: '#FFB800' }).setOrigin(0, 0.5);
+
+    this.globalHeader.add([bg, livesIcon, livesText, bonusIcon, bonusText]);
+
+    // Reactive update via timer
+    this.time.addEvent({
+      delay: 1000,
+      callback: this.updateGlobalHeader,
+      callbackScope: this,
+      loop: true,
+    });
+  }
+
+  private updateGlobalHeader(): void {
+    const economy = this.registry.get('economy') as EconomyManager;
+    // Update lives/bonuses text elements
+    // (Store references to text objects during createGlobalHeader)
+  }
+
+  private handleSceneChange(scene: Phaser.Scene): void {
+    this.activeSceneName = scene.scene.key;
+
+    // Hide bottom nav on Game scene (needs full screen)
+    if (this.activeSceneName === 'Game') {
+      this.bottomNav.setVisible(false);
+    } else {
+      this.bottomNav.setVisible(true);
+    }
+
+    // Hide global header on Boot/Menu (has own branding)
+    if (this.activeSceneName === 'Boot' || this.activeSceneName === 'Menu') {
+      this.globalHeader.setVisible(false);
+    } else {
+      this.globalHeader.setVisible(true);
+    }
+  }
+
+  private handleResize(gameSize: Phaser.Structs.Size): void {
+    const { width, height } = gameSize;
+    // Reposition bottom nav and global header
+    // (Destroy and recreate, or use explicit positioning)
   }
 }
 ```
 
-### Asset Requirements
+**Integration into main.ts:**
+
 ```typescript
-// In Boot.ts preload():
-this.load.image('bg_sky', 'assets/backgrounds/kyiv_sky.png');
-this.load.image('bg_buildings', 'assets/backgrounds/kyiv_buildings.png');
-this.load.image('bg_landmarks', 'assets/backgrounds/kyiv_landmarks.png');
-this.load.image('landmark_maidan', 'assets/landmarks/maidan.png');
-this.load.image('landmark_lavra', 'assets/landmarks/lavra.png');
-this.load.image('landmark_motherland', 'assets/landmarks/motherland.png');
-// ... etc
+// main.ts
+const config: Phaser.Types.Core.GameConfig = {
+  // ... existing config ...
+  scene: [Boot, Menu, LevelSelect, Game, UIOverlay], // Add UIOverlay
+};
+
+// After Phaser game created:
+game.events.on('ready', () => {
+  game.scene.start('Boot');
+  // Launch UIOverlay in parallel (it will handle visibility per scene)
+  game.scene.launch('UIOverlay');
+});
 ```
 
-### Integration Points
+**Scene Lifecycle Coordination:**
 
-| Location | Change Type | Implementation |
-|----------|-------------|----------------|
-| `LevelSelectScene` | MAJOR REFACTOR | Add camera scrolling, parallax layers, vertical layout |
-| `Boot.ts` | NEW | Load parallax background assets + landmark sprites |
-| `assets/backgrounds/` | NEW | Create/source Kyiv-themed background layers |
-| `ProgressManager` | NO CHANGE | Still returns unlocked levels |
+| Scene        | UIOverlay Bottom Nav | UIOverlay Global Header | Notes |
+|--------------|---------------------|------------------------|-------|
+| Boot         | Hidden              | Hidden                 | Loading screen |
+| Menu         | Hidden              | Hidden                 | Full-screen branding |
+| LevelSelect  | Visible             | Visible                | Navigation available |
+| Game         | Hidden              | Visible (lives/bonuses)| Bottom nav hides for full grid view |
+| Collection   | Visible             | Visible                | New scene for card viewing |
 
-### Build Order
-1. Create placeholder background assets (gradient layers for testing)
-2. Modify `LevelSelectScene` to use camera scrolling + world bounds
-3. Add parallax TileSprite layers with different scroll factors
-4. Test camera drag controls and bounds clamping
-5. Add level checkpoints in vertical scrolling layout
-6. Implement auto-scroll to current level on scene entry
-7. Replace placeholder backgrounds with final Kyiv artwork
+**Input Handling:**
+- UIOverlay scene processes input FIRST (top-most scene in scene list)
+- If UIOverlay handles input (e.g., nav button tap), event stops propagating
+- Game scenes receive input only if UIOverlay doesn't consume it
+- **Critical:** UIOverlay must have transparent backdrop to allow game scene input passthrough
 
-**Source:** [Add Pizazz with Parallax Scrolling](https://blog.ourcade.co/posts/2020/add-pizazz-parallax-scrolling-phaser-3/), [Parallax Scrolling with TileSprites Tutorial](https://phaser.io/news/2019/06/parallax-scrolling-with-tilesprites-tutorial)
+**Alternative Considered: Per-Scene Nav Recreation**
+- **Why rejected:** Violates DRY, state coordination nightmare, animation jank on transitions
+- **When viable:** If nav bar needs per-scene customization (not the case here)
+
+**Sources:**
+- [Phaser UI Scene Pattern](https://phaser.io/examples/v3/view/scenes/ui-scene)
+- [Phaser Persistent UI Discussion](https://phaser.discourse.group/t/persistent-ui-objects-components-on-scenes/2359)
+- [Cross-Scene Communication](https://docs.phaser.io/phaser/concepts/scenes/cross-scene-communication)
 
 ---
 
-## 8. Mobile Responsiveness + Canvas DPI
+## Recommended Architecture: Art Pipeline Integration
 
-### Architecture Pattern
+### Higher Resolution Tiles
 
-**Component:** Modify `main.ts` config + scene layout calculations
-**Pattern:** Phaser ScaleManager + dynamic positioning
-**Integration:** One-time config change, all scenes adapt
+**Current state:**
+- Tiles loaded as individual PNGs (128x128px assumed)
+- DPR capped at 2x for performance (zoom: 1/dpr)
+- No texture atlases
 
-### Current Config
+**Upgrade path for higher-res tiles:**
+
+**Option A: Replace PNGs with 256x256px versions (RECOMMENDED)**
+- **Pros:** Zero code changes, instant upgrade, preserves existing load logic
+- **Cons:** Larger file sizes (mitigated by Vite compression)
+- **Implementation:**
+  1. Replace assets in `assets/tiles/` with 256x256px versions
+  2. Update `TileSprite.ts` scale if needed: `setDisplaySize(TILE_SIZE, TILE_SIZE)`
+  3. Test on 1x and 2x DPR devices
+
+**Option B: Texture atlas (Shoebox, TexturePacker)**
+- **Pros:** Single HTTP request, reduced memory, easier to manage hundreds of sprites
+- **Cons:** Build step complexity, requires atlas JSON generation
+- **When to use:** When tile count exceeds 50+ or adding animations
+- **Implementation:**
+  ```typescript
+  // Boot.ts
+  this.load.atlas('tiles', 'assets/tiles.png', 'assets/tiles.json');
+
+  // TileSprite.ts
+  this.setTexture('tiles', `tile_${this.tileType}`); // Frame name from atlas
+  ```
+
+**Option C: SVG tiles (NOT RECOMMENDED for match-3)**
+- **Reason:** Phaser SVG support limited, rasterization overhead, no perf benefit
+
+**Recommendation:** **Option A** for immediate v1.2 milestone. Migrate to **Option B** (atlas) if tile count exceeds 50.
+
+### New Tile Types Integration
+
+**Current tile registration:**
 ```typescript
-const config: Phaser.Types.Core.GameConfig = {
-  type: Phaser.AUTO,
-  width: 1024,
-  height: 768,
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-  },
+// constants.ts
+export const TILE_TYPES = ['fuel', 'coffee', 'snack', 'road'] as const;
+export const TEXTURE_KEYS: Record<TileType, string> = {
+  fuel: 'tile_fuel_can',
+  coffee: 'tile_coffee',
+  snack: 'tile_wheel',
+  road: 'tile_light',
 };
+
+// Boot.ts
+this.load.image('tile_fuel_can', 'assets/tiles/fuel_can.png');
 ```
 
-### DPI-Aware Config
+**Adding new tile type (e.g., 'bonus'):**
+
+1. **Update constants:**
+   ```typescript
+   export const TILE_TYPES = ['fuel', 'coffee', 'snack', 'road', 'bonus'] as const;
+   export const TEXTURE_KEYS: Record<TileType, string> = {
+     // ... existing ...
+     bonus: 'tile_bonus_star',
+   };
+   ```
+
+2. **Load asset in Boot:**
+   ```typescript
+   this.load.image('tile_bonus_star', 'assets/tiles/bonus_star.png');
+   ```
+
+3. **Update spawn rules in level JSON:**
+   ```json
+   {
+     "spawn_rules": {
+       "fuel": 0.25,
+       "coffee": 0.25,
+       "snack": 0.25,
+       "road": 0.20,
+       "bonus": 0.05
+     }
+   }
+   ```
+
+**No engine changes needed:** `Match3Engine` uses generic `TileType`, handles any type in `TILE_TYPES`.
+
+### Collection Card Art
+
+**New asset category:** 512x512px card art (portrait orientation)
+
+**Loading strategy:**
 ```typescript
-const config: Phaser.Types.Core.GameConfig = {
-  type: Phaser.AUTO,
-  width: 1024,
-  height: 768,
-  scale: {
-    mode: Phaser.Scale.RESIZE, // Resize canvas to fill parent
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-    parent: 'game-container',
-    min: { width: 320, height: 480 },   // Minimum mobile size
-    max: { width: 1920, height: 1080 }, // Maximum desktop size
-  },
-  render: {
-    pixelArt: false,        // Smooth scaling for vector-style graphics
-    antialias: true,
-    antialiasGL: true,
-    resolution: window.devicePixelRatio || 1, // DPI awareness
-  },
-};
-```
+// Boot.ts - load card metadata
+this.load.json('card_metadata', 'data/cards.json');
 
-### Scene Responsive Layout
-```typescript
-// Pattern: Use camera dimensions instead of hardcoded values
-class GameScene extends Phaser.Scene {
-  create(): void {
-    const width = this.cameras.main.width;   // Dynamic
-    const height = this.cameras.main.height; // Dynamic
-
-    // Center grid dynamically
-    const gridPixelWidth = GRID_WIDTH * TILE_SIZE;
-    const gridPixelHeight = GRID_HEIGHT * TILE_SIZE;
-    this.gridOffsetX = (width - gridPixelWidth) / 2;
-    this.gridOffsetY = (height - gridPixelHeight) / 2 + 30;
-
-    // HUD positioned relative to screen size
-    this.createHUD(width, height);
+// Lazy-load card images on demand (NOT in Boot)
+// Collection scene loads only visible cards
+export class CollectionScene extends Phaser.Scene {
+  preload() {
+    const cards = this.cache.json.get('card_metadata');
+    // Load only first 10 cards (scrollable view)
+    cards.slice(0, 10).forEach(card => {
+      this.load.image(card.id, card.art_url);
+    });
   }
 }
 ```
 
-### Integration Points
+**Why lazy loading:**
+- 100 cards × 512×512px = ~25MB uncompressed
+- Boot scene would hang for 5+ seconds
+- Users rarely view full collection in one session
 
-| Location | Change Type | Implementation |
-|----------|-------------|----------------|
-| `main.ts` | MODIFY | Update scale config to RESIZE mode, add resolution setting |
-| All scenes | MODIFY | Replace hardcoded positions with dynamic width/height |
-| `GameScene` | MODIFY | Add scale.on('resize') handler to reposition grid |
-| Input handling | MODIFY | Adjust thresholds for mobile touch |
+**Progressive loading pattern:**
+```typescript
+// As user scrolls, load next batch
+onScroll(visibleRange: { start: number, end: number }) {
+  const cardsToLoad = this.cards.slice(visibleRange.start, visibleRange.end)
+    .filter(card => !this.textures.exists(card.id));
 
-### Build Order
-1. Update `main.ts` config with RESIZE mode and resolution
-2. Test on desktop - ensure no visual breakage
-3. Modify scenes to use `cameras.main.width/height` instead of hardcoded values
-4. Add resize handlers to scenes with complex layouts
-5. Test on mobile devices (real or emulator)
-6. Adjust touch target sizes if needed
-7. Add orientation lock for mobile (portrait/landscape preference)
-
-**Source:** [Scale manager - Notes of Phaser 3](https://rexrainbow.github.io/phaser3-rex-notes/docs/site/scalemanager/), [Help! Resizing a game with dpr](https://phaser.discourse.group/t/help-resizing-a-game-with-dpr-device-pixel-ratio/3242)
+  if (cardsToLoad.length > 0) {
+    this.load.reset(); // Clear previous loader queue
+    cardsToLoad.forEach(card => {
+      this.load.image(card.id, card.art_url);
+    });
+    this.load.once('complete', () => {
+      this.renderVisibleCards();
+    });
+    this.load.start();
+  }
+}
+```
 
 ---
 
-## Component Dependency Graph
+## Component Boundaries and Data Flow
+
+### System Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ main.ts                                                      │
-│ ┌─────────────────┐  ┌──────────────────┐  ┌─────────────┐  │
-│ │ ProgressManager │  │ EconomyManager   │  │ Settings    │  │
-│ │ (Firebase)      │  │ (localStorage)   │  │ Manager     │  │
-│ └────────┬────────┘  └────────┬─────────┘  └──────┬──────┘  │
-│          │                    │                    │         │
-│          └────────────────────┴────────────────────┘         │
-│                       game.registry                          │
-└──────────────────────────────┬───────────────────────────────┘
-                               │
-                ┌──────────────┴──────────────┐
-                │                             │
-        ┌───────▼──────┐              ┌──────▼──────┐
-        │ LevelSelect  │              │  GameScene  │
-        │ - Camera     │              │  - Board    │
-        │ - Parallax   │◄─────────────┤  - Managers │
-        │ - Scroll     │              │  - VFX      │
-        └──────────────┘              └─────┬───────┘
-                                            │
-                    ┌───────────────────────┴────────────────┐
-                    │                                        │
-            ┌───────▼──────┐                      ┌─────────▼────────┐
-            │ LevelManager │                      │ Match3Engine     │
-            │ - Goals      │                      │ - Board state    │
-            │ - Moves      │                      │ - Match logic    │
-            │ - Win/Lose   │                      │ - Obstacles      │
-            └──────────────┘                      └──────────────────┘
+│ main.ts (Initialization)                                     │
+├─────────────────────────────────────────────────────────────┤
+│ ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐    │
+│ │ Firebase    │  │ ProgressMgr  │  │ EconomyMgr       │    │
+│ │ Auth/FS     │─>│ (registry)   │  │ (registry)       │    │
+│ └─────────────┘  └──────────────┘  └──────────────────┘    │
+│                                                               │
+│ ┌──────────────┐  ┌──────────────┐                          │
+│ │ CollectionMgr│  │ SettingsMgr  │                          │
+│ │ (registry)   │  │ (registry)   │                          │
+│ └──────────────┘  └──────────────┘                          │
+└─────────────────────────────────────────────────────────────┘
+                          ↓ Launch scenes
+┌─────────────────────────────────────────────────────────────┐
+│ Scene Layer                                                  │
+├─────────────────────────────────────────────────────────────┤
+│ ┌─────────┐  ┌──────────────┐  ┌──────┐  ┌────────────┐   │
+│ │ Boot    │→ │ Menu         │→ │ Level│→ │ Game       │   │
+│ │         │  │              │  │Select│  │            │   │
+│ └─────────┘  └──────────────┘  └──────┘  └────────────┘   │
+│                     ↓                          ↓             │
+│               ┌────────────┐           ┌──────────────┐    │
+│               │ Collection │           │ Win Overlay  │    │
+│               │ Scene      │           │ (card drop)  │    │
+│               └────────────┘           └──────────────┘    │
+└─────────────────────────────────────────────────────────────┘
+                          ↑
+┌─────────────────────────────────────────────────────────────┐
+│ UIOverlay Scene (Parallel, depth: 1000)                     │
+├─────────────────────────────────────────────────────────────┤
+│ ┌───────────────┐  ┌─────────────────────────────────┐     │
+│ │ Global Header │  │ Bottom Navigation Bar           │     │
+│ │ Lives/Bonuses │  │ [Home] [Levels] [Cards] [Gear]  │     │
+│ └───────────────┘  └─────────────────────────────────┘     │
+│                                                               │
+│ Visibility controlled by activeSceneName                    │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**Dependencies:**
-- EconomyManager depends on ProgressManager for coin awards
-- SettingsManager is independent, consumed by AudioManager
-- GameScene depends on all registry managers
-- LevelSelectScene depends on ProgressManager + EconomyManager
-- Match3Engine remains dependency-free (pure logic)
+### Data Flow: Card Drop
+
+```
+1. Game scene: Win condition met
+   └─> showVictoryOverlay()
+
+2. Victory overlay:
+   ├─> ProgressManager.completeLevel(levelId) → stars
+   ├─> CollectionManager.rollForCard({ levelId, stars, isFirstWin })
+   │   ├─> Calculate drop chance (base + pity)
+   │   ├─> Select rarity tier (weighted random)
+   │   └─> Select card from pool → CardDrop | null
+   │
+   └─> if (drop):
+       ├─> Show card reveal animation
+       ├─> CollectionManager.addCard(drop.card.id)
+       └─> CollectionManager.saveInventory() → Firestore
+
+3. Firestore update:
+   users/{uid}/card_inventory[cardId] = { count: 1, unlocked_at: now() }
+   users/{uid}/card_pity_counter = 0
+```
+
+### Data Flow: Navigation Tap
+
+```
+1. User taps "Колекція" in bottom nav (UIOverlay scene)
+   └─> UIOverlay.handleNavTap('Collection')
+
+2. UIOverlay:
+   └─> this.scene.start('Collection')
+       ├─> Stops current game scene (e.g., LevelSelect)
+       └─> Starts Collection scene
+
+3. Collection scene:
+   ├─> preload(): Lazy-load visible card images
+   ├─> create():
+   │   ├─> Get CollectionManager from registry
+   │   ├─> Render card grid (owned cards highlighted)
+   │   └─> Setup scroll listener for progressive loading
+   │
+   └─> UIOverlay automatically shows bottom nav (scene != 'Game')
+```
 
 ---
 
-## Data Flow Changes
+## Integration Points with Existing Architecture
 
-### Before (Current)
-```
-User completes level → LevelManager emits 'level_won'
-  → GameScene calls ProgressManager.completeLevel()
-  → ProgressManager updates stars, unlocks next level
-  → ProgressManager.saveProgress() → Firebase
-  → Win overlay shows stars
+### Modifications to Existing Components
+
+#### 1. main.ts
+**Change:** Add CollectionManager initialization, launch UIOverlay scene
+
+```typescript
+// BEFORE (current)
+const progressManager = new ProgressManager(...);
+const economyManager = new EconomyManager(...);
+game.registry.set('progress', progressManager);
+game.registry.set('economy', economyManager);
+
+// AFTER (with collections + UI overlay)
+const progressManager = new ProgressManager(...);
+const economyManager = new EconomyManager(...);
+
+// NEW: Load card metadata and initialize CollectionManager
+const cardMetadata = await fetch('/data/cards.json').then(r => r.json());
+const cardInventory = await firestoreService.loadCardInventory(uid) || {};
+const collectionManager = new CollectionManager(firestoreService, uid, cardInventory, cardMetadata);
+
+game.registry.set('progress', progressManager);
+game.registry.set('economy', economyManager);
+game.registry.set('collection', collectionManager); // NEW
+
+// NEW: Launch UIOverlay in parallel with Boot
+game.events.on('ready', () => {
+  game.scene.start('Boot');
+  game.scene.launch('UIOverlay'); // Persistent UI layer
+});
 ```
 
-### After (With New Features)
-```
-User spends life to start level → EconomyManager.spendLife()
-  → GameScene creates with initial bonuses applied
-  → User completes level → LevelManager emits 'level_won'
-  → GameScene calls ProgressManager.completeLevel()
-  → ProgressManager awards coins via EconomyManager.addCoins()
-  → ProgressManager updates stars, unlocks
-  → ProgressManager.saveProgress() → Firebase
-  → EconomyManager.save() → localStorage
-  → Win overlay shows stars + coins earned
+#### 2. LevelSelect Scene
+**Change:** Remove duplicate HUD elements (now in UIOverlay global header)
+
+```typescript
+// BEFORE: LevelSelect creates own lives/bonuses HUD
+createEconomyHUD(width, economy) {
+  this.livesText = this.add.text(...);
+  // ... full HUD implementation
+}
+
+// AFTER: Delegate to UIOverlay global header
+// Option A: Remove HUD entirely (rely on UIOverlay)
+// Option B: Keep local HUD for scenes where UIOverlay hidden (Menu)
 ```
 
-**Key Change:** EconomyManager parallel to ProgressManager, both save independently.
+**Decision:** Keep minimal HUD in LevelSelect for v1.2, remove in v1.3 after UIOverlay proven stable.
+
+#### 3. Game Scene Win Overlay
+**Change:** Add card drop logic after star calculation
+
+```typescript
+// BEFORE (current)
+private async showVictoryOverlay(stars: number) {
+  // ... show stars, XP, etc.
+  await progress.saveProgress();
+}
+
+// AFTER (with card drops)
+private async showVictoryOverlay(stars: number) {
+  const progress = this.registry.get('progress') as ProgressManager;
+  const collection = this.registry.get('collection') as CollectionManager;
+
+  // Calculate stars
+  const result = progress.completeLevel(levelId, movesUsed, totalMoves);
+
+  // Roll for card drop
+  const drop = collection.rollForCard({
+    levelId: this.currentLevel,
+    stars: result.stars,
+    isFirstWin: result.isNewBest,
+  });
+
+  // Show victory UI
+  this.showStarsAnimation(result.stars);
+
+  // If card dropped, show reveal animation
+  if (drop) {
+    await this.showCardRevealAnimation(drop);
+    await collection.saveInventory();
+  }
+
+  // ... save progress, return to map
+}
+```
+
+#### 4. Boot Scene
+**Change:** Load card metadata JSON (NOT card images—those lazy-load)
+
+```typescript
+// BEFORE
+this.load.json('level_001', 'data/levels/level_001.json');
+
+// AFTER
+this.load.json('level_001', 'data/levels/level_001.json');
+this.load.json('card_metadata', 'data/cards.json'); // NEW
+```
 
 ---
 
-## Recommended Build Order
+## New Components to Build
 
-### Phase 1: Economy Foundation
-1. Create `EconomyManager` with lives + coins + bonuses
-2. Add to `main.ts` initialization
-3. Add lives display to MenuScene
-4. Modify LevelSelectScene to check lives before level start
-5. Add coin rewards to ProgressManager.completeLevel()
+### 1. CollectionManager (src/game/CollectionManager.ts)
+- **LOC estimate:** ~200
+- **Dependencies:** FirestoreService
+- **Test coverage:** Unit tests for probability engine (deterministic seeding)
 
-### Phase 2: Settings System
-1. Create `SettingsManager` with localStorage
-2. Create `SettingsOverlay` scene
-3. Integrate with AudioManager
-4. Add settings button to MenuScene
+### 2. UIOverlay Scene (src/scenes/UIOverlay.ts)
+- **LOC estimate:** ~300
+- **Dependencies:** EconomyManager, SettingsManager (for reactive updates)
+- **Responsive:** Yes (resize handler repositions nav/header)
 
-### Phase 3: Enhanced Levels
-1. Extend LevelData for variable boards (cellMap)
-2. Modify Match3Engine.generateGrid() to accept cellMap
-3. Update TileSprite obstacle rendering for 3-layer progression
-4. Add initial_tiles support to Match3Engine
-5. Create new level JSONs with advanced features
+### 3. Collection Scene (src/scenes/Collection.ts)
+- **LOC estimate:** ~250
+- **Dependencies:** CollectionManager
+- **Features:** Scrollable card grid, rarity filters, card detail modal
 
-### Phase 4: Visual Enhancements
-1. Modify LevelSelectScene for camera scrolling
-2. Add parallax background layers
-3. Create Kyiv landmark assets
-4. Implement vertical scrolling path
+### 4. Card Metadata Schema (data/cards.json)
+- **Format:** JSON array of CardDoc objects
+- **Size:** ~100 cards × 150 bytes = ~15KB
+- **Source:** Designed by product/AD, generated from spreadsheet
 
-### Phase 5: Mobile Polish
-1. Update main.ts config for DPI + RESIZE mode
-2. Make all scenes responsive (dynamic positioning)
-3. Add resize handlers where needed
-4. Test on mobile devices
-5. Adjust touch targets
-
-**Total Estimated Complexity:** Medium - mostly additive changes, minimal refactoring of core systems.
+### 5. Firestore Schema Migration
+- **New fields in users/{uid}:**
+  - `card_inventory: { [cardId]: { count, unlocked_at } }`
+  - `card_pity_counter: number`
+- **Migration:** Auto-initialize on first access (no breaking change)
 
 ---
 
-## Risk Assessment
+## Build Order Considering Dependencies
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| Lives timer drift on app close/reopen | Medium | Calculate regeneration on app start based on elapsed time |
-| localStorage cleared (private browsing) | Low | Fall back to defaults, inform user |
-| Variable boards break match detection | Medium | Test extensively, ensure Match3Engine handles isEmpty correctly |
-| Parallax performance on mobile | Low | Use TileSprite (efficient), limit layer count to 3-4 |
-| DPI scaling breaks input detection | Medium | Test on high-DPI devices, ensure Phaser 3.90+ (fixed in newer versions) |
-| Firebase + localStorage sync conflict | Low | ProgressManager only writes to Firebase, EconomyManager only to localStorage |
+### Phase 1: Foundation (No UI changes, backend only)
+**Duration:** 1-2 days
+
+1. **CollectionManager skeleton**
+   - Constructor, basic inventory methods (hasCard, getCardCount)
+   - Firestore save/load stubs (no-op)
+   - No probability engine yet
+
+2. **Card metadata JSON**
+   - Create `data/cards.json` with 10 example cards
+   - Schema: `{ id, name, rarity, theme, art_url }`
+
+3. **Firestore schema update**
+   - Add `card_inventory` and `card_pity_counter` fields to users doc
+   - Test with Firebase emulator
+
+4. **Integration into main.ts**
+   - Load card metadata
+   - Initialize CollectionManager
+   - Register in game.registry
+
+**Validation:** `console.log(collectionManager.getCollectionProgress())` shows { owned: 0, total: 10 }
+
+### Phase 2: Probability Engine (Backend logic)
+**Duration:** 1 day
+
+5. **Implement rollForCard() logic**
+   - Weighted random rarity selection
+   - Card pool filtering (avoid duplicates)
+   - Pity counter increment/reset
+
+6. **Unit tests**
+   - Test drop rates with fixed random seed
+   - Verify pity counter triggers at threshold
+
+**Validation:** 1000 simulated rolls → rarity distribution matches config ±5%
+
+### Phase 3: Card Drops in Game (Game scene integration)
+**Duration:** 1 day
+
+7. **Modify Game scene win overlay**
+   - Call `rollForCard()` after star calculation
+   - Show card reveal animation (simple fade-in for now)
+   - Save inventory to Firestore
+
+8. **Create card reveal animation**
+   - Placeholder: show card sprite with glow effect
+   - Audio: special "card get" SFX
+
+**Validation:** Win 5 levels → verify card_inventory in Firestore, pity counter increments
+
+### Phase 4: Collection Viewing (New scene)
+**Duration:** 2 days
+
+9. **Collection scene skeleton**
+   - Basic card grid layout (3 columns)
+   - Owned cards show full color, locked cards grayscale
+   - No lazy loading yet (load all 10 test cards)
+
+10. **Card detail modal**
+    - Tap card → show full-size view with description
+    - Close button returns to grid
+
+**Validation:** Navigate Menu → Collection → see cards, tap for details
+
+### Phase 5: Persistent UI Navigation (UIOverlay scene)
+**Duration:** 2-3 days
+
+11. **UIOverlay scene creation**
+    - Bottom nav bar with 4 buttons (Home, Levels, Cards, Settings)
+    - Global header with lives/bonuses (reactive update via timer)
+    - Visibility logic based on activeSceneName
+
+12. **Integrate UIOverlay into main.ts**
+    - Launch in parallel with Boot scene
+    - Test scene transitions don't break UIOverlay
+
+13. **Remove duplicate HUD from LevelSelect**
+    - Verify UIOverlay global header shows correctly
+    - Fix any input handling conflicts
+
+**Validation:** Navigate between all scenes → bottom nav persists, header shows/hides correctly
+
+### Phase 6: Art Pipeline Upgrades
+**Duration:** 1 day (asset replacement) + ongoing (new types)
+
+14. **Replace tile PNGs with 256×256px versions**
+    - Test on 1x and 2x DPR devices
+    - Verify no visual regression
+
+15. **Add new tile type (example: 'bonus')**
+    - Update constants, load asset, test spawn in level
+
+16. **Create 10 collection card art assets**
+    - 512×512px PNGs, place in `assets/cards/`
+    - Update `cards.json` with art URLs
+
+**Validation:** Visual QA on multiple devices, card art renders crisp
 
 ---
 
-## Performance Considerations
+## Patterns to Follow
 
-### Lives Timer
-- **Impact:** Negligible (single setTimeout per scene)
-- **Optimization:** Stop timer when scene is paused
+### Pattern 1: Registry-Based Singleton Access
+**What:** All managers stored in `game.registry`, accessed by scenes via type-safe getters
 
-### Parallax Layers
-- **Impact:** Low (TileSprite is GPU-optimized)
-- **Optimization:** Use max 4 layers, avoid transparency overdraw
+**When:** Any new singleton manager (CollectionManager, future: MissionsManager)
 
-### Variable Boards
-- **Impact:** None (same grid iteration, some cells skipped)
-- **Optimization:** Already optimal
+**Example:**
+```typescript
+// main.ts
+game.registry.set('collection', collectionManager);
 
-### DPI Scaling
-- **Impact:** Medium (higher resolution = more pixels to render)
-- **Optimization:** Cap max resolution at 2x on mobile (balance sharpness vs performance)
+// Any scene
+const collection = this.registry.get('collection') as CollectionManager;
+```
+
+**Why:** Avoids global variables, consistent with existing ProgressManager/EconomyManager pattern
+
+### Pattern 2: Reactive Manager Updates
+**What:** Managers notify scenes of state changes via subscriptions (not polling)
+
+**When:** Manager state changes frequently (economy lives regeneration, collection progress)
+
+**Example:**
+```typescript
+// CollectionManager
+private subscribers: ((event: CollectionEvent) => void)[] = [];
+
+subscribe(callback: (event: CollectionEvent) => void) {
+  this.subscribers.push(callback);
+}
+
+private notify(event: CollectionEvent) {
+  this.subscribers.forEach(cb => cb(event));
+}
+
+// UIOverlay scene
+const collection = this.registry.get('collection');
+collection.subscribe(event => {
+  if (event.type === 'card_added') {
+    this.showNotification(`Нова картка: ${event.card.name}!`);
+  }
+});
+```
+
+**Why:** Decouples managers from UI, enables real-time updates without polling
+
+### Pattern 3: Lazy Asset Loading
+**What:** Load assets on-demand in scene `preload()`, not upfront in Boot
+
+**When:** Assets not needed immediately (collection cards, future levels)
+
+**Example:**
+```typescript
+// Collection scene
+preload() {
+  const visibleCards = this.getVisibleCards(); // Based on scroll position
+  visibleCards.forEach(card => {
+    if (!this.textures.exists(card.id)) {
+      this.load.image(card.id, card.art_url);
+    }
+  });
+}
+```
+
+**Why:** Reduces Boot scene load time, improves perceived performance
+
+### Pattern 4: Scene Visibility Coordination
+**What:** UIOverlay scene shows/hides elements based on active game scene
+
+**When:** Persistent UI that shouldn't appear in all scenes (bottom nav hidden in Game)
+
+**Example:**
+```typescript
+// UIOverlay
+this.game.events.on('scenechange', (scene: Phaser.Scene) => {
+  const key = scene.scene.key;
+  this.bottomNav.setVisible(key !== 'Game');
+  this.globalHeader.setVisible(key !== 'Boot' && key !== 'Menu');
+});
+```
+
+**Why:** Avoids UI clutter, respects per-scene layout needs
 
 ---
 
-## Summary
+## Anti-Patterns to Avoid
 
-All new features integrate cleanly with the existing architecture:
+### Anti-Pattern 1: Recreating Nav in Every Scene
+**What goes wrong:** Each scene creates own bottom nav → duplicate code, state coordination bugs
 
-- **Lives/Economy/Settings** → New registry singletons (parallel to ProgressManager)
-- **Variable boards** → Level JSON extension + minor engine param
-- **Progressive obstacles** → Visual-only change (logic already exists)
-- **Pre-placed tiles** → Level JSON + new engine method
-- **Kyiv map** → LevelSelectScene refactor (self-contained)
-- **DPI/Mobile** → Config change + scene layout adjustments
+**Why it happens:** Doesn't know about UIOverlay scene pattern
 
-**No breaking changes to core Match3Engine, GravityEngine, or existing manager contracts.**
+**Prevention:** Use dedicated UIOverlay scene for all persistent UI
 
-**Confidence:** HIGH - patterns are standard Phaser 3 practices, well-documented, and align with existing codebase conventions.
+**Detection:** If you find yourself copying navigation code between scenes → refactor to UIOverlay
+
+### Anti-Pattern 2: Synchronous Firestore in Game Loop
+**What goes wrong:** `await firestoreService.saveInventory()` in match cascade → 200ms lag spike
+
+**Why it happens:** Saving after every card add without batching
+
+**Prevention:** Batch Firestore writes, use fire-and-forget for non-critical saves
+
+**Example:**
+```typescript
+// BAD: Save after every card add
+addCard(cardId) {
+  this.inventory[cardId] = { count: 1, unlocked_at: Timestamp.now() };
+  await this.saveInventory(); // BLOCKS RENDER
+}
+
+// GOOD: Fire-and-forget, batch on scene transition
+addCard(cardId) {
+  this.inventory[cardId] = { count: 1, unlocked_at: Timestamp.now() };
+  this.isDirty = true;
+}
+
+async shutdown() {
+  if (this.isDirty) {
+    await this.saveInventory(); // Save on scene exit
+  }
+}
+```
+
+### Anti-Pattern 3: Loading All Card Art in Boot
+**What goes wrong:** Boot scene hangs for 5+ seconds loading 100 cards
+
+**Why it happens:** Treating cards like tiles (which DO load in Boot)
+
+**Prevention:** Lazy-load card art per-scene, only visible cards
+
+**Detection:** Boot scene `progress` callback stalls at 0.8 → too many assets
+
+### Anti-Pattern 4: Hardcoded Drop Rates
+**What goes wrong:** Can't A/B test drop rates without code changes
+
+**Why it happens:** Drop rates in TypeScript constants instead of data
+
+**Prevention:** Store drop rates in `cards.json` or Remote Config
+
+**Example:**
+```typescript
+// BAD: Hardcoded
+const RARITY_DROP_RATES = { common: 0.6, rare: 0.3, epic: 0.09, legendary: 0.01 };
+
+// GOOD: Data-driven
+interface CardMetadata {
+  rarity_drop_rates: { common: number, rare: number, ... };
+}
+// Load from cards.json or Remote Config
+```
+
+---
+
+## Scalability Considerations
+
+| Concern | At 10 Cards | At 100 Cards | At 500 Cards |
+|---------|-------------|--------------|--------------|
+| **Firestore doc size** | <1KB (nested map) | ~10KB (nested map OK) | ~50KB (consider subcollection migration) |
+| **Boot load time** | +50ms (metadata JSON) | +100ms (metadata JSON) | +200ms (split metadata into chunks) |
+| **Collection scene render** | Instant (all loaded) | 1-2s (lazy load batches) | 5s+ (virtualized scroll) |
+| **Card drop query time** | <1ms (filter array) | <5ms (filter array) | <20ms (indexed lookup) |
+
+**Optimization triggers:**
+- **>100 cards:** Implement virtualized scrolling in Collection scene (only render visible cards)
+- **>200 cards:** Migrate Firestore schema to subcollection (`users/{uid}/cards/{cardId}`)
+- **>500 cards:** Add Firestore indexes for rarity/theme queries
+
+**Current recommendation:** Nested map in user doc sufficient for v1.2-v1.5 (estimated <100 cards)
+
+---
+
+## Confidence Assessment
+
+| Area | Confidence | Notes |
+|------|------------|-------|
+| CollectionManager architecture | **HIGH** | Proven singleton pattern, similar to existing managers |
+| Probability engine | **MEDIUM** | Standard gacha math, needs playtesting for balance |
+| UIOverlay scene pattern | **HIGH** | Official Phaser best practice, well-documented |
+| Firestore schema | **HIGH** | Nested map validated for <100 cards, migration path clear |
+| Art pipeline (higher res) | **HIGH** | Drop-in PNG replacement, zero risk |
+| Art pipeline (new types) | **HIGH** | Extensible constants pattern already proven |
+| Build order dependencies | **HIGH** | Phased approach isolates risks, early validation |
+| Scene lifecycle coordination | **MEDIUM** | UIOverlay visibility logic needs manual QA, potential edge cases |
+
+**Overall confidence:** **HIGH** (8/10)
+
+**Risk areas needing validation:**
+- UIOverlay input passthrough (ensure game scenes still receive taps)
+- Card drop animation performance on low-end devices (512×512 PNG decode)
+- Firestore write frequency (card drops + progress + economy = 3 writes per level win)
+
+---
+
+## Sources
+
+**Phaser Architecture Patterns:**
+- [Phaser UI Scene Example](https://phaser.io/examples/v3/view/scenes/ui-scene)
+- [Persistent UI Objects Discussion](https://phaser.discourse.group/t/persistent-ui-objects-components-on-scenes/2359)
+- [Phaser 3 UI Level Scene on Top](https://phaser.discourse.group/t/phaser-3-ui-level-scene-on-top/4792)
+- [Cross-Scene Communication](https://docs.phaser.io/phaser/concepts/scenes/cross-scene-communication)
+- [Phaser Scenes Overview](https://docs.phaser.io/phaser/concepts/scenes)
+
+**Firestore Schema Design:**
+- [Choose a Data Structure - Firestore](https://firebase.google.com/docs/firestore/manage-data/structure-data)
+- [Cloud Firestore Data Model](https://firebase.google.com/docs/firestore/data-model)
+- [Structure Data - Firestore](https://cloud.google.com/firestore/docs/concepts/structure-data)
+
+**Game Design References:**
+- [Match-3 Games Metrics Guide](https://www.gameanalytics.com/blog/match-3-games-metrics-guide)
+- [Marvel Snap Collector's Reserves](https://gamerant.com/marvel-snap-collectors-reserve-rate-odds-math-boxes-pity-system/)
+
+---
+
+**Research completed:** 2026-02-10
+**Confidence:** HIGH
+**Ready for roadmap creation:** YES

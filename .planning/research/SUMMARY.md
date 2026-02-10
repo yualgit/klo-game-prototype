@@ -1,290 +1,284 @@
 # Project Research Summary
 
-**Project:** KLO Match-3 Demo — Milestone 2 (Kyiv Journey)
-**Domain:** Match-3 Mobile Game Enhancement
+**Project:** KLO Match-3 v1.2 "Polish & Collections"
+**Domain:** Mobile Match-3 with Collection Card Meta-Progression
 **Researched:** 2026-02-10
 **Confidence:** HIGH
 
 ## Executive Summary
 
-This milestone adds player progression systems (lives regeneration, bonus economy, settings persistence), advanced level design features (variable board shapes, progressive obstacles, pre-placed tiles), and enhanced presentation (scrollable Kyiv map, canvas DPI scaling) to the existing match-3 game. Research confirms all features can be implemented using the current stack with **zero new dependencies**. Phaser 3.90, Firebase 11.0, and native Web APIs handle every requirement through additive architecture changes.
+The v1.2 milestone integrates three major upgrades into an existing Phaser 3.90 match-3 game: collection cards meta-progression (gacha-style reward system with 3 collections of 6 cards each), persistent UI navigation (bottom nav + global header), and art quality improvements (1024px retina assets, 6 new tile types). Research confirms this is achievable with minimal new dependencies and well-documented patterns.
 
-The recommended approach follows an additive manager pattern: create new `EconomyManager` and `SettingsManager` singletons parallel to the existing `ProgressManager`, extend level JSON schemas for advanced mechanics, and refactor `LevelSelectScene` for camera-based scrolling. Core game engine classes (Match3Engine, GravityEngine) remain untouched — changes are purely in presentation and persistence layers.
+The recommended approach follows proven Phaser architecture: a dedicated persistent UI scene running parallel to game scenes, a CollectionManager singleton following the existing registry pattern (ProgressManager/EconomyManager), and phaser3-rex-plugins for complex UI layouts. Two new libraries required: random-seed-weighted-chooser for gacha probability (mature, TypeScript support) and rexUI for bottom navigation components (official Phaser recommendation). Art pipeline uses existing 1024px PNGs with optional sprite sheet generation via Free Texture Packer.
 
-Key risks center on timer-based state management (lives regeneration can desync between devices if not using Firestore server timestamps), variable board coordinate mapping (non-rectangular grids break assumptions in existing rendering code), and canvas DPI performance on budget Android devices (3-4x resolution multiplier can collapse framerate). Mitigation strategies include server-authoritative timestamps for lives, explicit cell mapping in level JSON, and capping devicePixelRatio at 2x.
+Critical risks center on scene lifecycle coordination (persistent UI + game scenes), memory management for high-resolution assets on mobile devices (iOS Safari 300-500MB cap), and economy transaction safety for collection card pulls (prevent duplicate currency deduction). All have documented mitigation strategies: explicit registry key constants, multi-atlas loading strategy with device detection, and transaction-based economy updates with idempotency keys.
 
 ## Key Findings
 
 ### Recommended Stack
 
-No changes to existing stack. All new features leverage current dependencies:
+Existing Phaser 3.90 stack (TypeScript, Vite, Firebase) requires no changes. Add two specialized libraries for new features.
 
-**Core technologies:**
-- **Phaser 3.90**: Handles variable grid rendering, camera scrolling with parallax (setScrollFactor), canvas DPI via resolution config, scene registry for global state
-- **Firebase 11.0**: Extends UserProgress interface for lives/bonuses, Firestore server timestamps prevent state desync, TTL policies available for cleanup
-- **TypeScript 5.7**: Strong typing for new data structures (lives state, settings schema, level metadata)
-- **localStorage (Web API)**: Settings persistence (0ms latency vs 50-200ms Firestore, no cross-device sync needed for UI preferences)
-- **performance.now (Web API)**: High-precision monotonic timer for lives regeneration via Phaser time.now wrapper
+**Core technologies (no changes):**
+- **Phaser 3.90.0:** Game engine — DPR-aware rendering already validated
+- **TypeScript 5.7.0:** Type safety — existing setup continues
+- **Firebase 11.0.0:** Backend — progress/economy persistence proven
+- **Vite 6.0.0:** Build tool — fast HMR for dev workflow
 
-**Explicitly rejected dependencies:**
-- RxJS (350KB for timer features already in Phaser)
-- Redux/Zustand (Phaser registry provides global state)
-- Moment.js/Day.js (native Date + Timestamp sufficient for duration math)
-- i18next (70KB overkill for 2 languages, 50-100 strings)
+**New dependencies:**
+- **random-seed-weighted-chooser 1.1.1:** Gacha probability engine — handles weighted random selection with custom seed, zero dependencies, TypeScript support
+- **phaser3-rex-plugins 1.80.18:** UI components — production-ready Buttons, Sizer, Label components for bottom nav and complex layouts
+
+**Why these libraries:** Gacha probability is error-prone (pity system math, floating-point precision). Existing library handles edge cases better than custom implementation. RexUI provides battle-tested layout containers that integrate seamlessly with Phaser scene system, avoiding HTML overlay complexity and DPR scaling issues.
+
+**Art pipeline:** Free Texture Packer (web-based, no install) for sprite sheet generation. Current 1024px PNG assets already retina-ready. Collection cards (18 PNGs) bundled into atlas to reduce HTTP requests from 18 to 1.
 
 ### Expected Features
 
-**Must have (table stakes):**
-- **Lives System (5 max)** — Industry standard across all match-3 (Candy Crush, Royal Match). Players expect lives cap, regeneration timer, and HUD display.
-- **Lives regeneration timer** — Automatic recovery (30 min/life) prevents permanent lockout. Must persist across app close/reopen.
-- **Settings menu access** — Gear icon modal with close button. Universal mobile game expectation.
-- **Audio volume controls** — Separate music/SFX toggles. Players need individual control for social situations.
-- **Board shape visualization** — Non-rectangular boards need clear playable vs empty cell distinction.
-- **Mobile responsive layout** — Must work across phones/tablets/desktops without breaking.
-- **High DPI display support** — Retina/high-density screens require explicit canvas resolution configuration.
+Collection cards, persistent navigation, and art upgrades follow established mobile game conventions with KLO-specific theming.
 
-**Should have (competitive differentiation):**
-- **Scrollable Kyiv map level select** — Thematic storytelling through journey vs static grid. Stronger cultural identity.
-- **3-state progressive obstacles** — Ice/grass with 3 layers (ice1→ice2→ice3) adds strategic depth vs single-hit obstacles.
-- **Pre-placed tile configurations** — Hand-crafted puzzle feel vs pure RNG. Enables tutorial levels with guaranteed matches.
-- **Buy lives with bonuses (not IAP)** — F2P-friendly alternative to ads/purchases. Rewards skilled play.
+**Must have (table stakes):**
+- **Collection progress visualization (X/6 complete)** — players expect clear completion tracking
+- **Rarity color coding (grey/blue/purple/gold)** — universal standard across card games
+- **Card reveal animation (flip metaphor)** — expected gacha mechanic
+- **Bottom navigation (3 tabs: Levels/Collections/Shop)** — mobile UX convention for thumb-zone ergonomics
+- **Persistent HUD (lives/bonuses/settings)** — must be visible across non-game screens
+- **Responsive layout (all mobile viewports)** — iPhone SE through tablets, no cropping
+- **Retina-quality tiles (1024px source)** — high-DPI screens show blur on low-res assets
+- **Inactive cell visual** — variable board shapes need clear distinction
+
+**Should have (differentiators):**
+- **Pity mechanic (3 dupe streak → guaranteed new)** — anti-frustration, prevents infinite dupes
+- **Pick 1 of 2 closed cards** — agency in randomness vs pure RNG
+- **Thematic collections (coffee/food/cars)** — KLO brand integration with real rewards
+- **Collection exchange animation (cards → coupon)** — premium feel
+- **6 new tile types (burger, hotdog, oil, water, snack, soda)** — visual variety
+- **Booster sprites** — replace procedural indicators with real art
+- **Bottom nav notification dot** — "collection ready" indicator drives engagement
 
 **Defer (v2+):**
-- **Progressive timer** (30→45→60→90→120 min intervals) — LOW confidence, not found in major titles. Could confuse vs help.
-- **Variable board width per row** — Medium complexity, defer until 20+ levels justify hand-crafted shapes.
-- **Animation speed toggle** — Accessibility value, but lower priority than core features.
-- **Social lives gifting** — Requires Facebook SDK integration, privacy complexity beyond anonymous Firebase.
+- **Card trading between players** — requires social graph beyond current auth
+- **Animation skip/fast-forward** — improve in future based on feedback
+- **Virtualized scrolling for collections** — only needed if >100 cards
 
 ### Architecture Approach
 
-All additions are additive extensions following the existing manager pattern. Core game engine (Match3Engine, GravityEngine, MatchEngine) remains unchanged — implementations sit in presentation layer (scenes) and new managers.
+Integration requires three new components and modifications to existing scene lifecycle. Uses proven Phaser patterns: persistent UI scene for navigation, singleton managers in registry, lazy asset loading.
 
 **Major components:**
-1. **EconomyManager** (NEW singleton) — Lives timer with progressive regeneration, coin tracking, bonus inventory. Uses localStorage + Phaser.Time.TimerEvent, calculates regeneration on app start based on elapsed time since lastLifeLostTime.
-2. **SettingsManager** (NEW singleton) — localStorage-backed key-value store with reactive listeners. AudioManager subscribes to soundEnabled/musicEnabled changes.
-3. **Extended LevelData JSON** — Adds cells: number[][] for variable board shapes, layers: 1-3 for progressive obstacles, initial_tiles: [] for pre-placed boosters/matches.
-4. **Camera-scrollable LevelSelectScene** — Replaces static checkpoint grid with vertical scrolling map. Parallax TileSprite backgrounds (3-4 layers with setScrollFactor 0.2-0.8), camera drag controls, auto-scroll to current level.
-5. **DPI-aware Phaser config** — resolution: window.devicePixelRatio (capped at 2 for performance), scale.mode: RESIZE for responsive layout.
 
-**Integration points:**
-- Lives check gates level entry in LevelSelectScene via economy.canPlay()
-- Coin rewards awarded in ProgressManager.completeLevel() callback
-- Settings changes propagate to AudioManager via subscribe pattern
-- Variable boards pass cellMap to Match3Engine.generateGrid()
-- Progressive obstacles already supported (layers field exists), only visual sprite mapping needed
+1. **CollectionManager singleton** — Card inventory, drop probability, pity tracking, Firestore persistence. Follows existing ProgressManager/EconomyManager pattern. Stores nested map in users/{uid} Firestore doc (sufficient for <100 cards). Uses random-seed-weighted-chooser for weighted rarity selection.
+
+2. **UI Scene (persistent overlay)** — Dedicated scene running parallel to game scenes, manages bottom nav and global header. Uses rexUI Sizer/Buttons for responsive layout. Shows/hides based on active scene (bottom nav hidden in Game scene, both hidden in Boot/Menu). Renders at depth 1000 above game content. Handles visibility coordination via game.events 'scenechange'.
+
+3. **Collection Scene** — New scene for viewing 3 collections (6 cards each). Lazy-loads card images on demand (not in Boot). Implements progressive loading as user scrolls. Shows rarity-based color coding, owned/locked states, completion progress.
+
+**Integration pattern:** Boot scene initializes CollectionManager in registry, launches UI scene in parallel with game scenes. Game scene win overlay calls CollectionManager.rollForCard() after star calculation. UI scene listens to registry changes for reactive updates (lives/bonuses display). Scene sleep/wake used for input blocking during modals.
+
+**Modifications to existing code:** Add CollectionManager init in main.ts. Modify Game scene win overlay to roll for card drops. Optionally remove duplicate HUD from LevelSelect (delegated to UI scene global header). Add card metadata JSON load in Boot. All other scenes unchanged.
 
 ### Critical Pitfalls
 
-1. **Timer-based lives regeneration state corruption** — Firestore eventual consistency + offline cache means livesLastUpdated timestamp can be stale on multi-device or background resume. Progressive intervals (30→45→60 min) compound error. **Prevention:** Store livesDepletedAt + livesCount, calculate regeneration using serverTimestamp(), cap at 5 lives max in calculation not just UI.
+Top 5 mistakes that cause rewrites or major issues, with prevention strategies.
 
-2. **Variable board coordinate mapping breaks** — Existing grid assumes rectangular 8x8. Variable row widths (row 0 = 4 cells, row 1 = 8 cells) break col * CELL_SIZE pixel mapping, match detection at edges, gravity column tracking. **Prevention:** Add cellMap: boolean[][] to level JSON, center each row independently with offsetX = (maxCols - rowCols) * CELL_SIZE / 2, engines must check cellMap before accessing.
+1. **Scene Registry String Key Inconsistencies** — Using inconsistent key naming (camelCase vs kebab-case) creates duplicate states without noticing. EconomyManager state desyncs across scenes. **Prevention:** Define registry keys as TypeScript constants in shared file, use type-safe wrapper, validate keys exist during Boot.
 
-3. **Canvas DPI scaling performance collapse** — Setting resolution: window.devicePixelRatio on high-DPI Android (DPR 3-4) creates 3-4x larger canvas. Budget phones can't handle 1440x3200 resolution with 60fps match-3 animations. **Prevention:** Cap DPR at Math.min(devicePixelRatio, 2), use Scale.FIT not RESIZE, profile on real Android before commit.
+2. **Scene Transition Event Listener Memory Leaks** — Persistent UI scenes use sleep/wake instead of stop/start. Listeners from previous wake cycles never removed. Each wake adds duplicate listeners. Collection unlock triggers multiple times, economy deduction happens 2x-4x. **Prevention:** Use named event handler references (not inline functions), clean up in sleep handler, implement manager unsubscribe methods, use once() for one-time handlers.
 
-4. **Phaser scene shutdown race conditions** — v1.0 already hit tween callbacks firing after scene destroy. Adding settings/shop/lives overlays multiplies risk. Tweens, timers, event listeners outlive scene.shutdown(). **Prevention:** Register all timers in array, destroy in shutdown(), never use scene.start() from tween callbacks (use time.delayedCall()), test every transition path.
+3. **High-Resolution Asset Memory Explosion on Mobile** — Upgrading to 1024px tiles increases texture memory by 4x. With 30+ types, exceeds iOS Safari 300-500MB cap. Game crashes on level load. **Prevention:** Multi-atlas strategy (split by feature/scene), compress with WebP, detect device capability and load @2x vs @1x, destroy unused atlases after scene transition, cap canvas resolution at 2x DPR.
 
-5. **Progressive obstacle animation state desync** — 3-state ice (level 1→2→3) needs sprite swap on each hit. If crack animation playing when next hit arrives, visual state desyncs from logical hitPoints. **Prevention:** hitPoints is source of truth, sprite follows immediately, play crack animation as overlay not blocking replacement.
+4. **Responsive Layout Retrofit - Scale Mode Conflicts** — Existing game uses Phaser.Scale.FIT. Adding responsive requires RESIZE mode to handle orientations, but RESIZE breaks fullscreen, FIT doesn't trigger resize events. Bottom nav appears off-screen on certain aspect ratios. **Prevention:** Use RESIZE mode with manual letterboxing, implement ResponsiveLayout utility with getSafeArea(), add resize handler to EVERY scene, test on device matrix (iPhone SE, iPhone 14 Pro, iPad, Android tablet).
+
+5. **Persistent UI Input Blocking with Graphics Objects** — Bottom nav and global header use Graphics for backgrounds. Graphics fills don't block input by default. Clicks pass through to game board underneath. **Prevention:** Make Graphics interactive with explicit hit area (setInteractive with Phaser.Geom.Rectangle), layer persistent UI scenes above game scenes (bringToTop), use scene sleep to disable input on background scenes, create reusable ModalScene base class.
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure follows dependency order and risk mitigation:
+Based on architecture dependencies and risk mitigation, suggest 6-phase structure with foundation before features.
 
-### Phase 1: Economy Foundation
-**Rationale:** Lives system gates level entry — must come first before any level design changes. Establishes persistence patterns (localStorage for economy, Firestore for progress) that later phases build on.
+### Phase 1: Art & Asset Quality Upgrade
+**Rationale:** Foundation work with zero scene changes. Validates memory management before adding complex features. Can be tested in isolation. No dependencies on other phases.
 
-**Delivers:**
-- EconomyManager singleton with lives, coins, bonuses tracking
-- Lives timer with progressive regeneration (30 min/life)
-- Lives HUD display in MenuScene with countdown
-- Level entry gate in LevelSelectScene (check lives before start)
-- Coin reward system in ProgressManager.completeLevel() callback
+**Delivers:** 1024px retina tiles (crisp on DPR=2), 6 new tile types (burger, hotdog, oil, water, snack, soda), remove light tile cleanup, booster sprites (replace procedural indicators), inactive cell visual for variable boards. Free Texture Packer workflow established for future atlases.
 
-**Addresses:**
-- Lives System (table stakes from FEATURES.md)
-- Lives regeneration timer (table stakes)
-- Bonus economy data structures (preparation for Phase 2)
+**Addresses:** Retina-quality tiles, new tile types, booster sprites (table stakes + differentiators from FEATURES.md).
 
-**Avoids:**
-- Pitfall #1: Use Firestore serverTimestamp(), calculate regeneration on read
-- Pitfall #4: Proper timer cleanup in scene shutdown
+**Avoids:** High-resolution asset memory explosion (Pitfall 3) — implement multi-atlas strategy, device detection for @2x vs @1x loading, texture memory monitoring before adding more assets.
 
-### Phase 2: Settings & Polish
-**Rationale:** Independent of game mechanics — can run parallel to economy work or immediately after. Settings persistence pattern (localStorage) validates approach before using for other features.
+**Research needs:** SKIP — PNG replacement is well-documented, tile type extension follows existing pattern.
 
-**Delivers:**
-- SettingsManager singleton with localStorage persistence
-- SettingsOverlay scene (modal with sound/music toggles)
-- AudioManager integration (subscribe to settings changes)
-- Settings button in MenuScene
+### Phase 2: Responsive Layout Foundation
+**Rationale:** Establishes layout foundation before adding persistent UI. Scale mode changes affect all scenes. Must be tested across device matrix before building navigation on top.
 
-**Addresses:**
-- Settings menu access (table stakes from FEATURES.md)
-- Audio volume controls (table stakes)
-- Audio mute toggle (table stakes)
+**Delivers:** Phaser.Scale.RESIZE mode with manual letterboxing, ResponsiveLayout utility (getSafeArea, anchorBottom helpers), resize handlers in LevelSelect and Game scenes, tested on iPhone SE (375x667), iPhone 14 Pro (393x852 with notch), iPad (768x1024), Android tablet landscape (1280x800).
 
-**Avoids:**
-- Pitfall #4: Scene transition testing (settings overlay → game)
+**Uses:** Existing Phaser scale system (STACK.md) — no new dependencies.
 
-### Phase 3: Advanced Level Mechanics
-**Rationale:** Builds on existing Match3Engine without refactoring core logic. Variable boards + progressive obstacles enable richer level design for Phase 4's Kyiv map. Pre-placed tiles support tutorial levels.
+**Implements:** Responsive layout patterns (ARCHITECTURE.md) — layout utility with design constants.
 
-**Delivers:**
-- Extended LevelData interface (cells map, initial_tiles, obstacle layers)
-- Match3Engine.generateGrid() accepts cellMap parameter
-- TileSprite obstacle rendering maps layers to sprite variants (ice01/02/03)
-- Match3Engine.applyInitialTiles() for pre-placed boosters/matches
-- 3-5 new level JSONs with variable shapes and progressive obstacles
+**Avoids:** Scale mode conflicts (Pitfall 4) — choose RESIZE + manual letterboxing upfront, test on full device matrix before proceeding.
 
-**Addresses:**
-- Board shape visualization (table stakes)
-- 3-state progressive obstacles (differentiator)
-- Pre-placed tile configurations (differentiator)
-- Variable board shapes (enables richer design)
+**Research needs:** SKIP — Phaser RESIZE mode well-documented, ResponsiveLayout pattern is standard.
 
-**Avoids:**
-- Pitfall #2: Explicit cellMap with per-row centering, engines check cellMap before access
-- Pitfall #5: Obstacle hitPoints is source of truth, sprite follows
-- Pitfall #8: Apply initial_tiles first, skip in random fill
+### Phase 3: Persistent UI Navigation Shell
+**Rationale:** After responsive foundation, build navigation layer. Persistent UI scene pattern must be validated before adding collection features that depend on it.
 
-### Phase 4: Kyiv Map Level Select
-**Rationale:** Depends on Phase 3's advanced level mechanics to populate map with interesting levels. Major scene refactor — isolate from other changes to simplify debugging. High complexity justifies dedicated phase.
+**Delivers:** UI Scene running parallel to game scenes (depth: 1000), bottom navigation bar with rexUI Buttons (3 tabs: Levels/Collections/Shop), global header with lives/bonuses/settings (reactive updates from EconomyManager), visibility coordination (bottom nav hidden in Game, both hidden in Boot/Menu), registry key constants for type safety.
 
-**Delivers:**
-- Camera-scrollable LevelSelectScene (vertical world bounds)
-- Parallax background layers (sky, buildings, landmarks at different scrollFactors)
-- Drag scroll controls with tap vs drag distance threshold
-- Level checkpoint nodes positioned along winding path
-- Auto-scroll to current level on scene entry
-- Kyiv landmark assets (placeholder → final artwork)
+**Uses:** phaser3-rex-plugins 1.80.18 (STACK.md) — Sizer, Buttons, Label components for layout.
 
-**Addresses:**
-- Scrollable Kyiv map level select (differentiator)
-- Thematic storytelling through journey progression
+**Implements:** Persistent UI Scene pattern (ARCHITECTURE.md) — dedicated scene for navigation elements.
 
-**Avoids:**
-- Pitfall #6: Drag distance threshold (< 10px = tap, >= 10px = scroll)
-- Pitfall #4: Camera scroll input priority, disable game input behind overlay
+**Avoids:** Registry key inconsistencies (Pitfall 1), event listener leaks (Pitfall 2), input blocking issues (Pitfall 5) — define REGISTRY_KEYS constants, implement cleanup in sleep handler, make Graphics interactive with explicit hit areas.
 
-### Phase 5: Mobile & DPI Polish
-**Rationale:** Touches all scenes — do last to avoid merge conflicts with earlier phases. DPI changes affect rendering across entire game. Mobile responsiveness validates all previous work on actual devices.
+**Research needs:** MEDIUM — rexUI has comprehensive but scattered docs. Budget 4-6 hours for experimentation. Prototype bottom nav in isolated scene before integrating with main game.
 
-**Delivers:**
-- Phaser config: resolution capped at 2x, scale.mode RESIZE
-- All scenes use cameras.main.width/height for dynamic positioning
-- Touch input threshold scaled to cell size (cellSize * 0.3)
-- Resize handlers for complex layouts
-- Testing on real mobile devices (Android/iOS)
+### Phase 4: Collection Data Model & Viewing
+**Rationale:** Backend and UI for collections, without economy integration yet. Tests CollectionManager pattern and lazy loading before adding complex card drop/exchange flows.
 
-**Addresses:**
-- Mobile responsive layout (table stakes)
-- High DPI display support (table stakes)
-- Touch input optimization for small screens
+**Delivers:** CollectionManager singleton in registry (card inventory, metadata queries, Firestore persistence), card metadata JSON (3 collections × 6 cards = 18 cards), Collection Scene (scrollable card grid, rarity color coding, owned/locked states, progress X/6), card detail modal, lazy loading for card images (progressive as user scrolls).
 
-**Avoids:**
-- Pitfall #3: Cap DPR at 2, use Scale.FIT, profile on real Android
-- Pitfall #9: Scale swipe threshold relative to cell size
+**Uses:** Existing Firebase/Firestore for persistence (STACK.md), nested map schema in users/{uid}.
+
+**Implements:** CollectionManager singleton (ARCHITECTURE.md), lazy asset loading pattern.
+
+**Avoids:** Parallel scene lifecycle race conditions (Pitfall 7) — validate registry dependencies in create(), use events for late-binding.
+
+**Research needs:** SKIP — Singleton pattern matches existing managers, Firestore nested map validated for <100 cards.
+
+### Phase 5: Card Acquisition Flow
+**Rationale:** After collection viewing works, add card drop mechanics. Probability engine and pity system are complex, need isolated testing before exchange flow.
+
+**Delivers:** Pick 1-of-2 closed cards UI in Game win overlay, card reveal animation (Phaser sprite flip via scale X tween), probability engine with weighted rarity selection (random-seed-weighted-chooser), pity mechanic (3 dupe streak → guaranteed new card), transaction-based economy integration (prevent duplicate deduction), Firestore persistence with idempotency keys.
+
+**Uses:** random-seed-weighted-chooser 1.1.1 (STACK.md) for weighted random selection.
+
+**Implements:** Card drop logic in Game scene (ARCHITECTURE.md), CollectionManager.rollForCard() method.
+
+**Avoids:** Duplicate currency deduction (Pitfall 6), pity state desync (Pitfall 9) — implement transaction-based economy updates with rollback, write pity counter immediately (not batched), add pull history validation with 500ms debounce.
+
+**Research needs:** MEDIUM — Pity system math needs validation with gacha probability resources. Unit test probability curves with fixed seeds before integration. Test case: guarantee rare card within 10 pulls at 90% confidence.
+
+### Phase 6: Collection Exchange & Polish
+**Rationale:** Final feature after acquisition flow proven stable. Exchange animation is premium feel, not critical path. Notification dot drives engagement.
+
+**Delivers:** 6/6 collection completion detection, exchange animation (cards fold → compress → explode → coupon reveal, multi-step tween sequence), coupon reward integration with EconomyManager, bottom nav notification dot (badge when collection ready), collection ready indicator in UI Scene.
+
+**Implements:** Exchange flow (ARCHITECTURE.md), rexUI BadgeLabel for notification dot (STACK.md).
+
+**Avoids:** Rarity distribution feel issues (Pitfall 13) — tune after initial implementation, consider "bad luck protection" beyond pity if 3-4 consecutive commons feel unfair.
+
+**Research needs:** SKIP — Exchange is custom animation, no external patterns. Tween sequences well-documented in Phaser.
 
 ### Phase Ordering Rationale
 
-- **Phase 1 first:** Lives system gates level entry — foundational for all gameplay. Establishes localStorage + Firestore persistence patterns.
-- **Phase 2 parallel/second:** Settings independent of mechanics — can validate localStorage approach early without blocking level work.
-- **Phase 3 before Phase 4:** Variable boards + progressive obstacles provide content for Kyiv map. Pre-placed tiles enable tutorial levels along journey.
-- **Phase 4 isolated:** Major LevelSelectScene refactor — avoid conflicts with other scene changes. High complexity (camera, parallax, scroll) justifies focus.
-- **Phase 5 last:** DPI + responsiveness touch all scenes — do after feature work complete to avoid rework. Mobile testing validates entire stack.
+- **Foundation first (Phases 1-2):** Art and responsive layout are non-breaking changes that establish groundwork. Can be tested independently. Avoids memory/layout issues before adding complex features.
+
+- **Navigation before features (Phase 3):** Persistent UI Scene pattern must be proven before Collection Scene depends on it. Bottom nav provides navigation to Collection tab. Registry key constants prevent state desync issues early.
+
+- **Data model before flows (Phase 4 before 5):** Collection viewing without acquisition tests backend architecture (CollectionManager, lazy loading) before adding complex probability/economy logic. Reduces integration risk.
+
+- **Acquisition before exchange (Phase 5 before 6):** Card drop mechanics are critical path. Exchange animation is polish. If time-constrained, Phase 6 can defer to v1.3 without breaking core gameplay loop.
+
+- **Dependencies respected:** Each phase builds on previous. No circular dependencies. Can stop after any phase for incremental release.
 
 ### Research Flags
 
-**Phases with standard patterns (skip research-phase):**
-- **Phase 1 (Economy):** Lives timer pattern well-documented in Phaser 3 + Firestore best practices. Implementation clear from research.
-- **Phase 2 (Settings):** localStorage + reactive manager pattern standard in web games. No unknowns.
-- **Phase 3 (Levels):** LevelData JSON extension follows existing obstacle pattern. Match3Engine changes minimal (parameter addition).
-- **Phase 5 (Mobile/DPI):** Phaser Scale.RESIZE + resolution config well-documented. Device testing validates, no research phase needed.
-
 **Phases likely needing deeper research during planning:**
-- **Phase 4 (Kyiv Map):** Custom scroll container, parallax layers, path-based progression. While Phaser camera API researched, specific layout (winding path, landmark positioning, scroll-to-level animation) may need design iteration. Consider lightweight phase-planning to nail down UX flows before implementation.
+
+- **Phase 3 (Persistent UI Navigation):** rexUI has comprehensive but scattered docs. Team unfamiliar with API. Recommend 4-6 hour exploration phase to prototype Sizer + Buttons components in isolated scene. Fallback: custom bottom nav with manual layout if rexUI too complex (+200 LOC, worse DX).
+
+- **Phase 5 (Card Acquisition Flow):** Pity system math needs validation with gacha probability analysis resources. Unit test probability curves with deterministic seeding. Verify guarantee rare card within N pulls at 90% confidence interval before going live.
+
+**Phases with standard patterns (skip research-phase):**
+
+- **Phase 1 (Art & Asset Quality):** PNG replacement is straightforward. Tile type extension follows existing TILE_TYPES pattern. Free Texture Packer workflow is web-based, no CLI complexity for 18 cards.
+
+- **Phase 2 (Responsive Layout):** Phaser RESIZE mode + ResponsiveLayout utility pattern is well-documented. Testing on device matrix is QA work, not research.
+
+- **Phase 4 (Collection Data Model):** Singleton manager pattern matches existing ProgressManager/EconomyManager. Firestore nested map schema validated for <100 cards. Lazy loading pattern is standard Phaser.
+
+- **Phase 6 (Collection Exchange):** Custom animation work. Phaser tween sequences well-documented. No external patterns to research.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All features validated against current dependencies. No npm installs needed. |
-| Features | HIGH | Lives system, settings, obstacles confirmed as table stakes via Candy Crush docs + GameAnalytics metrics. Kyiv map as differentiator based on mobile game best practices. |
-| Architecture | HIGH | Additive manager pattern preserves existing code. Match3Engine changes minimal (parameter additions). LevelSelectScene refactor self-contained. |
-| Pitfalls | HIGH | 5 critical pitfalls identified with concrete prevention strategies. Based on v1.0 learnings (scene shutdown races) + Phaser/Firestore documented issues. |
+| Stack | HIGH | random-seed-weighted-chooser actively maintained (v1.1.1 released 2025), TypeScript support verified. phaser3-rex-plugins v1.80.18 compatible with Phaser 3.90, official examples use UI scene pattern. Existing stack (Phaser/Firebase/Vite) already validated. |
+| Features | HIGH | Monopoly GO and Marvel Snap collection patterns well-documented. 6-card collections with rarity tiers are standard. Bottom nav 3-tab pattern is mobile UX convention. Rarity color coding (grey/blue/purple/gold) universal across gaming. |
+| Architecture | HIGH | Persistent UI Scene is official Phaser best practice. Singleton manager pattern proven with existing ProgressManager/EconomyManager. Firestore nested map validated for <100 cards. Lazy asset loading is standard. Build order dependencies clear. |
+| Pitfalls | HIGH | All critical pitfalls have documented mitigation strategies. Scene lifecycle coordination risk mitigated with explicit registry keys + cleanup in sleep handlers. Memory management risk mitigated with multi-atlas + device detection. Economy transaction risk mitigated with idempotency keys + rollback. |
 
-**Overall confidence: HIGH**
+**Overall confidence:** HIGH (8/10)
 
 ### Gaps to Address
 
-**Progressive timer intervals (30→45→60→90→120 min):**
-- Research found NO major match-3 games using progressive intervals — all use flat 30 min regeneration.
-- Recommendation: Start with flat 30 min in Phase 1. If user feedback requests faster recovery after long waits, add progressive intervals in v1.2 as experiment.
-- **How to handle:** Implement flat timer in Phase 1, mark progressive intervals as "needs user validation" in backlog.
+Areas where research was inconclusive or needs validation during implementation:
 
-**Kyiv map asset sourcing:**
-- Research validates parallax scrolling pattern, but no specific Kyiv landmark asset libraries found.
-- Recommendation: Use placeholder gradient layers + basic shapes in Phase 4 implementation. Commission or source final Kyiv artwork as separate asset task after UX validated.
-- **How to handle:** Phase 4 plan includes "placeholder → final art" workflow. Assets unblock implementation.
+- **rexUI learning curve:** Team unfamiliar with rexUI API. Documentation comprehensive but scattered across 100+ plugin pages. **Mitigation:** Budget 4-6 hours for Phase 3 experimentation. Prototype bottom nav in isolated scene before integrating. Fallback to custom layout if rexUI too complex.
 
-**Variable board performance on low-end devices:**
-- cellMap validation on every match check + gravity step adds conditional overhead vs fixed 8x8.
-- Research validates pattern works, but no benchmark data for Phaser 3 specifically.
-- **How to handle:** Profile in Phase 3 on real Android device. If < 60fps, optimize with cellMap caching or precomputed neighbor arrays.
+- **Pity system math validation:** random-seed-weighted-chooser handles weighted selection, but pity logic (increase weights after N failures) is custom business logic. **Mitigation:** Unit test pity curves with fixed seeds before integration. Validate with gacha math resources. Test case: guarantee rare card within 10 pulls at 90% confidence.
 
-**Pre-placed tiles balance:**
-- No research on optimal density of pre-placed tiles (what % of board should be pre-configured vs random?).
-- Too many = feels scripted, too few = random RNG board, no puzzle feel.
-- **How to handle:** Start conservative (2-5 pre-placed tiles per level in Phase 3). Playtest feedback guides density for new levels.
+- **Art pipeline automation:** Free Texture Packer is web-based, no CLI. Manual export on each art update acceptable for 18 cards, but workflow slows with >100 assets. **Mitigation:** Acceptable for v1.2. If asset count grows >100 in future, migrate to free-tex-packer-core (Node.js, scriptable) or TexturePacker Pro CLI.
+
+- **Scene lifecycle edge cases:** UI Scene runs concurrently with Game/Menu/LevelSelect. Potential race conditions if scenes emit events before UI Scene ready. **Mitigation:** UI Scene signals registry 'uiReady' event in create(). Other scenes wait for changedata-uiReady before emitting UI events.
+
+- **Mobile device memory limits:** High-resolution assets tested on desktop, but iOS Safari 300-500MB cap and Android Chrome memory constraints need device testing. **Mitigation:** Implement multi-atlas strategy with @2x vs @1x device detection in Phase 1. Test on iPhone SE, iPhone 14 Pro, iPad, low-end Android before rolling out 1024px assets.
+
+- **Collection card reveal animation performance:** 512×512 PNG decode on low-end devices during reveal animation might stutter. **Mitigation:** Test on low-end Android (4-core CPU) during Phase 5. Fallback to lower resolution card art (@1x) if performance degrades below 30 FPS.
 
 ## Sources
 
 ### Primary (HIGH confidence)
 
-**Phaser 3 Official Docs:**
-- Camera API, setScrollFactor, TileSprite parallax — validated pattern for scrolling map
-- Scene registry, resolution config, Scale.RESIZE — core framework features
-- time.now (performance.now wrapper) — battle-tested timer API
+**Phaser Architecture Patterns:**
+- [Phaser UI Scene Example](https://phaser.io/examples/v3/view/scenes/ui-scene) — Official example for persistent UI scene pattern
+- [Persistent UI Objects Discussion](https://phaser.discourse.group/t/persistent-ui-objects-components-on-scenes/2359) — Community consensus on parallel scene approach
+- [Cross-Scene Communication](https://docs.phaser.io/phaser/concepts/scenes/cross-scene-communication) — Official docs for scene coordination
+- [Phaser Scenes Overview](https://docs.phaser.io/phaser/concepts/scenes) — Scene lifecycle documentation
 
-**Firebase Official Docs:**
-- Firestore serverTimestamp() — server-authoritative time for lives regeneration
-- TTL policies — optional cleanup for expired bonus timers
-- Offline cache behavior — explains stale read risk
+**Firestore Schema Design:**
+- [Choose a Data Structure - Firestore](https://firebase.google.com/docs/firestore/manage-data/structure-data) — Official guidance on nested maps vs subcollections
+- [Cloud Firestore Data Model](https://firebase.google.com/docs/firestore/data-model) — Schema best practices
+- [Structure Data - Firestore](https://cloud.google.com/firestore/docs/concepts/structure-data) — When to use nested fields
 
-**Candy Crush Official Support:**
-- Lives system mechanics: 5 lives max, 30 min flat regeneration, 150 min full refill
-- Confirms lives as table stakes feature
+**Phaser UI Components:**
+- [phaser3-rex-plugins npm](https://www.npmjs.com/package/phaser3-rex-plugins) — v1.80.18 compatible with Phaser 3.90
+- [rexUI Overview](https://rexrainbow.github.io/phaser3-rex-notes/docs/site/ui-overview/) — Component documentation
 
-**Web APIs (MDN):**
-- performance.now() — monotonic clock, microsecond precision
-- localStorage — 10 MiB quota, synchronous access, private browsing fallback
+**Gacha/Probability:**
+- [random-seed-weighted-chooser npm](https://www.npmjs.com/package/random-seed-weighted-chooser) — v1.1.1 TypeScript support
+- [Gacha probability algorithms](https://kylechen.net/writing/gacha-probability/) — Pity system math
+- [Genshin Impact gacha mechanics](https://library.keqingmains.com/general-mechanics/gacha) — Real-world pity implementation
 
 ### Secondary (MEDIUM confidence)
 
-**GameAnalytics Match-3 Metrics Guide:**
-- Lives system metrics, player retention impact
-- Validates lives as core engagement loop
+**Mobile UX Patterns:**
+- [Mobile Bottom Navigation UX](https://www.nngroup.com/articles/mobile-navigation-design/) — 3-tab thumb-zone convention
+- [Mobile Touch Target Sizes](https://www.w3.org/WAI/WCAG21/Understanding/target-size.html) — 44px+ targets (2026 standards)
+- [Rarity Color Standards in Gaming](https://tvtropes.org/pmwiki/pmwiki.php/Main/ColourCodedForYourConvenience) — Grey/blue/purple/gold universal
 
-**Playrix Help Centers (Fishdom, Homescapes):**
-- 3-state obstacles (ice1/2/3, granite1/2/3) confirmed as standard mechanic
-- Progressive obstacle strategy patterns
+**Match-3 Meta Progression:**
+- [Monopoly GO Sticker Collections](https://www.pocketgamer.biz/monopoly-go-sticker-collection-analysis/) — 6-card collection pattern
+- [Match-3 Meta Layers](https://www.gamerefinery.com/match3-meta-layers-matching-types/) — Collection system engagement
+- [Match-3 Games Metrics Guide](https://www.gameanalytics.com/blog/match-3-games-metrics-guide) — Collection completion rates
 
-**Phaser Community:**
-- Ourcade blog: Parallax scrolling tutorial
-- Phaser Discourse: Parallax + drag pattern validation
-- GitHub issues: DPI scaling performance discussions
+**Phaser Performance:**
+- [Phaser 3 Mobile Performance](https://phaser.discourse.group/t/phaser-3-mobile-performance-ios-android/1435) — iOS Safari memory limits
+- [Optimizing Phaser 3 Action Game (2025)](https://franzeus.medium.com/how-i-optimized-my-phaser-3-action-game-in-2025-5a648753f62b) — Texture memory management
+- [Poor WebGL performance on high resolutions](https://github.com/photonstorm/phaser/issues/2908) — Resolution caps
+
+**Responsive Layout:**
+- [Phaser 3 Retina Support](https://supernapie.com/blog/support-retina-with-phaser-3/) — DPR scaling patterns
+- [Responsive Phaser Games](https://medium.com/@mattcolman/responsive-phaser-game-54a0e2dafba7) — RESIZE mode + letterboxing
+- [Full-Screen Size and Responsive Game](https://medium.com/@tajammalmaqbool11/full-screen-size-and-responsive-game-in-phaser-3-e563c2d60eab) — Safe area handling
 
 ### Tertiary (LOW confidence)
 
-**Unity/Flutter tutorials:**
-- Scrollable level map patterns adapted from non-Phaser frameworks
-- Validates concept but requires Phaser-specific implementation
-
-**GameDeveloper articles:**
-- Match-3 level design principles, pre-placed tile balance
-- General guidance, not Phaser-specific
+**Art Pipeline:**
+- [Free Texture Packer](https://free-tex-packer.com/app/) — Web-based sprite sheet tool, sufficient for <50 assets
+- [TexturePacker Phaser 3 Tutorial](https://phaser.io/news/2018/03/texturepacker-and-phaser-3-tutorial) — Atlas generation workflow
+- [Sprite Sheet Optimization](https://www.codeandweb.com/texturepacker/tutorials/how-to-create-sprite-sheets-for-phaser) — Compression strategies
 
 ---
-
-**Research completed:** 2026-02-10
-**Ready for roadmap:** Yes
-**Recommended next step:** Create 5-phase roadmap based on implications section. All phases ready for planning except Phase 4 which may benefit from UX iteration on Kyiv map layout.
+*Research completed: 2026-02-10*
+*Ready for roadmap: yes*
