@@ -19,6 +19,11 @@ const LEVEL_NAMES: Record<number, string> = {
   3: 'Перший лід',
   4: 'Льодяна кава',
   5: 'Перший бустер',
+  6: 'Діамантове поле',
+  7: 'Трав\'яне поле',
+  8: 'Подарунок на старті',
+  9: 'Льодяна фортеця',
+  10: 'Фінальний виклик',
 };
 
 export class LevelSelect extends Phaser.Scene {
@@ -64,20 +69,25 @@ export class LevelSelect extends Phaser.Scene {
     // Settings gear icon
     this.createSettingsButton(width);
 
-    // 5 checkpoint positions along a winding path
+    // 10 checkpoint positions along a winding path
     const checkpoints = [
-      { x: width * 0.2, y: height * 0.78 },
-      { x: width * 0.5, y: height * 0.65 },
-      { x: width * 0.3, y: height * 0.48 },
-      { x: width * 0.6, y: height * 0.35 },
-      { x: width * 0.5, y: height * 0.2 },
+      { x: width * 0.25, y: height * 0.88 },
+      { x: width * 0.55, y: height * 0.80 },
+      { x: width * 0.30, y: height * 0.70 },
+      { x: width * 0.60, y: height * 0.62 },
+      { x: width * 0.35, y: height * 0.52 },
+      { x: width * 0.65, y: height * 0.44 },
+      { x: width * 0.30, y: height * 0.36 },
+      { x: width * 0.55, y: height * 0.28 },
+      { x: width * 0.35, y: height * 0.20 },
+      { x: width * 0.50, y: height * 0.12 },
     ];
 
     // Draw the road path connecting checkpoints
     this.drawRoadPath(checkpoints);
 
     // Create level checkpoint buttons
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       const levelId = i + 1;
       this.createLevelCheckpoint(
         checkpoints[i].x,
@@ -89,7 +99,7 @@ export class LevelSelect extends Phaser.Scene {
 
     // Map pointer at current unlocked level
     const currentLevelId = this.getCurrentLevel(progress);
-    if (currentLevelId > 0 && currentLevelId <= 5) {
+    if (currentLevelId > 0 && currentLevelId <= 10) {
       const pointerPos = checkpoints[currentLevelId - 1];
       this.createMapPointer(pointerPos.x, pointerPos.y - 60);
     }
@@ -500,12 +510,12 @@ export class LevelSelect extends Phaser.Scene {
 
   private getCurrentLevel(progress: ProgressManager): number {
     // Find the first locked level (that's the current target)
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 10; i++) {
       if (!progress.isLevelUnlocked(i)) {
         return i - 1; // Previous level is current
       }
     }
-    return 5; // All unlocked
+    return 10; // All unlocked
   }
 
   private getStarString(stars: number): string {

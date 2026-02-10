@@ -1,0 +1,30 @@
+{
+  "level_id": 6,
+  "name": "Діамантове поле",
+  "moves": 20,
+  "grid": {
+    "width": 8,
+    "height": 8,
+    "cell_map": [
+      [0, 0, 0, 1, 1, 0, 0, 0],
+      [0, 0, 1, 1, 1, 1, 0, 0],
+      [0, 1, 1, 1, 1, 1, 1, 0],
+      [1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1],
+      [0, 1, 1, 1, 1, 1, 1, 0],
+      [0, 0, 1, 1, 1, 1, 0, 0],
+      [0, 0, 0, 1, 1, 0, 0, 0]
+    ],
+    "blocked_cells": []
+  },
+  "goals": [
+    { "type": "collect", "item": "fuel", "count": 25, "current": 0, "description": "Зібрати 25 паливо" },
+    { "type": "destroy_obstacle", "obstacleType": "ice", "count": 9, "current": 0, "description": "Знищити 9 шарів льоду" }
+  ],
+  "spawn_rules": { "fuel": 0.35, "coffee": 0.25, "snack": 0.2, "road": 0.2 },
+  "obstacles": [
+    { "type": "ice", "layers": 3, "positions": [[3, 3], [3, 4], [4, 3]], "description": "3-шаровий лід" }
+  ],
+  "difficulty": "medium",
+  "target_fail_rate": 0.20
+}

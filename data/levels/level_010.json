@@ -1,0 +1,35 @@
+{
+  "level_id": 10,
+  "name": "Фінальний виклик",
+  "moves": 28,
+  "grid": {
+    "width": 8,
+    "height": 8,
+    "cell_map": [
+      [1, 1, 1, 1, 0, 0, 0, 0],
+      [1, 1, 1, 1, 0, 0, 0, 0],
+      [1, 1, 1, 1, 1, 1, 0, 0],
+      [1, 1, 1, 1, 1, 1, 0, 0],
+      [0, 0, 1, 1, 1, 1, 1, 1],
+      [0, 0, 1, 1, 1, 1, 1, 1],
+      [0, 0, 0, 0, 1, 1, 1, 1],
+      [0, 0, 0, 0, 1, 1, 1, 1]
+    ],
+    "blocked_cells": []
+  },
+  "goals": [
+    { "type": "collect", "item": "fuel", "count": 30, "current": 0, "description": "Зібрати 30 паливо" },
+    { "type": "destroy_obstacle", "obstacleType": "ice", "count": 6, "current": 0, "description": "Знищити 6 шарів льоду" },
+    { "type": "destroy_obstacle", "obstacleType": "grass", "count": 6, "current": 0, "description": "Знищити 6 шарів трави" }
+  ],
+  "spawn_rules": { "fuel": 0.35, "coffee": 0.25, "snack": 0.2, "road": 0.2 },
+  "obstacles": [
+    { "type": "ice", "layers": 3, "positions": [[1, 1], [2, 4]], "description": "3-шаровий лід" },
+    { "type": "grass", "layers": 3, "positions": [[5, 5], [6, 6]], "description": "3-шарова трава" }
+  ],
+  "pre_placed_tiles": [
+    { "row": 3, "col": 3, "type": "snack", "booster": "bomb" }
+  ],
+  "difficulty": "hard",
+  "target_fail_rate": 0.35
+}

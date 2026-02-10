@@ -1,0 +1,32 @@
+{
+  "level_id": 9,
+  "name": "Льодяна фортеця",
+  "moves": 25,
+  "grid": {
+    "width": 8,
+    "height": 8,
+    "cell_map": [
+      [0, 1, 1, 1, 1, 1, 1, 0],
+      [1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1],
+      [0, 1, 1, 1, 1, 1, 1, 0]
+    ],
+    "blocked_cells": []
+  },
+  "goals": [
+    { "type": "destroy_obstacle", "obstacleType": "ice", "count": 9, "current": 0, "description": "Знищити 9 шарів льоду" },
+    { "type": "destroy_obstacle", "obstacleType": "grass", "count": 6, "current": 0, "description": "Знищити 6 шарів трави" }
+  ],
+  "spawn_rules": { "fuel": 0.25, "coffee": 0.25, "snack": 0.25, "road": 0.25 },
+  "obstacles": [
+    { "type": "ice", "layers": 3, "positions": [[3, 3], [3, 4], [4, 3]], "description": "3-шаровий лід у центрі" },
+    { "type": "grass", "layers": 3, "positions": [[1, 1], [6, 6]], "description": "3-шарова трава по кутах" },
+    { "type": "crate", "layers": 1, "positions": [[2, 5], [5, 2]], "description": "Бульбашки (1 удар)" }
+  ],
+  "difficulty": "hard",
+  "target_fail_rate": 0.30
+}
