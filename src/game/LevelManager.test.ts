@@ -14,7 +14,7 @@ describe('LevelManager', () => {
         goals: [
           {
             type: 'collect' as const,
-            item: 'fuel' as const,
+            item: 'burger' as const,
             count: 10,
             current: 0,
             description: 'Collect 10 fuel'
@@ -31,7 +31,7 @@ describe('LevelManager', () => {
         goals: [
           {
             type: 'collect' as const,
-            item: 'fuel' as const,
+            item: 'burger' as const,
             count: 10,
             current: 0,
             description: 'Collect 10 fuel'
@@ -49,7 +49,7 @@ describe('LevelManager', () => {
         goals: [
           {
             type: 'collect' as const,
-            item: 'fuel' as const,
+            item: 'burger' as const,
             count: 10,
             current: 0,
             description: 'Collect 10 fuel'
@@ -76,7 +76,7 @@ describe('LevelManager', () => {
         goals: [
           {
             type: 'collect' as const,
-            item: 'fuel' as const,
+            item: 'burger' as const,
             count: 20,
             current: 0,
             description: 'Collect 20 fuel'
@@ -88,7 +88,7 @@ describe('LevelManager', () => {
       const fuelTiles: TileData[] = Array.from({ length: 5 }, (_, i) => ({
         row: 0,
         col: i,
-        type: 'fuel' as const,
+        type: 'burger' as const,
         isEmpty: false,
         id: `fuel-${i}`
       }));
@@ -105,7 +105,7 @@ describe('LevelManager', () => {
         goals: [
           {
             type: 'collect' as const,
-            item: 'fuel' as const,
+            item: 'burger' as const,
             count: 20,
             current: 0,
             description: 'Collect 20 fuel'
@@ -117,7 +117,7 @@ describe('LevelManager', () => {
       const fuelTiles: TileData[] = Array.from({ length: 25 }, (_, i) => ({
         row: 0,
         col: i,
-        type: 'fuel' as const,
+        type: 'burger' as const,
         isEmpty: false,
         id: `fuel-${i}`
       }));
@@ -134,7 +134,7 @@ describe('LevelManager', () => {
         goals: [
           {
             type: 'collect' as const,
-            item: 'fuel' as const,
+            item: 'burger' as const,
             count: 20,
             current: 0,
             description: 'Collect 20 fuel'
@@ -146,7 +146,7 @@ describe('LevelManager', () => {
       const coffeeTiles: TileData[] = Array.from({ length: 5 }, (_, i) => ({
         row: 0,
         col: i,
-        type: 'coffee' as const,
+        type: 'hotdog' as const,
         isEmpty: false,
         id: `coffee-${i}`
       }));
@@ -163,14 +163,14 @@ describe('LevelManager', () => {
         goals: [
           {
             type: 'collect' as const,
-            item: 'fuel' as const,
+            item: 'burger' as const,
             count: 15,
             current: 0,
             description: 'Collect 15 fuel'
           },
           {
             type: 'collect' as const,
-            item: 'coffee' as const,
+            item: 'hotdog' as const,
             count: 15,
             current: 0,
             description: 'Collect 15 coffee'
@@ -183,14 +183,14 @@ describe('LevelManager', () => {
         ...Array.from({ length: 5 }, (_, i) => ({
           row: 0,
           col: i,
-          type: 'fuel' as const,
+          type: 'burger' as const,
           isEmpty: false,
           id: `fuel-${i}`
         })),
         ...Array.from({ length: 3 }, (_, i) => ({
           row: 1,
           col: i,
-          type: 'coffee' as const,
+          type: 'hotdog' as const,
           isEmpty: false,
           id: `coffee-${i}`
         }))
@@ -286,7 +286,7 @@ describe('LevelManager', () => {
         goals: [
           {
             type: 'collect' as const,
-            item: 'fuel' as const,
+            item: 'burger' as const,
             count: 3,
             current: 0,
             description: 'Collect 3 fuel'
@@ -300,7 +300,7 @@ describe('LevelManager', () => {
       const fuelTiles: TileData[] = Array.from({ length: 3 }, (_, i) => ({
         row: 0,
         col: i,
-        type: 'fuel' as const,
+        type: 'burger' as const,
         isEmpty: false,
         id: `fuel-${i}`
       }));
@@ -316,7 +316,7 @@ describe('LevelManager', () => {
         goals: [
           {
             type: 'collect' as const,
-            item: 'fuel' as const,
+            item: 'burger' as const,
             count: 3,
             current: 0,
             description: 'Collect 3 fuel'
@@ -330,7 +330,7 @@ describe('LevelManager', () => {
       const fuelTiles: TileData[] = Array.from({ length: 3 }, (_, i) => ({
         row: 0,
         col: i,
-        type: 'fuel' as const,
+        type: 'burger' as const,
         isEmpty: false,
         id: `fuel-${i}`
       }));
@@ -347,7 +347,7 @@ describe('LevelManager', () => {
         goals: [
           {
             type: 'collect' as const,
-            item: 'fuel' as const,
+            item: 'burger' as const,
             count: 20,
             current: 0,
             description: 'Collect 20 fuel'
@@ -361,7 +361,7 @@ describe('LevelManager', () => {
       const fuelTiles: TileData[] = Array.from({ length: 3 }, (_, i) => ({
         row: 0,
         col: i,
-        type: 'fuel' as const,
+        type: 'burger' as const,
         isEmpty: false,
         id: `fuel-${i}`
       }));
@@ -378,7 +378,7 @@ describe('LevelManager', () => {
         goals: [
           {
             type: 'collect' as const,
-            item: 'fuel' as const,
+            item: 'burger' as const,
             count: 3,
             current: 0,
             description: 'Collect 3 fuel'
@@ -392,7 +392,7 @@ describe('LevelManager', () => {
       const fuelTiles: TileData[] = Array.from({ length: 3 }, (_, i) => ({
         row: 0,
         col: i,
-        type: 'fuel' as const,
+        type: 'burger' as const,
         isEmpty: false,
         id: `fuel-${i}`
       }));

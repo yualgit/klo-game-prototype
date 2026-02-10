@@ -4,10 +4,12 @@ import { SpawnRules, TileType } from './types';
 describe('Match3Engine', () => {
   let engine: Match3Engine;
   const defaultSpawnRules: SpawnRules = {
-    fuel: 0.25,
-    coffee: 0.25,
-    snack: 0.25,
-    road: 0.25,
+    burger: 0.17,
+    hotdog: 0.17,
+    oil: 0.17,
+    water: 0.16,
+    snack: 0.17,
+    soda: 0.16,
   };
 
   beforeEach(() => {
@@ -73,9 +75,9 @@ describe('Match3Engine', () => {
       const grid = engine.getGrid();
 
       // Manually set 3 in a row
-      grid[0][0].type = 'fuel';
-      grid[0][1].type = 'fuel';
-      grid[0][2].type = 'fuel';
+      grid[0][0].type = 'burger';
+      grid[0][1].type = 'burger';
+      grid[0][2].type = 'burger';
 
       const matches = engine.findMatches();
       expect(matches.length).toBeGreaterThan(0);
@@ -88,9 +90,9 @@ describe('Match3Engine', () => {
       const grid = engine.getGrid();
 
       // Manually set 3 in a column
-      grid[0][0].type = 'coffee';
-      grid[1][0].type = 'coffee';
-      grid[2][0].type = 'coffee';
+      grid[0][0].type = 'hotdog';
+      grid[1][0].type = 'hotdog';
+      grid[2][0].type = 'hotdog';
 
       const matches = engine.findMatches();
       expect(matches.length).toBeGreaterThan(0);
@@ -120,14 +122,14 @@ describe('Match3Engine', () => {
       // Clear grid with non-matching pattern to avoid random matches
       for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
-          grid[row][col].type = ((row + col) % 2 === 0) ? 'fuel' : 'coffee';
+          grid[row][col].type = ((row + col) % 2 === 0) ? 'burger' : 'hotdog';
         }
       }
 
       // Set pattern: fuel, road, fuel (non-adjacent fuels)
-      grid[0][0].type = 'fuel';
-      grid[0][1].type = 'road';
-      grid[0][2].type = 'fuel';
+      grid[0][0].type = 'burger';
+      grid[0][1].type = 'oil';
+      grid[0][2].type = 'burger';
 
       const matches = engine.findMatches();
       const fuelMatches = matches.filter(m =>
@@ -142,9 +144,9 @@ describe('Match3Engine', () => {
       engine.generateGrid(defaultSpawnRules);
       const grid = engine.getGrid();
 
-      grid[0][0].type = 'fuel';
-      grid[0][1].type = 'fuel';
-      grid[0][2].type = 'fuel';
+      grid[0][0].type = 'burger';
+      grid[0][1].type = 'burger';
+      grid[0][2].type = 'burger';
 
       const matches = engine.findMatches();
       engine.removeMatches(matches);
@@ -211,10 +213,12 @@ describe('Match3Engine', () => {
 
     test('respects spawn rules probabilities', () => {
       const customRules: SpawnRules = {
-        fuel: 1.0,
-        coffee: 0,
+        burger: 1.0,
+        hotdog: 0,
+        oil: 0,
+        water: 0,
         snack: 0,
-        road: 0,
+        soda: 0,
       };
 
       engine.generateGrid(customRules);
@@ -223,7 +227,7 @@ describe('Match3Engine', () => {
       // All tiles should be fuel
       grid.forEach(row => {
         row.forEach(tile => {
-          expect(tile.type).toBe('fuel');
+          expect(tile.type).toBe('burger');
         });
       });
     });
@@ -249,15 +253,15 @@ describe('Match3Engine', () => {
       // C S F
       // S F C
       // No adjacent swap creates 3-in-a-row
-      grid[0][0].type = 'fuel';
-      grid[0][1].type = 'coffee';
+      grid[0][0].type = 'burger';
+      grid[0][1].type = 'hotdog';
       grid[0][2].type = 'snack';
-      grid[1][0].type = 'coffee';
+      grid[1][0].type = 'hotdog';
       grid[1][1].type = 'snack';
-      grid[1][2].type = 'fuel';
+      grid[1][2].type = 'burger';
       grid[2][0].type = 'snack';
-      grid[2][1].type = 'fuel';
-      grid[2][2].type = 'coffee';
+      grid[2][1].type = 'burger';
+      grid[2][2].type = 'hotdog';
 
       for (let row = 0; row < 3; row++) {
         for (let col = 0; col < 3; col++) {
@@ -289,9 +293,9 @@ describe('Match3Engine', () => {
       const grid = engine.getGrid();
 
       // Create a match
-      grid[0][0].type = 'fuel';
-      grid[0][1].type = 'fuel';
-      grid[0][2].type = 'fuel';
+      grid[0][0].type = 'burger';
+      grid[0][1].type = 'burger';
+      grid[0][2].type = 'burger';
 
       const result = engine.processTurn();
 
@@ -306,7 +310,7 @@ describe('Match3Engine', () => {
 
       // Create vertical matches that could cascade
       for (let row = 0; row < 8; row++) {
-        grid[row][0].type = 'fuel';
+        grid[row][0].type = 'burger';
       }
 
       const result = engine.processTurn();
@@ -340,7 +344,7 @@ describe('Match3Engine', () => {
       // Clear grid with non-matching pattern
       for (let row = 0; row < 5; row++) {
         for (let col = 0; col < 5; col++) {
-          grid[row][col].type = ((row + col) % 2 === 0) ? 'fuel' : 'coffee';
+          grid[row][col].type = ((row + col) % 2 === 0) ? 'burger' : 'hotdog';
         }
       }
 
@@ -368,15 +372,15 @@ describe('Match3Engine', () => {
       // Clear grid with non-matching pattern
       for (let row = 0; row < 5; row++) {
         for (let col = 0; col < 5; col++) {
-          grid[row][col].type = ((row + col) % 2 === 0) ? 'fuel' : 'coffee';
+          grid[row][col].type = ((row + col) % 2 === 0) ? 'burger' : 'hotdog';
         }
       }
 
       // Set grid rows 0-3 col 0 to same type
-      grid[0][0].type = 'road';
-      grid[1][0].type = 'road';
-      grid[2][0].type = 'road';
-      grid[3][0].type = 'road';
+      grid[0][0].type = 'oil';
+      grid[1][0].type = 'oil';
+      grid[2][0].type = 'oil';
+      grid[3][0].type = 'oil';
 
       const result = testEngine.findMatchesWithBoosters();
 
@@ -385,7 +389,7 @@ describe('Match3Engine', () => {
       expect(result.boostersToSpawn[0].col).toBe(0);
       // Spawn position at middle (row 1 or 2 of 4 tiles)
       expect([1, 2]).toContain(result.boostersToSpawn[0].row);
-      expect(result.boostersToSpawn[0].baseType).toBe('road');
+      expect(result.boostersToSpawn[0].baseType).toBe('oil');
     });
 
     test('5-in-a-row creates klo_sphere booster', () => {
@@ -396,7 +400,7 @@ describe('Match3Engine', () => {
       // Clear grid with non-matching pattern
       for (let row = 0; row < 5; row++) {
         for (let col = 0; col < 6; col++) {
-          grid[row][col].type = ((row + col) % 2 === 0) ? 'fuel' : 'coffee';
+          grid[row][col].type = ((row + col) % 2 === 0) ? 'burger' : 'hotdog';
         }
       }
 
@@ -424,18 +428,18 @@ describe('Match3Engine', () => {
       // Clear grid with non-matching pattern
       for (let row = 0; row < 6; row++) {
         for (let col = 0; col < 6; col++) {
-          grid[row][col].type = ((row + col) % 2 === 0) ? 'fuel' : 'coffee';
+          grid[row][col].type = ((row + col) % 2 === 0) ? 'burger' : 'hotdog';
         }
       }
 
       // Set up horizontal match (row 2, cols 2-4)
-      grid[2][2].type = 'road';
-      grid[2][3].type = 'road';
-      grid[2][4].type = 'road';
+      grid[2][2].type = 'oil';
+      grid[2][3].type = 'oil';
+      grid[2][4].type = 'oil';
 
       // Set up vertical match (rows 2-4, col 2)
-      grid[3][2].type = 'road';
-      grid[4][2].type = 'road';
+      grid[3][2].type = 'oil';
+      grid[4][2].type = 'oil';
 
       const result = testEngine.findMatchesWithBoosters();
 
@@ -443,7 +447,7 @@ describe('Match3Engine', () => {
       expect(result.boostersToSpawn[0].boosterType).toBe('bomb');
       expect(result.boostersToSpawn[0].row).toBe(2);
       expect(result.boostersToSpawn[0].col).toBe(2); // Intersection position
-      expect(result.boostersToSpawn[0].baseType).toBe('road');
+      expect(result.boostersToSpawn[0].baseType).toBe('oil');
     });
 
     test('3-in-a-row creates no booster', () => {
@@ -454,7 +458,7 @@ describe('Match3Engine', () => {
       // Clear grid with non-matching pattern
       for (let row = 0; row < 5; row++) {
         for (let col = 0; col < 5; col++) {
-          grid[row][col].type = ((row + col) % 2 === 0) ? 'fuel' : 'coffee';
+          grid[row][col].type = ((row + col) % 2 === 0) ? 'burger' : 'hotdog';
         }
       }
 
@@ -477,20 +481,20 @@ describe('Match3Engine', () => {
       // Clear grid with non-matching pattern
       for (let row = 0; row < 5; row++) {
         for (let col = 0; col < 5; col++) {
-          grid[row][col].type = ((row + col) % 2 === 0) ? 'fuel' : 'snack';
+          grid[row][col].type = ((row + col) % 2 === 0) ? 'burger' : 'snack';
         }
       }
 
       // Set 4-in-a-row
-      grid[0][0].type = 'coffee';
-      grid[0][1].type = 'coffee';
-      grid[0][2].type = 'coffee';
-      grid[0][3].type = 'coffee';
+      grid[0][0].type = 'hotdog';
+      grid[0][1].type = 'hotdog';
+      grid[0][2].type = 'hotdog';
+      grid[0][3].type = 'hotdog';
 
       const result = testEngine.findMatchesWithBoosters();
 
       expect(result.tilesToRemove.length).toBe(4);
-      expect(result.tilesToRemove.every(t => t.type === 'coffee')).toBe(true);
+      expect(result.tilesToRemove.every(t => t.type === 'hotdog')).toBe(true);
       expect(result.tilesToRemove.every(t => t.row === 0)).toBe(true);
     });
   });
@@ -504,9 +508,9 @@ describe('Match3Engine', () => {
       grid[3][3].obstacle = { type: 'ice', layers: 2 };
 
       // Create a match adjacent to ice at (3,2), (3,1), (3,0)
-      grid[3][0].type = 'fuel';
-      grid[3][1].type = 'fuel';
-      grid[3][2].type = 'fuel';
+      grid[3][0].type = 'burger';
+      grid[3][1].type = 'burger';
+      grid[3][2].type = 'burger';
 
       const matches = engine.findMatches();
       const damaged = engine.damageObstacles(matches);
@@ -524,9 +528,9 @@ describe('Match3Engine', () => {
       grid[3][3].obstacle = { type: 'ice', layers: 1 };
 
       // Create adjacent match
-      grid[3][0].type = 'coffee';
-      grid[3][1].type = 'coffee';
-      grid[3][2].type = 'coffee';
+      grid[3][0].type = 'hotdog';
+      grid[3][1].type = 'hotdog';
+      grid[3][2].type = 'hotdog';
 
       const matches = engine.findMatches();
       engine.damageObstacles(matches);
@@ -547,7 +551,7 @@ describe('Match3Engine', () => {
       grid[4][2].type = 'snack';
       grid[4][3].type = 'snack';
       // Ensure cols 0 and 4 are NOT snack to keep match exactly 3
-      grid[4][0].type = 'fuel';
+      grid[4][0].type = 'burger';
 
       const matches = engine.findMatches();
       engine.damageObstacles(matches);
@@ -564,9 +568,9 @@ describe('Match3Engine', () => {
       grid[2][3].obstacle = { type: 'crate', layers: 3 };
 
       // Create adjacent match (horizontal)
-      grid[2][4].type = 'road';
-      grid[2][5].type = 'road';
-      grid[2][6].type = 'road';
+      grid[2][4].type = 'oil';
+      grid[2][5].type = 'oil';
+      grid[2][6].type = 'oil';
 
       const matches = engine.findMatches();
       engine.damageObstacles(matches);
@@ -585,9 +589,9 @@ describe('Match3Engine', () => {
       grid[5][5].isEmpty = true;
 
       // Create adjacent match
-      grid[5][2].type = 'fuel';
-      grid[5][3].type = 'fuel';
-      grid[5][4].type = 'fuel';
+      grid[5][2].type = 'burger';
+      grid[5][3].type = 'burger';
+      grid[5][4].type = 'burger';
 
       const matches = engine.findMatches();
       engine.damageObstacles(matches);
@@ -605,9 +609,9 @@ describe('Match3Engine', () => {
       grid[3][3].obstacle = { type: 'ice', layers: 1 };
 
       // Create adjacent match
-      grid[3][0].type = 'coffee';
-      grid[3][1].type = 'coffee';
-      grid[3][2].type = 'coffee';
+      grid[3][0].type = 'hotdog';
+      grid[3][1].type = 'hotdog';
+      grid[3][2].type = 'hotdog';
 
       const matches = engine.findMatches();
       const damaged = engine.damageObstacles(matches);
@@ -722,10 +726,10 @@ describe('Match3Engine', () => {
       const grid = testEngine.getGrid();
 
       // Place same type on both sides of inactive cell
-      grid[0][0].type = 'fuel';
-      grid[0][1].type = 'fuel';
-      grid[0][3].type = 'fuel';
-      grid[0][4].type = 'fuel';
+      grid[0][0].type = 'burger';
+      grid[0][1].type = 'burger';
+      grid[0][3].type = 'burger';
+      grid[0][4].type = 'burger';
 
       const matches = testEngine.findMatches();
 
@@ -749,7 +753,7 @@ describe('Match3Engine', () => {
 
       // Create empty cell at (2,3) - should fall to (2,3) not (3,3)
       grid[0][3].isEmpty = false;
-      grid[0][3].type = 'fuel';
+      grid[0][3].type = 'burger';
       grid[1][3].isEmpty = true;
       grid[1][3].type = 'empty';
       grid[2][3].isEmpty = true;
@@ -816,9 +820,9 @@ describe('Match3Engine', () => {
       const grid = engine.getGrid();
 
       // Create a match
-      grid[0][0].type = 'fuel';
-      grid[0][1].type = 'fuel';
-      grid[0][2].type = 'fuel';
+      grid[0][0].type = 'burger';
+      grid[0][1].type = 'burger';
+      grid[0][2].type = 'burger';
 
       const result = engine.processTurn();
 
