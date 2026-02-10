@@ -14,10 +14,10 @@ Transform v1.0 MVP (5 levels, basic mechanics) into deeper experience with lives
 
 ## Current Position
 
-**Phase:** 8 - Advanced Level Mechanics (next)
-**Plan:** None (awaiting `/gsd:plan-phase 8`)
-**Status:** Phase 7 verified ✓, Phase 8 pending
-**Progress:** 2/5 phases complete
+**Phase:** 8 - Advanced Level Mechanics (in progress)
+**Plan:** 08-01 complete, 08-02 next
+**Status:** Phase 8 plan 01 complete ✓
+**Progress:** [██████████] 95%
 
 ```
 [████████████████░░░░░░░░░░░░░░░░░░░░░░░░] 40%
@@ -32,15 +32,16 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics (Pending
 - 6 days (Feb 5 — Feb 10, 2026)
 
 **v1.1 Progress:**
-- Velocity: 3 min/plan (4 plans completed)
+- Velocity: 4 min/plan (5 plans completed)
 - Phase Completion Rate: 2/5 phases complete (Phase 6 done, Phase 7 done)
-- Plans Completed: 4/12 total (06-01, 06-02, 07-01, 07-02)
+- Plans Completed: 5/12 total (06-01, 06-02, 07-01, 07-02, 08-01)
 - Requirement Coverage: 23/23 mapped (100%)
 - Active Blockers: 0
 
 **Recent Completions:**
 | Phase-Plan | Duration | Tasks | Files | Completed |
 |------------|----------|-------|-------|-----------|
+| 08-01 | 5min | 2 | 6 | 2026-02-10 |
 | 07-02 | 1min | 1 | 1 | 2026-02-10 |
 | 07-01 | 2min | 2 | 4 | 2026-02-10 |
 | 06-02 | 2min | 2 | 2 | 2026-02-10 |
@@ -71,6 +72,8 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics (Pending
 | Gear icon positioning | x=width-200 avoids overlap with back button and economy HUD | 07-02 | Visual balance |
 | setAlpha(0.001) for invisible hit areas | Phaser skips invisible objects in hit testing — setVisible(false) breaks input | 07-02 | Fix: toggles now respond |
 | Panel interactive to block backdrop | Without it, clicks on panel pass through to backdrop close handler | 07-02 | Fix: dialog stays open |
+| Cell map uses number[][] (1=active, 0=inactive) | Backward compatibility for levels without cell_map | 08-01 | No migration needed for L1-L5 |
+| Inactive cells as blocked obstacles | Reuses existing gravity/spawn skip logic for inactive cells | 08-01 | Clean implementation |
 
 ### Open TODOs
 
@@ -108,19 +111,20 @@ None. All phases ready for planning.
 
 ## Session Continuity
 
-**Last Session:** 2026-02-10
-**Stopped At:** Phase 7 complete — verified and approved by user
+**Last Session:** 2026-02-10T13:21:51.764Z
+**Stopped At:** Completed 08-01-PLAN.md
 
-**Next Action:** Run `/gsd:plan-phase 8` to begin Phase 8: Advanced Level Mechanics planning
+**Next Action:** Execute 08-02-PLAN.md to author L6-L10 levels with variable boards
 
 **Context for Next Session:**
-- Phase 07 complete ✓: Settings system with data layer and UI overlay, human-verified
-- SettingsManager: localStorage persistence, reactive subscriptions, version migration
-- Settings UI: gear icon, modal overlay with SFX toggle, volume slider, animation toggle
-- Bugfix applied: setVisible(false) breaks Phaser hit testing — use setAlpha(0.001) instead
-- Bugfix applied: panel must be interactive to block backdrop close on dialog clicks
-- Phase 7 deliverables: 2 plans, 3 tasks, 5 files, 6 commits
-- Next: Phase 8 — Advanced Level Mechanics (variable boards, 3-state obstacles, L6-L10)
+- Phase 08 plan 01 complete ✓: Cell map support and grass obstacles
+- Match3Engine: isCellActive(), setCellMap(), applyCellMap() for non-rectangular boards
+- All algorithms updated: findMatches, applyGravity, spawnNewTiles, hasValidMoves skip inactive cells
+- Types extended: PrePlacedTile, cell_map, pre_placed_tiles fields added to LevelData
+- ObstacleType renamed: 'dirt' → 'grass' (aligns with grss01/02/03.png assets)
+- 43 tests passing (7 new non-rectangular board tests added)
+- Phase 8 deliverables so far: 1 plan, 2 tasks, 6 files, 2 commits
+- Next: 08-02 — Author L6-L10 with diamond/hexagon/cross shapes and 3-layer grass obstacles
 
 **Files to Reference:**
 - `.planning/ROADMAP.md` — Phase structure, success criteria, dependencies
