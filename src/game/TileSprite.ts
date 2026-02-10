@@ -36,13 +36,17 @@ export class TileSprite extends Phaser.GameObjects.Container {
   private offsetX: number;
   private offsetY: number;
 
+  // Tile size (defaults to constant, can be overridden for responsive sizing)
+  private tileSize: number;
+
   constructor(
     scene: Phaser.Scene,
     row: number,
     col: number,
     type: TileType,
     offsetX: number = DEFAULT_OFFSET_X,
-    offsetY: number = DEFAULT_OFFSET_Y
+    offsetY: number = DEFAULT_OFFSET_Y,
+    tileSize: number = TILE_SIZE
   ) {
     super(scene, 0, 0);
 
@@ -51,12 +55,13 @@ export class TileSprite extends Phaser.GameObjects.Container {
     this.type = type;
     this.offsetX = offsetX;
     this.offsetY = offsetY;
+    this.tileSize = tileSize;
 
     // Create tile image using texture from TEXTURE_KEYS
     const textureKey = TEXTURE_KEYS[type];
     this.tileImage = scene.add.image(0, 0, textureKey);
     // Scale image to fit tile size (assets are large, ~400-500px, need to fit ~60px tile)
-    const targetSize = TILE_SIZE - TILE_GAP;
+    const targetSize = this.tileSize - TILE_GAP;
     this.tileImage.setDisplaySize(targetSize, targetSize);
     this.add(this.tileImage);
 
@@ -85,7 +90,7 @@ export class TileSprite extends Phaser.GameObjects.Container {
     if (this.scene.textures.exists(textureKey)) {
       this.tileImage.setTexture(textureKey);
     }
-    const targetSize = TILE_SIZE - TILE_GAP;
+    const targetSize = this.tileSize - TILE_GAP;
     this.tileImage.setDisplaySize(targetSize, targetSize);
 
     // Selection state: add glow effect via tint
@@ -185,18 +190,30 @@ export class TileSprite extends Phaser.GameObjects.Container {
    * Calculate screen position from grid coordinates.
    */
   private updatePosition(): void {
-    this.x = this.offsetX + this.col * TILE_SIZE + TILE_SIZE / 2;
-    this.y = this.offsetY + this.row * TILE_SIZE + TILE_SIZE / 2;
+    this.x = this.offsetX + this.col * this.tileSize + this.tileSize / 2;
+    this.y = this.offsetY + this.row * this.tileSize + this.tileSize / 2;
   }
 
   /**
    * Set grid offset for positioning calculations.
    * Useful for centering grid on screen.
    */
-  public setOffset(offsetX: number, offsetY: number): void {
+  public setOffset(offsetX: number, offsetY: number, tileSize?: number): void {
     this.offsetX = offsetX;
     this.offsetY = offsetY;
+    if (tileSize !== undefined) {
+      this.tileSize = tileSize;
+      // Redraw with new tile size
+      this.draw();
+    }
     this.updatePosition();
+  }
+
+  /**
+   * Get current tile size for external calculations.
+   */
+  public getTileSize(): number {
+    return this.tileSize;
   }
 
   /**
@@ -226,7 +243,7 @@ export class TileSprite extends Phaser.GameObjects.Container {
     // Create booster image sprite if texture exists
     if (textureKey && this.scene.textures.exists(textureKey)) {
       this.boosterImage = this.scene.add.image(0, 0, textureKey);
-      const targetSize = TILE_SIZE - TILE_GAP;
+      const targetSize = this.tileSize - TILE_GAP;
       this.boosterImage.setDisplaySize(targetSize, targetSize);
       this.add(this.boosterImage);
 
@@ -322,7 +339,7 @@ export class TileSprite extends Phaser.GameObjects.Container {
       return;
     }
 
-    const targetSize = TILE_SIZE - TILE_GAP;
+    const targetSize = this.tileSize - TILE_GAP;
     const halfSize = targetSize / 2;
 
     switch (this.obstacleData.type) {

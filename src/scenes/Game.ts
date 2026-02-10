@@ -15,6 +15,7 @@ import { ProgressManager } from '../game/ProgressManager';
 import { EconomyManager } from '../game/EconomyManager';
 import { AudioManager } from '../game/AudioManager';
 import { VFXManager } from '../game/VFXManager';
+import { getResponsiveLayout, cssToGame } from '../utils/responsive';
 
 // Design constants from STYLE_GUIDE.md
 const KLO_YELLOW = 0xffb800;
@@ -54,6 +55,9 @@ export class Game extends Phaser.Scene {
   private gridWidth: number;
   private gridHeight: number;
 
+  // Responsive layout
+  private layout: ReturnType<typeof getResponsiveLayout>;
+
   // VFX and Audio
   private audioManager: AudioManager;
   private vfxManager: VFXManager;
@@ -75,6 +79,9 @@ export class Game extends Phaser.Scene {
   create(): void {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
+
+    // Compute responsive layout
+    this.layout = getResponsiveLayout(width, height);
 
     // Fade in from black
     this.cameras.main.fadeIn(300, 0, 0, 0);
@@ -111,11 +118,11 @@ export class Game extends Phaser.Scene {
     this.gridWidth = this.levelData.grid.width;
     this.gridHeight = this.levelData.grid.height;
 
-    // Calculate grid offsets (center on screen with HUD offset)
-    const gridPixelWidth = this.gridWidth * TILE_SIZE;
-    const gridPixelHeight = this.gridHeight * TILE_SIZE;
+    // Calculate grid offsets using responsive tile size
+    const gridPixelWidth = this.gridWidth * this.layout.tileSize;
+    const gridPixelHeight = this.gridHeight * this.layout.tileSize;
     this.gridOffsetX = (width - gridPixelWidth) / 2;
-    this.gridOffsetY = (height - gridPixelHeight) / 2 + 30; // Offset for HUD
+    this.gridOffsetY = this.layout.hudHeight + cssToGame(10); // HUD at top + padding
 
     // Initialize engine and generate grid
     this.engine = new Match3Engine(this.gridHeight, this.gridWidth);
@@ -204,14 +211,17 @@ export class Game extends Phaser.Scene {
   }
 
   private createHUD(width: number): void {
-    // HUD background with styled bar
+    // HUD background with styled bar (responsive height)
     this.hudBg = this.add.graphics();
     this.hudBg.fillStyle(0xFFB800, 0.15);
-    this.hudBg.fillRoundedRect(8, 8, width - 16, 52, 8);
+    const padding = cssToGame(4);
+    this.hudBg.fillRoundedRect(padding * 2, padding * 2, width - padding * 4, this.layout.hudHeight - padding * 4, cssToGame(4));
 
-    // Add KLO branding stripe on left
+    // Add KLO branding stripe on left (proportional)
     this.hudBg.fillStyle(KLO_YELLOW, 1);
-    this.hudBg.fillRoundedRect(12, 12, 4, 44, 2);
+    const stripeWidth = cssToGame(2);
+    const stripeHeight = this.layout.hudHeight - padding * 6;
+    this.hudBg.fillRoundedRect(padding * 3, padding * 3, stripeWidth, stripeHeight, cssToGame(1));
 
     // Initial HUD text
     this.updateHUDText(width);
@@ -235,9 +245,9 @@ export class Game extends Phaser.Scene {
     const text = `Рівень ${this.currentLevel}  •  Ходи: ${moves}  •  ${goalText}`;
 
     if (!this.hudText) {
-      this.hudText = this.add.text(width / 2, 34, text, {
+      this.hudText = this.add.text(width / 2, this.layout.hudHeight / 2, text, {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '16px',
+        fontSize: `${this.layout.hudFontSize}px`,
         color: '#1A1A1A',
         fontStyle: 'bold',
       });
@@ -302,15 +312,15 @@ export class Game extends Phaser.Scene {
       duration: 200,
     });
 
-    // Panel background
-    const panelW = 400;
-    const panelH = this.currentLevel === 10 ? 400 : 320;
+    // Panel background (responsive width)
+    const panelW = this.layout.overlayPanelWidth;
+    const panelH = this.currentLevel === 10 ? cssToGame(400) : cssToGame(320);
     const panelX = (width - panelW) / 2;
     const panelY = (height - panelH) / 2;
 
     const panel = this.add.graphics();
     panel.fillStyle(KLO_WHITE, 1);
-    panel.fillRoundedRect(0, 0, panelW, panelH, 16);
+    panel.fillRoundedRect(0, 0, panelW, panelH, cssToGame(8));
 
     // Panel container starts above screen and slides in
     const panelContainer = this.add.container(panelX, -panelH);
@@ -329,9 +339,9 @@ export class Game extends Phaser.Scene {
     });
 
     // Title
-    const titleText = this.add.text(panelW / 2, 40, 'Рівень пройдено!', {
+    const titleText = this.add.text(panelW / 2, cssToGame(20), 'Рівень пройдено!', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '32px',
+      fontSize: `${this.layout.overlayTitleSize}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
@@ -340,21 +350,21 @@ export class Game extends Phaser.Scene {
 
     // Crown icon for 3-star completion
     if (earnedStars === 3) {
-      const crown = this.add.image(panelW / 2, 80, GUI_TEXTURE_KEYS.crown1);
-      crown.setDisplaySize(40, 40);
+      const crown = this.add.image(panelW / 2, cssToGame(40), GUI_TEXTURE_KEYS.crown1);
+      crown.setDisplaySize(cssToGame(20), cssToGame(20));
       panelContainer.add(crown);
     }
 
     // Animated star reveal - stars appear one by one
-    const starY = earnedStars === 3 ? 120 : 90;
-    const starSpacing = 60;
+    const starY = earnedStars === 3 ? cssToGame(60) : cssToGame(45);
+    const starSpacing = cssToGame(30);
     const starStartX = panelW / 2 - starSpacing;
 
     for (let i = 0; i < 3; i++) {
       const filled = i < earnedStars;
       const starText = this.add.text(starStartX + i * starSpacing, starY, filled ? '★' : '☆', {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '48px',
+        fontSize: `${cssToGame(24)}px`,
         color: filled ? '#FFB800' : '#CCCCCC',
       });
       starText.setOrigin(0.5);
@@ -375,44 +385,47 @@ export class Game extends Phaser.Scene {
     // Lives display (informational - no life lost on win)
     const economyMgr = this.registry.get('economy') as EconomyManager;
     const currentLives = economyMgr.getLives();
-    const livesDisplay = this.add.text(panelW / 2, starY + 50, `❤ ${currentLives}/5`, {
+    const livesDisplay = this.add.text(panelW / 2, starY + cssToGame(25), `❤ ${currentLives}/5`, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '18px',
+      fontSize: `${this.layout.overlaySubtitleSize}px`,
       color: '#FFB800',
     });
     livesDisplay.setOrigin(0.5);
     panelContainer.add(livesDisplay);
 
-    let nextButtonY = 200;
+    let nextButtonY = cssToGame(100);
 
     // Coupon display for level 10
     if (this.currentLevel === 10) {
       const couponBg = this.add.graphics();
+      const couponPadding = cssToGame(20);
+      const couponHeight = cssToGame(45);
+      const couponY = cssToGame(90);
       couponBg.fillStyle(KLO_YELLOW, 1);
-      couponBg.lineStyle(3, 0xFFD700, 1);
-      couponBg.fillRoundedRect(40, 180, panelW - 80, 90, 12);
-      couponBg.strokeRoundedRect(40, 180, panelW - 80, 90, 12);
+      couponBg.lineStyle(cssToGame(1.5), 0xFFD700, 1);
+      couponBg.fillRoundedRect(couponPadding, couponY, panelW - couponPadding * 2, couponHeight, cssToGame(6));
+      couponBg.strokeRoundedRect(couponPadding, couponY, panelW - couponPadding * 2, couponHeight, cssToGame(6));
       panelContainer.add(couponBg);
 
-      const couponTitle = this.add.text(panelW / 2, 200, 'Ваш купон:', {
+      const couponTitle = this.add.text(panelW / 2, couponY + cssToGame(10), 'Ваш купон:', {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '18px',
+        fontSize: `${this.layout.overlaySubtitleSize}px`,
         color: '#1A1A1A',
         fontStyle: 'bold',
       });
       couponTitle.setOrigin(0.5);
       panelContainer.add(couponTitle);
 
-      const couponText = this.add.text(panelW / 2, 235, '🎁 Безкоштовна кава S', {
+      const couponText = this.add.text(panelW / 2, couponY + cssToGame(27.5), '🎁 Безкоштовна кава S', {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '22px',
+        fontSize: `${cssToGame(18)}px`,
         color: '#1A1A1A',
         fontStyle: 'bold',
       });
       couponText.setOrigin(0.5);
       panelContainer.add(couponText);
 
-      nextButtonY = 290;
+      nextButtonY = cssToGame(145);
     }
 
     // "Далі" button → next level or LevelSelect
@@ -430,7 +443,7 @@ export class Game extends Phaser.Scene {
 
     // "Рівні" button → LevelSelect (only when not last level)
     if (!isLastLevel) {
-      const levelsBtn = this.createOverlayButton(panelW / 2, nextButtonY + 60, 'Рівні', () => {
+      const levelsBtn = this.createOverlayButton(panelW / 2, nextButtonY + cssToGame(30), 'Рівні', () => {
         this.scene.start('LevelSelect');
       }, true);
       panelContainer.add(levelsBtn);
@@ -466,15 +479,15 @@ export class Game extends Phaser.Scene {
       duration: 200,
     });
 
-    // Panel background
-    const panelW = 400;
-    const panelH = 380;
+    // Panel background (responsive width)
+    const panelW = this.layout.overlayPanelWidth;
+    const panelH = cssToGame(190);
     const panelX = (width - panelW) / 2;
     const panelY = (height - panelH) / 2;
 
     const panel = this.add.graphics();
     panel.fillStyle(KLO_WHITE, 1);
-    panel.fillRoundedRect(0, 0, panelW, panelH, 16);
+    panel.fillRoundedRect(0, 0, panelW, panelH, cssToGame(8));
 
     // Panel container starts above screen and slides in
     const panelContainer = this.add.container(panelX, -panelH);
@@ -488,9 +501,9 @@ export class Game extends Phaser.Scene {
     });
 
     // Title (motivational tone)
-    const titleText = this.add.text(panelW / 2, 50, 'Ходи закінчились!', {
+    const titleText = this.add.text(panelW / 2, cssToGame(25), 'Ходи закінчились!', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '32px',
+      fontSize: `${this.layout.overlayTitleSize}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
@@ -498,9 +511,9 @@ export class Game extends Phaser.Scene {
     panelContainer.add(titleText);
 
     // Subtitle
-    const subtitle = this.add.text(panelW / 2, 95, 'Спробуйте ще раз!', {
+    const subtitle = this.add.text(panelW / 2, cssToGame(47.5), 'Спробуйте ще раз!', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '18px',
+      fontSize: `${this.layout.overlaySubtitleSize}px`,
       color: '#666666',
     });
     subtitle.setOrigin(0.5);
@@ -508,9 +521,9 @@ export class Game extends Phaser.Scene {
 
     // Lives remaining display
     const livesRemaining = economy.getLives();
-    const livesInfo = this.add.text(panelW / 2, 130, `Залишилось життів: ${livesRemaining}/5`, {
+    const livesInfo = this.add.text(panelW / 2, cssToGame(65), `Залишилось життів: ${livesRemaining}/5`, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '18px',
+      fontSize: `${this.layout.overlaySubtitleSize}px`,
       color: '#FFB800',
       fontStyle: 'bold',
     });
@@ -518,7 +531,7 @@ export class Game extends Phaser.Scene {
     panelContainer.add(livesInfo);
 
     // "Повторити" button → restart same level (with lives check)
-    const retryBtn = this.createOverlayButton(panelW / 2, 180, 'Повторити', () => {
+    const retryBtn = this.createOverlayButton(panelW / 2, cssToGame(90), 'Повторити', () => {
       const eco = this.registry.get('economy') as EconomyManager;
       if (!eco.canStartLevel()) {
         // Show inline refill option instead of restarting
@@ -530,7 +543,7 @@ export class Game extends Phaser.Scene {
     panelContainer.add(retryBtn);
 
     // "Меню" button → LevelSelect
-    const menuBtn = this.createOverlayButton(panelW / 2, 240, 'Меню', () => {
+    const menuBtn = this.createOverlayButton(panelW / 2, cssToGame(120), 'Меню', () => {
       this.scene.start('LevelSelect');
     }, true);
     panelContainer.add(menuBtn);
@@ -544,9 +557,9 @@ export class Game extends Phaser.Scene {
     const canRefill = economy.getBonuses() >= 15;
 
     // Add refill message
-    const msg = this.add.text(panelW / 2, 290, canRefill ? 'Поповнити життя?' : 'Недостатньо бонусів', {
+    const msg = this.add.text(panelW / 2, cssToGame(145), canRefill ? 'Поповнити життя?' : 'Недостатньо бонусів', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '18px',
+      fontSize: `${this.layout.overlaySubtitleSize}px`,
       color: canRefill ? '#1A1A1A' : '#999999',
       fontStyle: 'bold',
     });
@@ -554,7 +567,7 @@ export class Game extends Phaser.Scene {
     panelContainer.add(msg);
 
     if (canRefill) {
-      const refillBtn = this.createOverlayButton(panelW / 2, 330, 'Поповнити (15)', async () => {
+      const refillBtn = this.createOverlayButton(panelW / 2, cssToGame(165), 'Поповнити (15)', async () => {
         const success = await economy.spendBonusesForRefill();
         if (success) {
           this.scene.start('Game', { levelId: this.currentLevel });
@@ -574,8 +587,8 @@ export class Game extends Phaser.Scene {
     onClick: () => void,
     secondary: boolean = false
   ): Phaser.GameObjects.Container {
-    const buttonWidth = 200;
-    const buttonHeight = 50;
+    const buttonWidth = this.layout.buttonWidth;
+    const buttonHeight = this.layout.buttonHeight;
 
     // Use GUI sprite background
     const bg = this.add.image(0, 0, secondary ? GUI_TEXTURE_KEYS.buttonYellow : GUI_TEXTURE_KEYS.buttonOrange);
@@ -583,7 +596,7 @@ export class Game extends Phaser.Scene {
 
     const text = this.add.text(0, 0, label, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '22px',
+      fontSize: `${this.layout.buttonFontSize}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
@@ -602,8 +615,8 @@ export class Game extends Phaser.Scene {
   }
 
   private createBackButton(): void {
-    const buttonWidth = 100;
-    const buttonHeight = 40;
+    const buttonWidth = this.layout.backButtonWidth;
+    const buttonHeight = this.layout.backButtonHeight;
 
     // Button background using GUI sprite
     const buttonBg = this.add.image(0, 0, GUI_TEXTURE_KEYS.buttonYellow);
@@ -612,13 +625,15 @@ export class Game extends Phaser.Scene {
     // Button text
     const buttonText = this.add.text(0, 0, '< Menu', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '18px',
+      fontSize: `${this.layout.backButtonFontSize}px`,
       color: '#1A1A1A',
     });
     buttonText.setOrigin(0.5);
 
-    // Create container for button
-    this.backButton = this.add.container(70, 30, [buttonBg, buttonText]);
+    // Create container for button (position relative to HUD area)
+    const buttonX = cssToGame(35) + buttonWidth / 2;
+    const buttonY = this.layout.hudHeight / 2;
+    this.backButton = this.add.container(buttonX, buttonY, [buttonBg, buttonText]);
     this.backButton.setSize(buttonWidth, buttonHeight);
     this.backButton.setInteractive({ useHandCursor: true });
 
@@ -638,28 +653,30 @@ export class Game extends Phaser.Scene {
   }
 
   private drawGridBackground(): void {
-    const gridPixelWidth = this.gridWidth * TILE_SIZE;
-    const gridPixelHeight = this.gridHeight * TILE_SIZE;
+    const gridPixelWidth = this.gridWidth * this.layout.tileSize;
+    const gridPixelHeight = this.gridHeight * this.layout.tileSize;
 
     // Board background with shadow and polished style
     this.gridShadowGraphics = this.add.graphics();
     this.gridShadowGraphics.fillStyle(0x000000, 0.08);
+    const shadowPadding = cssToGame(6);
     this.gridShadowGraphics.fillRoundedRect(
-      this.gridOffsetX - 12,
-      this.gridOffsetY - 12,
-      gridPixelWidth + 24,
-      gridPixelHeight + 24,
-      16
+      this.gridOffsetX - shadowPadding,
+      this.gridOffsetY - shadowPadding,
+      gridPixelWidth + shadowPadding * 2,
+      gridPixelHeight + shadowPadding * 2,
+      cssToGame(8)
     );
 
     this.gridBoardGraphics = this.add.graphics();
     this.gridBoardGraphics.fillStyle(0xFFFFFF, 0.6);
+    const boardPadding = cssToGame(4);
     this.gridBoardGraphics.fillRoundedRect(
-      this.gridOffsetX - 8,
-      this.gridOffsetY - 8,
-      gridPixelWidth + 16,
-      gridPixelHeight + 16,
-      14
+      this.gridOffsetX - boardPadding,
+      this.gridOffsetY - boardPadding,
+      gridPixelWidth + boardPadding * 2,
+      gridPixelHeight + boardPadding * 2,
+      cssToGame(7)
     );
 
     // Inactive cell rendering: block sprites or transparent mask
@@ -672,20 +689,20 @@ export class Game extends Phaser.Scene {
         if (!this.engine.isCellActive(row, col)) {
           if (inactiveStyle === 'block') {
             // Place block sprite
-            const x = this.gridOffsetX + col * TILE_SIZE + TILE_SIZE / 2;
-            const y = this.gridOffsetY + row * TILE_SIZE + TILE_SIZE / 2;
+            const x = this.gridOffsetX + col * this.layout.tileSize + this.layout.tileSize / 2;
+            const y = this.gridOffsetY + row * this.layout.tileSize + this.layout.tileSize / 2;
             const blockSprite = this.add.image(x, y, BLOCK_TEXTURE_KEY);
-            blockSprite.setDisplaySize(TILE_SIZE, TILE_SIZE);
+            blockSprite.setDisplaySize(this.layout.tileSize, this.layout.tileSize);
             blockSprite.setDepth(0); // Same depth as board, under tiles
             this.blockSprites.push(blockSprite);
           } else {
             // Transparent: mask with bg color
             this.gridMaskGraphics.fillStyle(0xFFFBF0, 1);
             this.gridMaskGraphics.fillRect(
-              this.gridOffsetX + col * TILE_SIZE,
-              this.gridOffsetY + row * TILE_SIZE,
-              TILE_SIZE,
-              TILE_SIZE
+              this.gridOffsetX + col * this.layout.tileSize,
+              this.gridOffsetY + row * this.layout.tileSize,
+              this.layout.tileSize,
+              this.layout.tileSize
             );
           }
         }
@@ -718,14 +735,15 @@ export class Game extends Phaser.Scene {
         // Engine should never generate empty tiles, but safeguard
         const tileType = (tileData.type === 'empty' ? 'burger' : tileData.type) as 'burger' | 'hotdog' | 'oil' | 'water' | 'snack' | 'soda';
 
-        // Create TileSprite
+        // Create TileSprite with responsive tile size
         const tile = new TileSprite(
           this,
           row,
           col,
           tileType,
           this.gridOffsetX,
-          this.gridOffsetY
+          this.gridOffsetY,
+          this.layout.tileSize
         );
 
         // Set initial booster and obstacle visuals
@@ -734,10 +752,10 @@ export class Game extends Phaser.Scene {
 
         // Make interactive - Containers need explicit hit area
         const hitArea = new Phaser.Geom.Rectangle(
-          -TILE_SIZE / 2,
-          -TILE_SIZE / 2,
-          TILE_SIZE,
-          TILE_SIZE
+          -this.layout.tileSize / 2,
+          -this.layout.tileSize / 2,
+          this.layout.tileSize,
+          this.layout.tileSize
         );
         tile.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
 
@@ -841,8 +859,8 @@ export class Game extends Phaser.Scene {
    * Get tile at pointer position
    */
   private getTileAtPointer(pointer: Phaser.Input.Pointer): TileSprite | null {
-    const col = Math.floor((pointer.x - this.gridOffsetX) / TILE_SIZE);
-    const row = Math.floor((pointer.y - this.gridOffsetY) / TILE_SIZE);
+    const col = Math.floor((pointer.x - this.gridOffsetX) / this.layout.tileSize);
+    const row = Math.floor((pointer.y - this.gridOffsetY) / this.layout.tileSize);
 
     if (row >= 0 && row < this.gridHeight && col >= 0 && col < this.gridWidth) {
       // Skip inactive cells
@@ -895,15 +913,15 @@ export class Game extends Phaser.Scene {
     await Promise.all([
       this.tweenAsync({
         targets: tile1,
-        x: this.gridOffsetX + tile2.col * TILE_SIZE + TILE_SIZE / 2,
-        y: this.gridOffsetY + tile2.row * TILE_SIZE + TILE_SIZE / 2,
+        x: this.gridOffsetX + tile2.col * this.layout.tileSize + this.layout.tileSize / 2,
+        y: this.gridOffsetY + tile2.row * this.layout.tileSize + this.layout.tileSize / 2,
         duration: 150,
         ease: 'Back.Out',
       }),
       this.tweenAsync({
         targets: tile2,
-        x: this.gridOffsetX + tile1.col * TILE_SIZE + TILE_SIZE / 2,
-        y: this.gridOffsetY + tile1.row * TILE_SIZE + TILE_SIZE / 2,
+        x: this.gridOffsetX + tile1.col * this.layout.tileSize + this.layout.tileSize / 2,
+        y: this.gridOffsetY + tile1.row * this.layout.tileSize + this.layout.tileSize / 2,
         duration: 150,
         ease: 'Back.Out',
       }),
@@ -933,8 +951,8 @@ export class Game extends Phaser.Scene {
       console.log('[Game] Booster combo detected');
 
       // Add booster combo VFX (use sphere wave for dramatic effect)
-      const comboX = this.gridOffsetX + tile1.col * TILE_SIZE + TILE_SIZE / 2;
-      const comboY = this.gridOffsetY + tile1.row * TILE_SIZE + TILE_SIZE / 2;
+      const comboX = this.gridOffsetX + tile1.col * this.layout.tileSize + this.layout.tileSize / 2;
+      const comboY = this.gridOffsetY + tile1.row * this.layout.tileSize + this.layout.tileSize / 2;
       this.vfxManager.boosterSphereWave(comboX, comboY);
       this.audioManager.playSphere();
 
@@ -950,8 +968,8 @@ export class Game extends Phaser.Scene {
       console.log('[Game] KLO-sphere swap with regular tile');
 
       // Add sphere wave VFX and sound
-      const sphereX = this.gridOffsetX + tile1.col * TILE_SIZE + TILE_SIZE / 2;
-      const sphereY = this.gridOffsetY + tile1.row * TILE_SIZE + TILE_SIZE / 2;
+      const sphereX = this.gridOffsetX + tile1.col * this.layout.tileSize + this.layout.tileSize / 2;
+      const sphereY = this.gridOffsetY + tile1.row * this.layout.tileSize + this.layout.tileSize / 2;
       this.vfxManager.boosterSphereWave(sphereX, sphereY);
       this.audioManager.playSphere();
 
@@ -965,8 +983,8 @@ export class Game extends Phaser.Scene {
       console.log('[Game] KLO-sphere swap with regular tile');
 
       // Add sphere wave VFX and sound
-      const sphereX = this.gridOffsetX + tile2.col * TILE_SIZE + TILE_SIZE / 2;
-      const sphereY = this.gridOffsetY + tile2.row * TILE_SIZE + TILE_SIZE / 2;
+      const sphereX = this.gridOffsetX + tile2.col * this.layout.tileSize + this.layout.tileSize / 2;
+      const sphereY = this.gridOffsetY + tile2.row * this.layout.tileSize + this.layout.tileSize / 2;
       this.vfxManager.boosterSphereWave(sphereX, sphereY);
       this.audioManager.playSphere();
 
@@ -994,15 +1012,15 @@ export class Game extends Phaser.Scene {
       await Promise.all([
         this.tweenAsync({
           targets: tile1,
-          x: this.gridOffsetX + tile2.col * TILE_SIZE + TILE_SIZE / 2,
-          y: this.gridOffsetY + tile2.row * TILE_SIZE + TILE_SIZE / 2,
+          x: this.gridOffsetX + tile2.col * this.layout.tileSize + this.layout.tileSize / 2,
+          y: this.gridOffsetY + tile2.row * this.layout.tileSize + this.layout.tileSize / 2,
           duration: 150,
           ease: 'Power2',
         }),
         this.tweenAsync({
           targets: tile2,
-          x: this.gridOffsetX + tile1.col * TILE_SIZE + TILE_SIZE / 2,
-          y: this.gridOffsetY + tile1.row * TILE_SIZE + TILE_SIZE / 2,
+          x: this.gridOffsetX + tile1.col * this.layout.tileSize + this.layout.tileSize / 2,
+          y: this.gridOffsetY + tile1.row * this.layout.tileSize + this.layout.tileSize / 2,
           duration: 150,
           ease: 'Power2',
         }),
@@ -1077,8 +1095,8 @@ export class Game extends Phaser.Scene {
       console.log('[Game] Cascade depth:', depth, 'Tiles to remove:', matchResult.tilesToRemove.length);
 
       // Add cascade combo escalation VFX
-      const worldX = this.gridOffsetX + this.gridWidth * TILE_SIZE / 2;
-      const worldY = this.gridOffsetY + this.gridHeight * TILE_SIZE / 2;
+      const worldX = this.gridOffsetX + this.gridWidth * this.layout.tileSize / 2;
+      const worldY = this.gridOffsetY + this.gridHeight * this.layout.tileSize / 2;
       this.vfxManager.cascadeCombo(worldX, worldY, depth);
 
       // Separate tiles into free (removable) vs obstacle-protected (stay in place, obstacle damaged)
@@ -1104,15 +1122,15 @@ export class Game extends Phaser.Scene {
           console.log('[Game] Activating booster at', tile.row, tile.col, ':', tileData.booster);
 
           // Add booster activation VFX and sound
-          const bx = this.gridOffsetX + tileData.col * TILE_SIZE + TILE_SIZE / 2;
-          const by = this.gridOffsetY + tileData.row * TILE_SIZE + TILE_SIZE / 2;
+          const bx = this.gridOffsetX + tileData.col * this.layout.tileSize + this.layout.tileSize / 2;
+          const by = this.gridOffsetY + tileData.row * this.layout.tileSize + this.layout.tileSize / 2;
 
           if (tileData.booster === 'linear_horizontal') {
-            const length = this.gridWidth * TILE_SIZE;
+            const length = this.gridWidth * this.layout.tileSize;
             this.vfxManager.boosterLineSweep(bx, by, 'horizontal', length);
             this.audioManager.playLineClear();
           } else if (tileData.booster === 'linear_vertical') {
-            const length = this.gridHeight * TILE_SIZE;
+            const length = this.gridHeight * this.layout.tileSize;
             this.vfxManager.boosterLineSweep(bx, by, 'vertical', length);
             this.audioManager.playLineClear();
           } else if (tileData.booster === 'bomb') {
@@ -1215,8 +1233,8 @@ export class Game extends Phaser.Scene {
         if (!sprite) return;
 
         // Add particle pop VFX at each tile position
-        const worldX = this.gridOffsetX + tileData.col * TILE_SIZE + TILE_SIZE / 2;
-        const worldY = this.gridOffsetY + tileData.row * TILE_SIZE + TILE_SIZE / 2;
+        const worldX = this.gridOffsetX + tileData.col * this.layout.tileSize + this.layout.tileSize / 2;
+        const worldY = this.gridOffsetY + tileData.row * this.layout.tileSize + this.layout.tileSize / 2;
         const color = (tileData.type in TILE_COLORS ? TILE_COLORS[tileData.type as keyof typeof TILE_COLORS] : 0xffffff);
         this.vfxManager.matchPop(worldX, worldY, color);
 
@@ -1249,8 +1267,8 @@ export class Game extends Phaser.Scene {
       tweens.push(
         this.tweenAsync({
           targets: sprite,
-          x: this.gridOffsetX + movement.toCol * TILE_SIZE + TILE_SIZE / 2,
-          y: this.gridOffsetY + movement.toRow * TILE_SIZE + TILE_SIZE / 2,
+          x: this.gridOffsetX + movement.toCol * this.layout.tileSize + this.layout.tileSize / 2,
+          y: this.gridOffsetY + movement.toRow * this.layout.tileSize + this.layout.tileSize / 2,
           duration: 150,
           ease: 'Power2',
         })
@@ -1274,8 +1292,8 @@ export class Game extends Phaser.Scene {
       // Set type and position above screen (safeguard against empty type)
       const tileType = (spawn.type === 'empty' ? 'burger' : spawn.type) as 'burger' | 'hotdog' | 'oil' | 'water' | 'snack' | 'soda';
       sprite.setType(tileType);
-      sprite.x = this.gridOffsetX + spawn.col * TILE_SIZE + TILE_SIZE / 2;
-      sprite.y = this.gridOffsetY - (index + 1) * TILE_SIZE;
+      sprite.x = this.gridOffsetX + spawn.col * this.layout.tileSize + this.layout.tileSize / 2;
+      sprite.y = this.gridOffsetY - (index + 1) * this.layout.tileSize;
       sprite.setScale(1);
       sprite.setAlpha(1);
 
@@ -1283,7 +1301,7 @@ export class Game extends Phaser.Scene {
       tweens.push(
         this.tweenAsync({
           targets: sprite,
-          y: this.gridOffsetY + spawn.row * TILE_SIZE + TILE_SIZE / 2,
+          y: this.gridOffsetY + spawn.row * this.layout.tileSize + this.layout.tileSize / 2,
           duration: 150,
           ease: 'Bounce.Out',
         })
@@ -1299,14 +1317,17 @@ export class Game extends Phaser.Scene {
 
     const { width, height } = gameSize;
 
+    // Recompute responsive layout
+    this.layout = getResponsiveLayout(width, height);
+
     // Update camera viewport (CRITICAL for input)
     this.cameras.main.setViewport(0, 0, width, height);
 
-    // Recalculate grid offset (center on new viewport)
-    const gridPixelWidth = this.gridWidth * TILE_SIZE;
-    const gridPixelHeight = this.gridHeight * TILE_SIZE;
+    // Recalculate grid offset with new layout
+    const gridPixelWidth = this.gridWidth * this.layout.tileSize;
+    const gridPixelHeight = this.gridHeight * this.layout.tileSize;
     this.gridOffsetX = (width - gridPixelWidth) / 2;
-    this.gridOffsetY = (height - gridPixelHeight) / 2 + 30;
+    this.gridOffsetY = this.layout.hudHeight + cssToGame(10);
 
     // Redraw background
     if (this.bg) {
@@ -1315,18 +1336,29 @@ export class Game extends Phaser.Scene {
       this.bg.fillRect(0, 0, width, height);
     }
 
-    // Redraw HUD background
+    // Redraw HUD background with new layout
     if (this.hudBg) {
       this.hudBg.clear();
       this.hudBg.fillStyle(0xFFB800, 0.15);
-      this.hudBg.fillRoundedRect(8, 8, width - 16, 52, 8);
+      const padding = cssToGame(4);
+      this.hudBg.fillRoundedRect(padding * 2, padding * 2, width - padding * 4, this.layout.hudHeight - padding * 4, cssToGame(4));
       this.hudBg.fillStyle(KLO_YELLOW, 1);
-      this.hudBg.fillRoundedRect(12, 12, 4, 44, 2);
+      const stripeWidth = cssToGame(2);
+      const stripeHeight = this.layout.hudHeight - padding * 6;
+      this.hudBg.fillRoundedRect(padding * 3, padding * 3, stripeWidth, stripeHeight, cssToGame(1));
     }
 
-    // Reposition HUD text
+    // Reposition HUD text with new font size
     if (this.hudText) {
-      this.hudText.setPosition(width / 2, 34);
+      this.hudText.setPosition(width / 2, this.layout.hudHeight / 2);
+      this.hudText.setFontSize(this.layout.hudFontSize);
+    }
+
+    // Reposition back button
+    if (this.backButton) {
+      const buttonX = cssToGame(35) + this.layout.backButtonWidth / 2;
+      const buttonY = this.layout.hudHeight / 2;
+      this.backButton.setPosition(buttonX, buttonY);
     }
 
     // Redraw grid background (board, shadow, mask)
@@ -1337,19 +1369,20 @@ export class Game extends Phaser.Scene {
   }
 
   private redrawGridBackground(): void {
-    const gridPixelWidth = this.gridWidth * TILE_SIZE;
-    const gridPixelHeight = this.gridHeight * TILE_SIZE;
+    const gridPixelWidth = this.gridWidth * this.layout.tileSize;
+    const gridPixelHeight = this.gridHeight * this.layout.tileSize;
 
     // Redraw shadow
     if (this.gridShadowGraphics) {
       this.gridShadowGraphics.clear();
       this.gridShadowGraphics.fillStyle(0x000000, 0.08);
+      const shadowPadding = cssToGame(6);
       this.gridShadowGraphics.fillRoundedRect(
-        this.gridOffsetX - 12,
-        this.gridOffsetY - 12,
-        gridPixelWidth + 24,
-        gridPixelHeight + 24,
-        16
+        this.gridOffsetX - shadowPadding,
+        this.gridOffsetY - shadowPadding,
+        gridPixelWidth + shadowPadding * 2,
+        gridPixelHeight + shadowPadding * 2,
+        cssToGame(8)
       );
     }
 
@@ -1357,12 +1390,13 @@ export class Game extends Phaser.Scene {
     if (this.gridBoardGraphics) {
       this.gridBoardGraphics.clear();
       this.gridBoardGraphics.fillStyle(0xFFFFFF, 0.6);
+      const boardPadding = cssToGame(4);
       this.gridBoardGraphics.fillRoundedRect(
-        this.gridOffsetX - 8,
-        this.gridOffsetY - 8,
-        gridPixelWidth + 16,
-        gridPixelHeight + 16,
-        14
+        this.gridOffsetX - boardPadding,
+        this.gridOffsetY - boardPadding,
+        gridPixelWidth + boardPadding * 2,
+        gridPixelHeight + boardPadding * 2,
+        cssToGame(7)
       );
     }
 
@@ -1370,16 +1404,17 @@ export class Game extends Phaser.Scene {
     const inactiveStyle = this.levelData.grid.inactive_cell_style || 'transparent';
 
     if (inactiveStyle === 'block') {
-      // Reposition block sprites on resize
+      // Reposition block sprites on resize with new tile size
       let blockIdx = 0;
       for (let row = 0; row < this.gridHeight; row++) {
         for (let col = 0; col < this.gridWidth; col++) {
           if (!this.engine.isCellActive(row, col)) {
             if (blockIdx < this.blockSprites.length) {
               this.blockSprites[blockIdx].setPosition(
-                this.gridOffsetX + col * TILE_SIZE + TILE_SIZE / 2,
-                this.gridOffsetY + row * TILE_SIZE + TILE_SIZE / 2
+                this.gridOffsetX + col * this.layout.tileSize + this.layout.tileSize / 2,
+                this.gridOffsetY + row * this.layout.tileSize + this.layout.tileSize / 2
               );
+              this.blockSprites[blockIdx].setDisplaySize(this.layout.tileSize, this.layout.tileSize);
               blockIdx++;
             }
           }
@@ -1395,10 +1430,10 @@ export class Game extends Phaser.Scene {
         for (let col = 0; col < this.gridWidth; col++) {
           if (!this.engine.isCellActive(row, col)) {
             this.gridMaskGraphics.fillRect(
-              this.gridOffsetX + col * TILE_SIZE,
-              this.gridOffsetY + row * TILE_SIZE,
-              TILE_SIZE,
-              TILE_SIZE
+              this.gridOffsetX + col * this.layout.tileSize,
+              this.gridOffsetY + row * this.layout.tileSize,
+              this.layout.tileSize,
+              this.layout.tileSize
             );
           }
         }
@@ -1411,7 +1446,7 @@ export class Game extends Phaser.Scene {
       for (let col = 0; col < this.gridWidth; col++) {
         const sprite = this.tileSprites[row]?.[col];
         if (sprite) {
-          sprite.setOffset(this.gridOffsetX, this.gridOffsetY);
+          sprite.setOffset(this.gridOffsetX, this.gridOffsetY, this.layout.tileSize);
         }
       }
     }
@@ -1439,8 +1474,8 @@ export class Game extends Phaser.Scene {
         sprite.setObstacle(tileData.obstacle);
         sprite.row = row;
         sprite.col = col;
-        sprite.x = this.gridOffsetX + col * TILE_SIZE + TILE_SIZE / 2;
-        sprite.y = this.gridOffsetY + row * TILE_SIZE + TILE_SIZE / 2;
+        sprite.x = this.gridOffsetX + col * this.layout.tileSize + this.layout.tileSize / 2;
+        sprite.y = this.gridOffsetY + row * this.layout.tileSize + this.layout.tileSize / 2;
         sprite.setScale(1);
         sprite.setAlpha(1);
       }
