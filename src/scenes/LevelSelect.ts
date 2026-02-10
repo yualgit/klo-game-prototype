@@ -33,6 +33,8 @@ export class LevelSelect extends Phaser.Scene {
   private timerEvent: Phaser.Time.TimerEvent;
   private isDragging: boolean = false;
   private dragStartY: number = 0;
+  private overlayActive: boolean = false;
+  private levelNodes: Phaser.GameObjects.Container[] = [];
 
   constructor() {
     super({ key: 'LevelSelect' });
@@ -100,6 +102,9 @@ export class LevelSelect extends Phaser.Scene {
 
     // Setup drag scrolling
     this.setupDragScrolling();
+
+    // Auto-scroll to current level
+    this.scrollToCurrentLevel();
   }
 
   private createParallaxBackground(): void {
@@ -153,7 +158,7 @@ export class LevelSelect extends Phaser.Scene {
     });
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.isDown) {
+      if (pointer.isDown && !this.overlayActive) {
         const deltaY = pointer.y - pointer.prevPosition.y;
 
         // Check if drag threshold exceeded
@@ -169,11 +174,57 @@ export class LevelSelect extends Phaser.Scene {
     });
 
     this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-      if (!this.isDragging) {
-        console.log('[LevelSelect] Tap detected at', pointer.x, pointer.y);
+      if (!this.isDragging && !this.overlayActive) {
+        this.handleTap(pointer);
       }
       this.isDragging = false;
     });
+  }
+
+  private handleTap(pointer: Phaser.Input.Pointer): void {
+    // Convert pointer screen coordinates to world coordinates
+    const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+
+    // Check each level node container to see if tap is within its bounds
+    for (let i = 0; i < this.levelNodes.length; i++) {
+      const container = this.levelNodes[i];
+      if (!container) continue;
+
+      const bounds = container.getBounds();
+
+      if (Phaser.Geom.Rectangle.Contains(bounds, worldPoint.x, worldPoint.y)) {
+        const levelId = i + 1;
+        const progress = this.registry.get('progress') as ProgressManager;
+        const economy = this.registry.get('economy') as EconomyManager;
+
+        // Check if level is unlocked
+        if (progress.isLevelUnlocked(levelId)) {
+          // Check economy gating
+          if (!economy.canStartLevel()) {
+            this.showNoLivesPrompt(economy);
+            return;
+          }
+
+          // Start level with fade out
+          this.cameras.main.fadeOut(300, 0, 0, 0);
+          this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.start('Game', { levelId });
+          });
+          return;
+        }
+      }
+    }
+  }
+
+  private scrollToCurrentLevel(): void {
+    const progress = this.registry.get('progress') as ProgressManager;
+    const currentLevelId = this.getCurrentLevel(progress);
+
+    if (currentLevelId > 0 && currentLevelId <= 10) {
+      const targetNode = MAP_CONFIG.LEVEL_NODES[currentLevelId - 1];
+      // Pan camera to center on current level
+      this.cameras.main.pan(targetNode.x, targetNode.y, 800, 'Sine.easeInOut', true);
+    }
   }
 
   private createEconomyHUD(width: number, economy: EconomyManager): void {
@@ -275,13 +326,17 @@ export class LevelSelect extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
+    // Block scroll interaction while overlay is active
+    this.overlayActive = true;
+
     // Store overlay elements for cleanup
     const overlayElements: Phaser.GameObjects.GameObject[] = [];
 
-    // Dark backdrop
+    // Dark backdrop - blocks scroll dragging
     const backdrop = this.add.graphics();
     backdrop.fillStyle(0x000000, 0.6);
     backdrop.fillRect(0, 0, width, height);
+    backdrop.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
     backdrop.setScrollFactor(0);
     backdrop.setDepth(100);
     overlayElements.push(backdrop);
@@ -343,6 +398,7 @@ export class LevelSelect extends Phaser.Scene {
           if (success) {
             // Clean up overlay
             overlayElements.forEach(el => el.destroy());
+            this.overlayActive = false;
             // Update HUD
             this.updateEconomyDisplay();
           }
@@ -369,6 +425,7 @@ export class LevelSelect extends Phaser.Scene {
       'Закрити',
       () => {
         overlayElements.forEach(el => el.destroy());
+        this.overlayActive = false;
       },
       true
     );
@@ -530,34 +587,13 @@ export class LevelSelect extends Phaser.Scene {
     container.setSize(size, size);
     container.setDepth(5);
 
+    // Store container for tap detection
+    this.levelNodes.push(container);
+
+    // Make interactive for hit testing, but don't add event handlers
+    // (scene-level tap handler will check bounds centrally)
     if (unlocked) {
       container.setInteractive({ useHandCursor: true });
-
-      container.on('pointerover', () => {
-        this.tweens.add({
-          targets: container,
-          scale: 1.1,
-          duration: 100,
-        });
-      });
-
-      container.on('pointerout', () => {
-        this.tweens.add({
-          targets: container,
-          scale: 1,
-          duration: 100,
-        });
-      });
-
-      container.on('pointerdown', () => {
-        this.tweens.add({
-          targets: container,
-          scale: 0.95,
-          duration: 50,
-        });
-      });
-
-      // Note: pointerup handler removed - Plan 02 will add proper tap/drag distinction
     }
   }
 
@@ -639,10 +675,13 @@ export class LevelSelect extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
+    // Block scroll interaction while overlay is active
+    this.overlayActive = true;
+
     // Store all overlay elements for cleanup
     const overlayElements: Phaser.GameObjects.GameObject[] = [];
 
-    // Dark backdrop - blocks clicks to elements behind
+    // Dark backdrop - blocks clicks to elements behind and scroll dragging
     const backdrop = this.add.graphics();
     backdrop.fillStyle(0x000000, 0.7);
     backdrop.fillRect(0, 0, width, height);
@@ -652,6 +691,7 @@ export class LevelSelect extends Phaser.Scene {
     backdrop.on('pointerup', () => {
       // Click backdrop to close
       overlayElements.forEach(el => el.destroy());
+      this.overlayActive = false;
     });
     overlayElements.push(backdrop);
 
@@ -872,9 +912,20 @@ export class LevelSelect extends Phaser.Scene {
       'Закрити',
       () => {
         overlayElements.forEach(el => el.destroy());
+        this.overlayActive = false;
       },
       true
     );
     overlayElements.push(closeBtn);
+  }
+
+  shutdown(): void {
+    // Cleanup pointer event listeners
+    this.input.off('pointerdown');
+    this.input.off('pointermove');
+    this.input.off('pointerup');
+
+    // Clear level nodes array
+    this.levelNodes = [];
   }
 }
