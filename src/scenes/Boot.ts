@@ -106,6 +106,34 @@ export class Boot extends Phaser.Scene {
     this.load.image('gui_fill_orange', 'assets/gui/Fill Orange.png');
     this.load.image('gui_fill_yellow', 'assets/gui/Fill Yellow.png');
 
+    // --- Load collection card assets ---
+    // Coffee collection
+    this.load.image('collection_coffee_01', 'assets/collections/coffee/01_espresso.png');
+    this.load.image('collection_coffee_02', 'assets/collections/coffee/02_americano.png');
+    this.load.image('collection_coffee_03', 'assets/collections/coffee/03_latte.png');
+    this.load.image('collection_coffee_04', 'assets/collections/coffee/04_capucino.png');
+    this.load.image('collection_coffee_05', 'assets/collections/coffee/05_flatwhite.png');
+    this.load.image('collection_coffee_06', 'assets/collections/coffee/06_raf.png');
+
+    // Food collection
+    this.load.image('collection_food_01', 'assets/collections/food/01_hotdog.png');
+    this.load.image('collection_food_02', 'assets/collections/food/02_cruassan.png');
+    this.load.image('collection_food_03', 'assets/collections/food/03_burger.png');
+    this.load.image('collection_food_04', 'assets/collections/food/04_pizza.png');
+    this.load.image('collection_food_05', 'assets/collections/food/05_combo.png');
+    this.load.image('collection_food_06', 'assets/collections/food/06_klo_hotdog.png');
+
+    // Car collection
+    this.load.image('collection_car_01', 'assets/collections/car/01_red_car.png');
+    this.load.image('collection_car_02', 'assets/collections/car/02_blue_car.png');
+    this.load.image('collection_car_03', 'assets/collections/car/03_suv.png');
+    this.load.image('collection_car_04', 'assets/collections/car/04_outlander.png');
+    this.load.image('collection_car_05', 'assets/collections/car/05_sportcar.png');
+    this.load.image('collection_car_06', 'assets/collections/car/06_lux_car.png');
+
+    // Blank card placeholder for uncollected cards
+    this.load.image('collection_blank', 'assets/collections/blank.png');
+
     // --- Load sound effects ---
     this.load.audio('sfx_match', 'assets/sound/match.wav');
     this.load.audio('sfx_bomb', 'assets/sound/bomb.wav');
