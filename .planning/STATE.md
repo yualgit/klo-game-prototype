@@ -15,13 +15,13 @@ Transform v1.0 MVP (5 levels, basic mechanics) into deeper experience with lives
 ## Current Position
 
 **Phase:** 6 - Economy System
-**Plan:** 2 of 2 (06-01 complete, 06-02 next)
-**Status:** In progress
+**Plan:** 2 of 2 (both complete)
+**Status:** Complete
 **Progress:** 1/5 phases complete
 
 ```
 [########                                ] 20%
-Phase 6: Economy System (1/2 plans complete)
+Phase 6: Economy System (2/2 plans complete)
 ```
 
 ## Performance Metrics
@@ -32,15 +32,16 @@ Phase 6: Economy System (1/2 plans complete)
 - 6 days (Feb 5 — Feb 10, 2026)
 
 **v1.1 Progress:**
-- Velocity: 8 min/plan (1 plan completed)
-- Phase Completion Rate: 0/5 phases complete (1/2 plans in Phase 6)
-- Plans Completed: 1/10 total (06-01)
+- Velocity: 5 min/plan (2 plans completed)
+- Phase Completion Rate: 1/5 phases complete (Phase 6 done)
+- Plans Completed: 2/10 total (06-01, 06-02)
 - Requirement Coverage: 23/23 mapped (100%)
 - Active Blockers: 0
 
 **Recent Completions:**
 | Phase-Plan | Duration | Tasks | Files | Completed |
 |------------|----------|-------|-------|-----------|
+| 06-02 | 2min | 2 | 2 | 2026-02-10 |
 | 06-01 | 8min | 2 | 3 | 2026-02-10 |
 
 ## Accumulated Context
@@ -58,6 +59,8 @@ Phase 6: Economy System (1/2 plans complete)
 | Firebase Timestamp for lives | Prevents multi-device desync and local time exploits | 06-01 | Server-side time accuracy |
 | Throttle recalculation to 1/sec | Prevents performance impact from excessive getLives() calls | 06-01 | Performance optimization |
 | Nullish coalescing defaults | Backward-compatible economy initialization for existing users | 06-01 | No migration needed |
+| Top-right HUD placement | Avoid overlap with title/back button in LevelSelect | 06-02 | Visual balance maintained |
+| Inline refill prompt | Expand lose panel vs separate modal for better UX flow | 06-02 | Smoother retry experience |
 
 ### Open TODOs
 
@@ -95,18 +98,19 @@ None. All phases ready for planning.
 
 ## Session Continuity
 
-**Last Session:** 2026-02-10T12:12:55Z
-**Stopped At:** Completed Phase 06 Plan 01 (Economy Foundation)
+**Last Session:** 2026-02-10T12:12:26Z
+**Stopped At:** Completed Phase 06 (Economy System) - All plans complete
 
-**Next Action:** Execute Phase 06 Plan 02 (Lives UI Integration) via `/gsd:execute-phase 06`
+**Next Action:** Plan Phase 07 (Settings) via `/gsd:plan-phase 07`
 
 **Context for Next Session:**
-- Phase 06-01 complete: EconomyManager singleton with lives regeneration, bonus system, Firestore persistence
-- Economy accessible in all scenes via `game.registry.get('economy')`
-- Lives API ready: getLives(), canStartLevel(), loseLife(), getSecondsUntilNextLife()
-- Bonus refill API ready: spendBonusesForRefill() (costs 15 bonuses)
-- Next: Integrate lives display and countdown timer into UI
-- Phase 6 has 2 plans: 06-01 ✓ (foundation), 06-02 (UI integration)
+- Phase 06 complete: Economy system fully integrated and user-facing
+- Lives system: regeneration (1/30min), gating (0 lives blocks level), HUD with countdown
+- Refill system: 15 bonus cost to refill to max 5 lives
+- UI patterns established: modal overlays, inline expansions, timer cleanup
+- All 7 ECON requirements implemented and verified
+- Phase 6 deliverables: 2 plans, 4 tasks, 5 files, 4 commits
+- Next phase: Settings (audio, music, SFX toggles, localStorage)
 
 **Files to Reference:**
 - `.planning/ROADMAP.md` — Phase structure, success criteria, dependencies
