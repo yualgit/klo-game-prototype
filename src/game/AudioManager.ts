@@ -5,6 +5,7 @@
  */
 import Phaser from 'phaser';
 import { SOUND_KEYS } from './constants';
+import { SettingsManager } from './SettingsManager';
 
 export class AudioManager {
   private scene: Phaser.Scene;
@@ -13,6 +14,23 @@ export class AudioManager {
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
+
+    // Integrate with SettingsManager for reactive audio control
+    const settings = scene.registry.get('settings') as SettingsManager | undefined;
+    if (settings) {
+      // Set initial state from settings
+      this.muted = !settings.get('sfxEnabled');
+      this.volume = settings.get('sfxVolume');
+
+      // Subscribe to settings changes
+      settings.subscribe('sfxEnabled', (enabled: boolean) => {
+        this.muted = !enabled;
+      });
+
+      settings.subscribe('sfxVolume', (vol: number) => {
+        this.volume = vol;
+      });
+    }
   }
 
   /** Play a sound effect by key from SOUND_KEYS */

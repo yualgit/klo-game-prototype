@@ -5,13 +5,27 @@
  */
 import Phaser from 'phaser';
 import { TILE_COLORS } from './constants';
+import { SettingsManager } from './SettingsManager';
 
 export class VFXManager {
   private scene: Phaser.Scene;
+  private animationsEnabled: boolean = true;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     this.createParticleTextures();
+
+    // Integrate with SettingsManager for reactive VFX control
+    const settings = scene.registry.get('settings') as SettingsManager | undefined;
+    if (settings) {
+      // Set initial state from settings
+      this.animationsEnabled = settings.get('animationsEnabled');
+
+      // Subscribe to settings changes
+      settings.subscribe('animationsEnabled', (enabled: boolean) => {
+        this.animationsEnabled = enabled;
+      });
+    }
   }
 
   /** Create small runtime textures for particles */
@@ -43,6 +57,7 @@ export class VFXManager {
 
   /** Particle burst when tiles are matched and cleared */
   matchPop(x: number, y: number, color: number): void {
+    if (!this.animationsEnabled) return;
     if (!this.active) return;
     const emitter = this.scene.add.particles(x, y, 'particle_white', {
       speed: { min: 40, max: 120 },
@@ -60,6 +75,7 @@ export class VFXManager {
 
   /** Line sweep effect for linear booster activation */
   boosterLineSweep(startX: number, startY: number, direction: 'horizontal' | 'vertical', length: number): void {
+    if (!this.animationsEnabled) return;
     if (!this.active) return;
     const isHorizontal = direction === 'horizontal';
     // Create a sweep particle that travels along the row/column
@@ -88,6 +104,7 @@ export class VFXManager {
 
   /** Explosion burst for bomb booster activation */
   boosterBombExplosion(x: number, y: number): void {
+    if (!this.animationsEnabled) return;
     if (!this.active) return;
     // Main explosion burst — white/gold particles in circular pattern
     const emitter = this.scene.add.particles(x, y, 'particle_star', {
@@ -109,6 +126,7 @@ export class VFXManager {
 
   /** Expanding wave effect for KLO sphere (color bomb) activation */
   boosterSphereWave(x: number, y: number): void {
+    if (!this.animationsEnabled) return;
     if (!this.active) return;
     // Create expanding ring graphic
     const ring = this.scene.add.graphics();
@@ -141,6 +159,7 @@ export class VFXManager {
 
   /** Confetti burst for win celebration */
   confettiBurst(x: number, y: number): void {
+    if (!this.animationsEnabled) return;
     if (!this.active) return;
     const emitter = this.scene.add.particles(x, y, 'particle_white', {
       speed: { min: 50, max: 200 },
@@ -158,6 +177,7 @@ export class VFXManager {
 
   /** Escalating cascade combo feedback — bigger effects at higher depths */
   cascadeCombo(x: number, y: number, depth: number): void {
+    if (!this.animationsEnabled) return;
     if (!this.active) return;
     // depth 1: small subtle pop
     const particleCount = Math.min(8 + depth * 4, 30);
