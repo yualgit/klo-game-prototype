@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 13 of 16 (Persistent UI Navigation Shell)
-Plan: Not started
-Status: Phase 12 complete — ready for Phase 13 planning
-Last activity: 2026-02-10 — Phase 12 complete (responsive layout verified)
+Plan: 1 of 2 complete
+Status: Phase 13 Plan 01 complete — UIScene + EventsCenter infrastructure ready
+Last activity: 2026-02-10 — Phase 13-01 complete (EventsCenter + UIScene + reactive EconomyManager)
 
-Progress: [████████████████░░░░░░░░░░░] 50% (12 of 16 phases complete)
+Progress: [████████████████░░░░░░░░░░░] 50% (12 of 16 phases complete, Phase 13: 1/2 plans)
 
 ## Performance Metrics
 
@@ -44,6 +44,7 @@ Progress: [████████████████░░░░░░░
 | Phase 11 P02 | 409 | 3 tasks | 5 files |
 | Phase 12 P01 | 385 | 1 task | 3 files |
 | Phase 12 P02 | ~337 | 2 tasks | 5 files |
+| Phase 13 P01 | 154 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,9 @@ Recent decisions affecting current work:
 - [Phase 12]: LevelSelect elements need proportionally smaller CSS sizes than Game scene for mobile
 - [Phase 12]: Overlay buttons positioned relative to panel bottom to prevent overlap
 - [Phase 12]: Camera world bottom extends dynamically for proper first-level positioning
+- [Phase 13]: UIScene runs in parallel with content scenes via scene.launch() pattern
+- [Phase 13]: EventsCenter singleton pattern (not game.events) for cross-scene communication
+- [Phase 13]: Interactive graphics backgrounds required to block click-through (Phaser gotcha)
 
 ### Pending Todos
 
