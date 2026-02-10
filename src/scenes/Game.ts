@@ -85,14 +85,9 @@ export class Game extends Phaser.Scene {
     // Reset scene state for restarts
     this.resetState();
 
-    // Clean up on scene shutdown to prevent drawImage errors during restart
+    // On shutdown, flag scene inactive so async chains (processCascade, etc.) stop
     this.events.once('shutdown', () => {
       this.sceneActive = false;
-      this.tweens.killAll();
-      this.time.removeAllEvents();
-      this.tileSprites = [];
-      this.isProcessing = false;
-      this.selectedTile = null;
     });
 
     // Get level ID from scene data
@@ -378,24 +373,18 @@ export class Game extends Phaser.Scene {
     const nextLabel = isLastLevel ? 'Меню' : 'Далі';
 
     const nextBtn = this.createOverlayButton(panelW / 2, nextButtonY, nextLabel, () => {
-      this.cameras.main.fadeOut(300, 0, 0, 0);
-      this.cameras.main.once('camerafadeoutcomplete', () => {
-        if (isLastLevel) {
-          this.scene.start('LevelSelect');
-        } else {
-          this.scene.start('Game', { levelId: this.currentLevel + 1 });
-        }
-      });
+      if (isLastLevel) {
+        this.scene.start('LevelSelect');
+      } else {
+        this.scene.start('Game', { levelId: this.currentLevel + 1 });
+      }
     });
     panelContainer.add(nextBtn);
 
     // "Рівні" button → LevelSelect (only when not last level)
     if (!isLastLevel) {
       const levelsBtn = this.createOverlayButton(panelW / 2, nextButtonY + 60, 'Рівні', () => {
-        this.cameras.main.fadeOut(300, 0, 0, 0);
-        this.cameras.main.once('camerafadeoutcomplete', () => {
-          this.scene.start('LevelSelect');
-        });
+        this.scene.start('LevelSelect');
       }, true);
       panelContainer.add(levelsBtn);
     }
@@ -468,19 +457,13 @@ export class Game extends Phaser.Scene {
 
     // "Повторити" button → restart same level
     const retryBtn = this.createOverlayButton(panelW / 2, 150, 'Повторити', () => {
-      this.cameras.main.fadeOut(300, 0, 0, 0);
-      this.cameras.main.once('camerafadeoutcomplete', () => {
-        this.scene.start('Game', { levelId: this.currentLevel });
-      });
+      this.scene.start('Game', { levelId: this.currentLevel });
     });
     panelContainer.add(retryBtn);
 
     // "Меню" button → LevelSelect
     const menuBtn = this.createOverlayButton(panelW / 2, 210, 'Меню', () => {
-      this.cameras.main.fadeOut(300, 0, 0, 0);
-      this.cameras.main.once('camerafadeoutcomplete', () => {
-        this.scene.start('LevelSelect');
-      });
+      this.scene.start('LevelSelect');
     }, true);
     panelContainer.add(menuBtn);
   }
@@ -554,10 +537,7 @@ export class Game extends Phaser.Scene {
 
     this.backButton.on('pointerup', () => {
       console.log('[Game] Back button clicked, returning to LevelSelect');
-      this.cameras.main.fadeOut(300, 0, 0, 0);
-      this.cameras.main.once('camerafadeoutcomplete', () => {
-        this.scene.start('LevelSelect');
-      });
+      this.scene.start('LevelSelect');
     });
   }
 
