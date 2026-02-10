@@ -131,7 +131,10 @@ export class Boot extends Phaser.Scene {
   create(): void {
     console.log('[Boot] Assets loaded, starting Menu');
 
-    // Transition to Menu scene
-    this.scene.start('Menu');
+    // Fade transition to Menu scene
+    this.cameras.main.fadeOut(200, 0, 0, 0);
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.scene.start('Menu');
+    });
   }
 }
