@@ -5,7 +5,7 @@
  */
 
 import Phaser from 'phaser';
-import { TILE_COLORS, TILE_SIZE, TILE_GAP, TileType, TEXTURE_KEYS, OBSTACLE_TEXTURE_KEYS } from './constants';
+import { TILE_COLORS, TILE_SIZE, TILE_GAP, TileType, TEXTURE_KEYS, OBSTACLE_TEXTURE_KEYS, BOOSTER_TEXTURE_KEYS } from './constants';
 import { BoosterType, ObstacleData } from './types';
 
 // Grid offset configuration (can be set per-instance or use defaults)
@@ -26,6 +26,8 @@ export class TileSprite extends Phaser.GameObjects.Container {
   private boosterType?: BoosterType;
   private obstacleData?: ObstacleData;
   private boosterGraphics: Phaser.GameObjects.Graphics;
+  private boosterImage?: Phaser.GameObjects.Image;
+  private boosterIdleTween?: Phaser.Tweens.Tween;
   private obstacleGraphics: Phaser.GameObjects.Graphics;
   private obstacleImage?: Phaser.GameObjects.Image;
   private layerCountText?: Phaser.GameObjects.Text;
@@ -147,6 +149,17 @@ export class TileSprite extends Phaser.GameObjects.Container {
    * Sets new type, position, and redraws.
    */
   public reset(type: TileType, row: number, col: number): void {
+    // Cleanup booster tween and image
+    if (this.boosterIdleTween) {
+      this.boosterIdleTween.stop();
+      this.boosterIdleTween.remove();
+      this.boosterIdleTween = undefined;
+    }
+    if (this.boosterImage) {
+      this.boosterImage.destroy();
+      this.boosterImage = undefined;
+    }
+
     this.type = type;
     this.row = row;
     this.col = col;
@@ -187,78 +200,102 @@ export class TileSprite extends Phaser.GameObjects.Container {
   }
 
   /**
-   * Draw booster overlay on tile.
+   * Draw booster overlay on tile using sprite images with idle animations.
    */
   private drawBooster(): void {
+    // Clear old Graphics-based drawing (safety measure)
     this.boosterGraphics.clear();
 
+    // Remove old booster image and tween if exists
+    if (this.boosterIdleTween) {
+      this.boosterIdleTween.stop();
+      this.boosterIdleTween.remove();
+      this.boosterIdleTween = undefined;
+    }
+    if (this.boosterImage) {
+      this.boosterImage.destroy();
+      this.boosterImage = undefined;
+    }
+
+    // Early return if no booster
     if (!this.boosterType) return;
 
-    const tileSize = TILE_SIZE - TILE_GAP;
-    const halfSize = tileSize / 2;
+    // Look up texture key from BOOSTER_TEXTURE_KEYS
+    const textureKey = BOOSTER_TEXTURE_KEYS[this.boosterType];
 
-    this.boosterGraphics.lineStyle(3, 0xffffff, 1);
+    // Create booster image sprite if texture exists
+    if (textureKey && this.scene.textures.exists(textureKey)) {
+      this.boosterImage = this.scene.add.image(0, 0, textureKey);
+      const targetSize = TILE_SIZE - TILE_GAP;
+      this.boosterImage.setDisplaySize(targetSize, targetSize);
+      this.add(this.boosterImage);
+
+      // Add subtle idle animation effect
+      this.addBoosterIdleEffect();
+    }
+  }
+
+  /**
+   * Add subtle idle animation effect to booster image.
+   * Each booster type gets a unique barely-noticeable effect.
+   */
+  private addBoosterIdleEffect(): void {
+    if (!this.boosterImage || !this.boosterType) return;
+
+    // Stop existing tween
+    if (this.boosterIdleTween) {
+      this.boosterIdleTween.stop();
+      this.boosterIdleTween.remove();
+      this.boosterIdleTween = undefined;
+    }
 
     switch (this.boosterType) {
+      case 'bomb':
+        // Subtle pulse: scale 1.0 -> 1.03 over 1.2s
+        this.boosterIdleTween = this.scene.tweens.add({
+          targets: this.boosterImage,
+          scaleX: 1.03,
+          scaleY: 1.03,
+          duration: 600,
+          ease: 'Sine.InOut',
+          yoyo: true,
+          repeat: -1,
+        });
+        break;
+
       case 'linear_horizontal':
-        // Horizontal arrow bar
-        this.boosterGraphics.fillStyle(0xffffff, 0.9);
-        this.boosterGraphics.fillRect(-halfSize + 10, -5, tileSize - 20, 10);
-        // Arrow heads
-        this.boosterGraphics.beginPath();
-        this.boosterGraphics.moveTo(halfSize - 10, 0);
-        this.boosterGraphics.lineTo(halfSize - 18, -6);
-        this.boosterGraphics.lineTo(halfSize - 18, 6);
-        this.boosterGraphics.closePath();
-        this.boosterGraphics.fillPath();
-        this.boosterGraphics.beginPath();
-        this.boosterGraphics.moveTo(-halfSize + 10, 0);
-        this.boosterGraphics.lineTo(-halfSize + 18, -6);
-        this.boosterGraphics.lineTo(-halfSize + 18, 6);
-        this.boosterGraphics.closePath();
-        this.boosterGraphics.fillPath();
+        // Subtle horizontal shimmer: alpha 0.88 -> 1.0 over 0.8s
+        this.boosterIdleTween = this.scene.tweens.add({
+          targets: this.boosterImage,
+          alpha: 0.88,
+          duration: 400,
+          ease: 'Sine.InOut',
+          yoyo: true,
+          repeat: -1,
+        });
         break;
 
       case 'linear_vertical':
-        // Vertical arrow bar
-        this.boosterGraphics.fillStyle(0xffffff, 0.9);
-        this.boosterGraphics.fillRect(-5, -halfSize + 10, 10, tileSize - 20);
-        // Arrow heads
-        this.boosterGraphics.beginPath();
-        this.boosterGraphics.moveTo(0, halfSize - 10);
-        this.boosterGraphics.lineTo(-6, halfSize - 18);
-        this.boosterGraphics.lineTo(6, halfSize - 18);
-        this.boosterGraphics.closePath();
-        this.boosterGraphics.fillPath();
-        this.boosterGraphics.beginPath();
-        this.boosterGraphics.moveTo(0, -halfSize + 10);
-        this.boosterGraphics.lineTo(-6, -halfSize + 18);
-        this.boosterGraphics.lineTo(6, -halfSize + 18);
-        this.boosterGraphics.closePath();
-        this.boosterGraphics.fillPath();
-        break;
-
-      case 'bomb':
-        // Star shape using lines to create * pattern
-        this.boosterGraphics.lineStyle(4, 0xffffff, 0.9);
-        const starSize = 20;
-        // Vertical line
-        this.boosterGraphics.lineBetween(0, -starSize, 0, starSize);
-        // Horizontal line
-        this.boosterGraphics.lineBetween(-starSize, 0, starSize, 0);
-        // Diagonal lines
-        const diag = starSize * 0.707; // 45 degrees
-        this.boosterGraphics.lineBetween(-diag, -diag, diag, diag);
-        this.boosterGraphics.lineBetween(-diag, diag, diag, -diag);
+        // Subtle vertical shimmer: alpha 0.88 -> 1.0 over 0.8s (same as horizontal)
+        this.boosterIdleTween = this.scene.tweens.add({
+          targets: this.boosterImage,
+          alpha: 0.88,
+          duration: 400,
+          ease: 'Sine.InOut',
+          yoyo: true,
+          repeat: -1,
+        });
         break;
 
       case 'klo_sphere':
-        // Glowing circle
-        this.boosterGraphics.fillStyle(0xffffff, 0.8);
-        this.boosterGraphics.fillCircle(0, 0, 15);
-        // Inner glow
-        this.boosterGraphics.fillStyle(0xffffff, 0.4);
-        this.boosterGraphics.fillCircle(0, 0, 20);
+        // Subtle slow rotation: 0 -> 360 degrees over 6s
+        this.boosterIdleTween = this.scene.tweens.add({
+          targets: this.boosterImage,
+          angle: 360,
+          duration: 6000,
+          ease: 'Linear',
+          repeat: -1,
+        });
         break;
     }
   }
