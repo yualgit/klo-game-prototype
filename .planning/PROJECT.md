@@ -29,7 +29,19 @@ Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed 
 
 ### Active
 
-(None — planning next milestone)
+## Current Milestone: v1.2 Polish & Collections
+
+**Goal:** Add collection cards meta-progression, overhaul UI with global header + bottom navigation, improve art quality, fix mobile responsiveness.
+
+**Target features:**
+- Collection cards system (3 collections, card pick flow, pity mechanic, exchange for coupons)
+- Bottom navigation bar (Levels / Collections / Shop tabs)
+- Global header with lives/bonuses/settings
+- In-level HUD rework (no bottom nav, compact level HUD)
+- Responsive layout fixes (Level Select + Game Board on all mobile screens)
+- Art upgrade: 1024px retina tiles, 6 new tile types, booster sprites, remove light tile
+- Inactive cell visual for variable board shapes
+- Collection progress persistence (Firestore)
 
 ### Out of Scope
 
@@ -74,4 +86,4 @@ Demo is fully playable with 10 levels, all mechanics, economy system, settings, 
 - **Scope**: L1-10 з просунутими механіками та economy (демо)
 
 ---
-*Last updated: 2026-02-10 after v1.1 Kyiv Journey milestone completed*
+*Last updated: 2026-02-10 after v1.2 Polish & Collections milestone started*

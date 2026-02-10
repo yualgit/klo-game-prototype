@@ -1,25 +1,22 @@
 # Project State
 
-**Milestone:** v1.1 Kyiv Journey (COMPLETE)
+**Milestone:** v1.2 Polish & Collections
 **Last Updated:** 2026-02-10
-**State:** Milestone v1.1 shipped
+**State:** Defining requirements
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core Value:** Клієнт має побачити і відчути gameplay — як гра буде сприйматись реальними користувачами.
-**Current Focus:** Planning next milestone
+**Current Focus:** v1.2 Polish & Collections — defining requirements
 
 ## Current Position
 
-**Phase:** All complete
-**Status:** v1.1 milestone shipped
-**Progress:** [██████████] 100%
-
-```
-v1.0: Phase 1-5 ✓ | v1.1: Phase 6-10 ✓
-```
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-10 — Milestone v1.2 started
 
 ## Performance Metrics
 
@@ -37,11 +34,11 @@ v1.0: Phase 1-5 ✓ | v1.1: Phase 6-10 ✓
 ## Session Continuity
 
 **Last Session:** 2026-02-10
-**Stopped At:** Milestone v1.1 Kyiv Journey archived
+**Stopped At:** Milestone v1.2 requirements definition
 
-**Next Action:** `/gsd:new-milestone` to start v1.2
+**Next Action:** Define requirements and create roadmap
 
 ---
 
 *State initialized: 2026-02-05*
-*Last checkpoint: 2026-02-10 — v1.1 Kyiv Journey complete*
+*Last checkpoint: 2026-02-10 — v1.2 Polish & Collections started*
