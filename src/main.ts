@@ -4,6 +4,7 @@ import { Boot, Menu, LevelSelect, Game, UIScene, Collections, Shop } from './sce
 import { ProgressManager } from './game/ProgressManager';
 import { EconomyManager } from './game/EconomyManager';
 import { SettingsManager } from './game/SettingsManager';
+import { CollectionsManager } from './game/CollectionsManager';
 
 // Compute DPR capped at 2x for crisp retina rendering without performance issues
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -81,6 +82,28 @@ async function main() {
 
     console.log('[Main] EconomyManager initialized');
 
+    // Load or create collection state
+    let collectionState = await firestoreService.loadCollections(uid);
+
+    if (!collectionState) {
+      // New user: set defaults (empty collections)
+      await firestoreService.saveCollections(uid, {
+        collections: {
+          coffee: { owned_cards: [], pity_streak: 0 },
+          food: { owned_cards: [], pity_streak: 0 },
+          car: { owned_cards: [], pity_streak: 0 },
+        },
+      });
+      collectionState = await firestoreService.loadCollections(uid);
+    }
+
+    console.log('[Main] Collections loaded:', collectionState);
+
+    // Create CollectionsManager singleton
+    const collectionsManager = new CollectionsManager(firestoreService, uid, collectionState!);
+
+    console.log('[Main] CollectionsManager initialized');
+
     // Load and create SettingsManager singleton
     const settingsData = SettingsManager.load();
     const settingsManager = new SettingsManager(settingsData);
@@ -93,6 +116,7 @@ async function main() {
     // Store managers in registry for scene access
     game.registry.set('progress', progressManager);
     game.registry.set('economy', economyManager);
+    game.registry.set('collections', collectionsManager);
     game.registry.set('settings', settingsManager);
     game.registry.set('dpr', dpr);
 
