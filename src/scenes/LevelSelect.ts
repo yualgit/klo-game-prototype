@@ -5,6 +5,7 @@
 
 import Phaser from 'phaser';
 import { ProgressManager } from '../game/ProgressManager';
+import { EconomyManager } from '../game/EconomyManager';
 import { GUI_TEXTURE_KEYS } from '../game/constants';
 
 const KLO_YELLOW = 0xffb800;
@@ -20,6 +21,11 @@ const LEVEL_NAMES: Record<number, string> = {
 };
 
 export class LevelSelect extends Phaser.Scene {
+  private livesText: Phaser.GameObjects.Text;
+  private bonusText: Phaser.GameObjects.Text;
+  private countdownText: Phaser.GameObjects.Text;
+  private timerEvent: Phaser.Time.TimerEvent;
+
   constructor() {
     super({ key: 'LevelSelect' });
   }
@@ -28,6 +34,7 @@ export class LevelSelect extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
     const progress = this.registry.get('progress') as ProgressManager;
+    const economy = this.registry.get('economy') as EconomyManager;
 
     // Fade in from black
     this.cameras.main.fadeIn(300, 0, 0, 0);
@@ -49,6 +56,9 @@ export class LevelSelect extends Phaser.Scene {
 
     // Back button
     this.createBackButton();
+
+    // Economy HUD (top-right area)
+    this.createEconomyHUD(width, economy);
 
     // 5 checkpoint positions along a winding path
     const checkpoints = [
@@ -102,6 +112,218 @@ export class LevelSelect extends Phaser.Scene {
       path.lineTo(checkpoints[i].x, checkpoints[i].y);
     }
     path.strokePath();
+  }
+
+  private createEconomyHUD(width: number, economy: EconomyManager): void {
+    const containerX = width - 100;
+    const containerY = 60;
+
+    // Heart icon + lives count
+    const heartIcon = this.add.text(containerX - 70, containerY - 20, '❤', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '24px',
+    });
+    heartIcon.setOrigin(0.5);
+
+    this.livesText = this.add.text(containerX - 40, containerY - 20, '5/5', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '24px',
+      color: '#1A1A1A',
+      fontStyle: 'bold',
+    });
+    this.livesText.setOrigin(0, 0.5);
+
+    // Countdown text (hidden when lives = 5)
+    this.countdownText = this.add.text(containerX - 70, containerY + 10, '', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '16px',
+      color: '#666666',
+    });
+    this.countdownText.setOrigin(0, 0.5);
+
+    // Bonus icon + count
+    const bonusIcon = this.add.text(containerX - 70, containerY + 40, '💎', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '20px',
+    });
+    bonusIcon.setOrigin(0.5);
+
+    this.bonusText = this.add.text(containerX - 40, containerY + 40, '500', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '20px',
+      color: '#FFB800',
+      fontStyle: 'bold',
+    });
+    this.bonusText.setOrigin(0, 0.5);
+
+    // Create 1-second timer for countdown updates
+    this.timerEvent = this.time.addEvent({
+      delay: 1000,
+      callback: this.updateEconomyDisplay,
+      callbackScope: this,
+      loop: true,
+    });
+
+    // Initial update
+    this.updateEconomyDisplay();
+
+    // Cleanup on scene shutdown
+    this.events.once('shutdown', () => {
+      if (this.timerEvent) {
+        this.timerEvent.remove();
+        this.timerEvent = null!;
+      }
+    });
+  }
+
+  private updateEconomyDisplay(): void {
+    const economy = this.registry.get('economy') as EconomyManager;
+    if (!economy) return;
+
+    // Update lives text
+    const lives = economy.getLives();
+    this.livesText.setText(`${lives}/5`);
+
+    // Update countdown if lives < 5
+    if (lives < 5) {
+      const seconds = economy.getSecondsUntilNextLife();
+      const minutes = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      this.countdownText.setText(`Далі: ${minutes}:${secs.toString().padStart(2, '0')}`);
+    } else {
+      this.countdownText.setText('');
+    }
+
+    // Update bonuses
+    const bonuses = economy.getBonuses();
+    this.bonusText.setText(`${bonuses}`);
+  }
+
+  private showNoLivesPrompt(economy: EconomyManager): void {
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+
+    // Store overlay elements for cleanup
+    const overlayElements: Phaser.GameObjects.GameObject[] = [];
+
+    // Dark backdrop
+    const backdrop = this.add.graphics();
+    backdrop.fillStyle(0x000000, 0.6);
+    backdrop.fillRect(0, 0, width, height);
+    overlayElements.push(backdrop);
+
+    // White panel
+    const panelW = 300;
+    const panelH = 250;
+    const panelX = (width - panelW) / 2;
+    const panelY = (height - panelH) / 2;
+
+    const panel = this.add.graphics();
+    panel.fillStyle(KLO_WHITE, 1);
+    panel.fillRoundedRect(panelX, panelY, panelW, panelH, 16);
+    overlayElements.push(panel);
+
+    // Title
+    const title = this.add.text(width / 2, panelY + 50, 'Немає життів!', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '32px',
+      color: '#1A1A1A',
+      fontStyle: 'bold',
+    });
+    title.setOrigin(0.5);
+    overlayElements.push(title);
+
+    // Countdown
+    const seconds = economy.getSecondsUntilNextLife();
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    const countdownMsg = this.add.text(
+      width / 2,
+      panelY + 90,
+      `Наступне через: ${minutes}:${secs.toString().padStart(2, '0')}`,
+      {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '16px',
+        color: '#666666',
+      }
+    );
+    countdownMsg.setOrigin(0.5);
+    overlayElements.push(countdownMsg);
+
+    const canRefill = economy.getBonuses() >= 15;
+
+    // Refill button or message
+    if (canRefill) {
+      const refillBtn = this.createOverlayButton(
+        width / 2,
+        panelY + 140,
+        'Поповнити (15 бонусів)',
+        async () => {
+          const success = await economy.spendBonusesForRefill();
+          if (success) {
+            // Clean up overlay
+            overlayElements.forEach(el => el.destroy());
+            // Update HUD
+            this.updateEconomyDisplay();
+          }
+        }
+      );
+      overlayElements.push(refillBtn);
+    } else {
+      const noBonus = this.add.text(width / 2, panelY + 140, 'Недостатньо бонусів', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '18px',
+        color: '#999999',
+        fontStyle: 'bold',
+      });
+      noBonus.setOrigin(0.5);
+      overlayElements.push(noBonus);
+    }
+
+    // Close button
+    const closeBtn = this.createOverlayButton(
+      width / 2,
+      panelY + 190,
+      'Закрити',
+      () => {
+        overlayElements.forEach(el => el.destroy());
+      },
+      true
+    );
+    overlayElements.push(closeBtn);
+  }
+
+  private createOverlayButton(
+    x: number,
+    y: number,
+    label: string,
+    onClick: () => void,
+    secondary: boolean = false
+  ): Phaser.GameObjects.Container {
+    const buttonWidth = 200;
+    const buttonHeight = 50;
+
+    const bg = this.add.image(0, 0, secondary ? GUI_TEXTURE_KEYS.buttonYellow : GUI_TEXTURE_KEYS.buttonOrange);
+    bg.setDisplaySize(buttonWidth, buttonHeight);
+
+    const text = this.add.text(0, 0, label, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '18px',
+      color: '#1A1A1A',
+      fontStyle: 'bold',
+    });
+    text.setOrigin(0.5);
+
+    const container = this.add.container(x, y, [bg, text]);
+    container.setSize(buttonWidth, buttonHeight);
+    container.setInteractive({ useHandCursor: true });
+
+    container.on('pointerover', () => container.setScale(1.05));
+    container.on('pointerout', () => container.setScale(1));
+    container.on('pointerdown', () => container.setScale(0.95));
+    container.on('pointerup', onClick);
+
+    return container;
   }
 
   private createBackButton(): void {
@@ -240,6 +462,12 @@ export class LevelSelect extends Phaser.Scene {
       });
 
       container.on('pointerup', () => {
+        const economy = this.registry.get('economy') as EconomyManager;
+        if (!economy.canStartLevel()) {
+          console.log('[LevelSelect] No lives, showing refill prompt');
+          this.showNoLivesPrompt(economy);
+          return;
+        }
         console.log(`[LevelSelect] Starting level ${levelId}`);
 
         // Fade out to black before starting level
