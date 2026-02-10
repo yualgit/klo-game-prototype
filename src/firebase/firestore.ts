@@ -32,6 +32,23 @@ export interface EconomyState {
   lives_regen_start: Timestamp | null;
 }
 
+/**
+ * Collection progress data structure for a single collection.
+ */
+export interface CollectionProgress {
+  owned_cards: string[];
+  pity_streak: number;  // For Phase 15
+}
+
+/**
+ * Collection state data structure stored in Firestore.
+ */
+export interface CollectionState {
+  collections: {
+    [key: string]: CollectionProgress;
+  };
+}
+
 export class FirestoreService {
   private db: Firestore;
 
@@ -133,5 +150,67 @@ export class FirestoreService {
 
     console.log(`[FirestoreService] Loaded economy for ${uid}:`, economy);
     return economy;
+  }
+
+  /**
+   * Save collection state to Firestore.
+   * Uses merge to update only the collections field.
+   *
+   * @param uid User's Firebase UID
+   * @param state Collection state to save
+   */
+  async saveCollections(uid: string, state: CollectionState): Promise<void> {
+    console.log(`[FirestoreService] Saving collections for ${uid}`);
+
+    const userDocRef = doc(this.db, 'users', uid);
+    await setDoc(
+      userDocRef,
+      {
+        collections: state.collections,
+        last_seen: serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    console.log(`[FirestoreService] Collections saved for ${uid}`);
+  }
+
+  /**
+   * Load collection state from Firestore.
+   *
+   * @param uid User's Firebase UID
+   * @returns Collection state or null if no document exists
+   */
+  async loadCollections(uid: string): Promise<CollectionState | null> {
+    console.log(`[FirestoreService] Loading collections for ${uid}`);
+
+    const userDocRef = doc(this.db, 'users', uid);
+    const docSnap = await getDoc(userDocRef);
+
+    if (!docSnap.exists()) {
+      console.log(`[FirestoreService] No collections found for ${uid}`);
+      return null;
+    }
+
+    const data = docSnap.data();
+
+    // Return default state if collections field doesn't exist
+    if (!data.collections) {
+      console.log(`[FirestoreService] No collections field found for ${uid}, returning default state`);
+      return {
+        collections: {
+          coffee: { owned_cards: [], pity_streak: 0 },
+          food: { owned_cards: [], pity_streak: 0 },
+          car: { owned_cards: [], pity_streak: 0 },
+        },
+      };
+    }
+
+    const collectionState: CollectionState = {
+      collections: data.collections,
+    };
+
+    console.log(`[FirestoreService] Loaded collections for ${uid}:`, collectionState);
+    return collectionState;
   }
 }
