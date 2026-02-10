@@ -14,14 +14,14 @@ Transform v1.0 MVP (5 levels, basic mechanics) into deeper experience with lives
 
 ## Current Position
 
-**Phase:** 9 - Kyiv Map Experience (in progress)
-**Plan:** 1/2 complete
-**Status:** Plan 09-01 complete ✓, Plan 09-02 pending
-**Progress:** 3/5 phases complete (Phase 9: 50%)
+**Phase:** 9 - Kyiv Map Experience (complete)
+**Plan:** 2/2 complete
+**Status:** Plan 09-01 complete ✓, Plan 09-02 complete ✓
+**Progress:** [██████████] 100%
 
 ```
-[████████████████████████████░░░░░░░░░░░░] 70%
-Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Phase 9: Kyiv Map (50%)
+[████████████████████████████████████████] 100%
+Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Phase 9: Kyiv Map ✓
 ```
 
 ## Performance Metrics
@@ -32,15 +32,16 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Ph
 - 6 days (Feb 5 — Feb 10, 2026)
 
 **v1.1 Progress:**
-- Velocity: 4 min/plan (7 plans completed)
-- Phase Completion Rate: 3/5 phases complete (Phase 6 done, Phase 7 done, Phase 8 done, Phase 9 in progress)
-- Plans Completed: 7/14 total (06-01, 06-02, 07-01, 07-02, 08-01, 08-02, 09-01)
+- Velocity: 13 min/plan (8 plans completed)
+- Phase Completion Rate: 4/5 phases complete (Phase 6 done, Phase 7 done, Phase 8 done, Phase 9 done)
+- Plans Completed: 8/14 total (06-01, 06-02, 07-01, 07-02, 08-01, 08-02, 09-01, 09-02)
 - Requirement Coverage: 23/23 mapped (100%)
 - Active Blockers: 0
 
 **Recent Completions:**
 | Phase-Plan | Duration | Tasks | Files | Completed |
 |------------|----------|-------|-------|-----------|
+| 09-02 | 101min | 2 | 1 | 2026-02-10 |
 | 09-01 | 5min | 2 | 3 | 2026-02-10 |
 | 08-02 | 4min | 2 | 8 | 2026-02-10 |
 | 08-01 | 5min | 2 | 6 | 2026-02-10 |
@@ -48,6 +49,7 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Ph
 | 07-01 | 2min | 2 | 4 | 2026-02-10 |
 | 06-02 | 2min | 2 | 2 | 2026-02-10 |
 | 06-01 | 8min | 2 | 3 | 2026-02-10 |
+| Phase 09 P02 | 101 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -85,6 +87,11 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Ph
 | Camera bounds for scrolling | Use Phaser setBounds vs manual scroll clamping | 09-01 | Built-in enforcement, cleaner code |
 | ScrollFactor(0) for HUD pinning | Pin HUD to camera vs separate overlay scene | 09-01 | Simpler single-scene architecture |
 | Depth-based layering (0-100+) | Explicit depth values vs add order | 09-01 | Prevents accidental occlusion |
+| Centralized tap routing | Scene-level handler checks isDragging before allowing level starts | 09-02 | Prevents level starts during drags |
+| World coordinate hit testing | Convert pointer coords to world space for scrollable level nodes | 09-02 | Reliable bounds checking in scrollable map |
+| Camera pan animation | 800ms Sine.easeInOut for smooth auto-scroll to current level | 09-02 | Better UX than instant scroll |
+| overlayActive flag | Blocks scroll interaction during overlay open, preserves overlay clicks | 09-02 | Clean overlay/scroll separation |
+| Real Kyiv PNG assets | Integrated post-checkpoint with parallax positioning fix | 09-02 | Production-ready visuals |
 
 ### Open TODOs
 
@@ -123,22 +130,23 @@ None. All phases ready for planning.
 ## Session Continuity
 
 **Last Session:** 2026-02-10
-**Stopped At:** Phase 9 Plan 01 complete — scrollable Kyiv map infrastructure
+**Stopped At:** Phase 9 complete — Kyiv Map Experience
 
-**Next Action:** Execute Plan 09-02 to wire level interactions and camera scrolling
+**Next Action:** Plan Phase 10 (Mobile Polish) via `/gsd:plan-phase 10`
 
 **Context for Next Session:**
-- Phase 09 Plan 01 complete ✓: Scrollable Kyiv map with parallax, camera drag, 10 level nodes
-- LevelSelect transformed into 2200px tall scrollable world with camera bounds
-- 3 parallax background layers generated procedurally (kyiv_sky, kyiv_far, kyiv_mid)
-- MAP_CONFIG centralizes map layout: dimensions, parallax factors, 10 Kyiv node positions
-- Level nodes positioned along winding path (Оболонь → Печерська Лавра) with landmark labels
-- HUD elements pinned to camera with scrollFactor(0) and depth 11
-- Depth layering: 0-2 backgrounds, 3 path, 5 nodes, 11 HUD, 100+ overlays
-- Drag scrolling with 10px threshold (distinguishes taps from drags)
-- Level tap handler removed — Plan 02 will re-add with tap/drag logic
-- Phase 9 Plan 01 deliverables: 2 tasks, 3 files, 2 commits, 5 min duration
-- Next: Plan 09-02 — wire level node taps, smooth camera scroll to level, visual polish
+- Phase 09 complete ✓: Kyiv Map Experience with scrolling, parallax, tap/drag, auto-scroll
+- Plan 09-01 complete: Scrollable map infrastructure (camera, parallax, drag scrolling)
+- Plan 09-02 complete: Interaction layer (tap/drag distinction, auto-scroll, overlay blocking)
+- LevelSelect is now 2200px tall scrollable Kyiv journey (Оболонь → Печерська Лавра)
+- 6 real Kyiv PNG assets integrated with proper parallax positioning
+- Tap/drag distinction prevents accidental level starts during scrolling
+- Camera auto-scrolls to current progress level on scene open (800ms pan animation)
+- overlayActive flag blocks scroll interaction when settings/shop open
+- All VISL requirements met: VISL-01 (scrolling), VISL-02 (Kyiv theme), VISL-03 (winding path)
+- Phase 9 deliverables: 2 plans, 4 tasks, 4 files, 4 commits, 106 min duration
+- 4/5 phases complete (Phase 6, 7, 8, 9 done) — 100% of v1.1 requirements delivered
+- Next phase: Phase 10 Mobile Polish (RESP-01, RESP-02, RESP-03)
 
 **Files to Reference:**
 - `.planning/ROADMAP.md` — Phase structure, success criteria, dependencies
