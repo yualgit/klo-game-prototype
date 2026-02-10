@@ -69,6 +69,12 @@ Plans:
 3. User disables booster animations and sees instant booster activation (no tween delay)
 4. User closes app, reopens, and sees previously configured settings still active
 
+**Plans:** 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — SettingsManager singleton + localStorage persistence + AudioManager/VFXManager integration
+- [ ] 07-02-PLAN.md — Gear icon + settings overlay modal in LevelSelect
+
 **Research Flags:** None (localStorage + reactive manager pattern)
 
 ---
@@ -146,7 +152,7 @@ Plans:
 | Phase | Status | Requirements | Plans | Completion |
 |-------|--------|--------------|-------|------------|
 | 6 - Economy System | ✅ Complete (2026-02-10) | 7 (ECON-01..07) | 2/2 | 100% |
-| 7 - Settings | Pending | 4 (SETT-01..04) | 0/? | 0% |
+| 7 - Settings | Planned | 4 (SETT-01..04) | 0/2 | 0% |
 | 8 - Advanced Level Mechanics | Pending | 7 (OBST-05..07, LVLD-01..04) | 0/? | 0% |
 | 9 - Kyiv Map Experience | Pending | 3 (VISL-01..03) | 0/? | 0% |
 | 10 - Mobile Polish | Pending | 2 (VISL-04..05) | 0/? | 0% |
