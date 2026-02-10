@@ -40,7 +40,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] TBD — needs re-planning (Scale.FIT approach reverted, need responsive approach)
+- [ ] 12-01-PLAN.md — DPR-aware responsive utility + Game scene adaptive layout
+- [ ] 12-02-PLAN.md — LevelSelect + Menu responsive layout + iOS safe area + verification
 
 ### Phase 13: Persistent UI Navigation Shell
 **Goal**: Bottom navigation + global header visible across all non-game screens
