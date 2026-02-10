@@ -581,6 +581,7 @@ export class LevelSelect extends Phaser.Scene {
     const panel = this.add.graphics();
     panel.fillStyle(0xF9F9F9, 1);
     panel.fillRoundedRect(panelX, panelY, panelW, panelH, 16);
+    panel.setInteractive(new Phaser.Geom.Rectangle(panelX, panelY, panelW, panelH), Phaser.Geom.Rectangle.Contains);
     overlayElements.push(panel);
 
     // Title
@@ -627,7 +628,7 @@ export class LevelSelect extends Phaser.Scene {
     // Make toggle interactive
     const sfxToggleHitArea = this.add.rectangle(sfxToggleX + 30, sfxRowY, 60, 30);
     sfxToggleHitArea.setInteractive({ useHandCursor: true });
-    sfxToggleHitArea.setVisible(false);
+    sfxToggleHitArea.setAlpha(0.001);
     overlayElements.push(sfxToggleHitArea);
 
     sfxToggleHitArea.on('pointerup', () => {
@@ -733,7 +734,7 @@ export class LevelSelect extends Phaser.Scene {
     // Make toggle interactive
     const animToggleHitArea = this.add.rectangle(animToggleX + 30, animRowY, 60, 30);
     animToggleHitArea.setInteractive({ useHandCursor: true });
-    animToggleHitArea.setVisible(false);
+    animToggleHitArea.setAlpha(0.001);
     overlayElements.push(animToggleHitArea);
 
     animToggleHitArea.on('pointerup', () => {
