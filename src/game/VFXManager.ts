@@ -36,8 +36,14 @@ export class VFXManager {
     }
   }
 
+  /** Check if the scene is still active */
+  private get active(): boolean {
+    return this.scene && this.scene.sys && this.scene.sys.isActive();
+  }
+
   /** Particle burst when tiles are matched and cleared */
   matchPop(x: number, y: number, color: number): void {
+    if (!this.active) return;
     const emitter = this.scene.add.particles(x, y, 'particle_white', {
       speed: { min: 40, max: 120 },
       scale: { start: 0.5, end: 0 },
@@ -54,6 +60,7 @@ export class VFXManager {
 
   /** Line sweep effect for linear booster activation */
   boosterLineSweep(startX: number, startY: number, direction: 'horizontal' | 'vertical', length: number): void {
+    if (!this.active) return;
     const isHorizontal = direction === 'horizontal';
     // Create a sweep particle that travels along the row/column
     const emitter = this.scene.add.particles(startX, startY, 'particle_gold', {
@@ -81,6 +88,7 @@ export class VFXManager {
 
   /** Explosion burst for bomb booster activation */
   boosterBombExplosion(x: number, y: number): void {
+    if (!this.active) return;
     // Main explosion burst — white/gold particles in circular pattern
     const emitter = this.scene.add.particles(x, y, 'particle_star', {
       speed: { min: 80, max: 200 },
@@ -101,6 +109,7 @@ export class VFXManager {
 
   /** Expanding wave effect for KLO sphere (color bomb) activation */
   boosterSphereWave(x: number, y: number): void {
+    if (!this.active) return;
     // Create expanding ring graphic
     const ring = this.scene.add.graphics();
     ring.lineStyle(4, 0xffb800, 1);
@@ -132,6 +141,7 @@ export class VFXManager {
 
   /** Confetti burst for win celebration */
   confettiBurst(x: number, y: number): void {
+    if (!this.active) return;
     const emitter = this.scene.add.particles(x, y, 'particle_white', {
       speed: { min: 50, max: 200 },
       angle: { min: 240, max: 300 },  // Upward spread
@@ -148,6 +158,7 @@ export class VFXManager {
 
   /** Escalating cascade combo feedback — bigger effects at higher depths */
   cascadeCombo(x: number, y: number, depth: number): void {
+    if (!this.active) return;
     // depth 1: small subtle pop
     const particleCount = Math.min(8 + depth * 4, 30);
     const emitter = this.scene.add.particles(x, y, 'particle_gold', {

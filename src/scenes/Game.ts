@@ -54,6 +54,9 @@ export class Game extends Phaser.Scene {
   // Level data
   private levelData: any;
 
+  // Scene lifecycle flag — false after shutdown to stop async chains
+  private sceneActive: boolean = true;
+
   // Input tracking
   private dragStartX: number = 0;
   private dragStartY: number = 0;
@@ -76,11 +79,15 @@ export class Game extends Phaser.Scene {
     bg.fillGradientStyle(0xFFFBF0, 0xFFFBF0, 0xFFF0D0, 0xFFF0D0, 1);
     bg.fillRect(0, 0, width, height);
 
+    // Mark scene as active (reset from previous shutdown)
+    this.sceneActive = true;
+
     // Reset scene state for restarts
     this.resetState();
 
     // Clean up on scene shutdown to prevent drawImage errors during restart
     this.events.once('shutdown', () => {
+      this.sceneActive = false;
       this.tweens.killAll();
       this.time.removeAllEvents();
       this.tileSprites = [];
@@ -772,6 +779,7 @@ export class Game extends Phaser.Scene {
         ease: 'Back.Out',
       }),
     ]);
+    if (!this.sceneActive) return;
 
     // Update sprite positions in array
     const tempRow = tile1.row;
@@ -804,6 +812,7 @@ export class Game extends Phaser.Scene {
       const tilesToRemove = this.boosterActivator.activateBoosterCombo(tile1Data, tile2Data);
       this.levelManager.onTilesMatched(tilesToRemove);
       await this.animateMatchRemoval([{ tiles: tilesToRemove, type: tile1Data.type, direction: 'horizontal' }]);
+      if (!this.sceneActive) return;
       this.engine.removeMatches([{ tiles: tilesToRemove, type: tile1Data.type, direction: 'horizontal' }]);
       validSwap = true;
     }
@@ -820,6 +829,7 @@ export class Game extends Phaser.Scene {
       const tilesToRemove = this.engine.getTilesByType(tile2Data.type);
       this.levelManager.onTilesMatched(tilesToRemove);
       await this.animateMatchRemoval([{ tiles: tilesToRemove, type: tile2Data.type, direction: 'horizontal' }]);
+      if (!this.sceneActive) return;
       this.engine.removeMatches([{ tiles: tilesToRemove, type: tile2Data.type, direction: 'horizontal' }]);
       validSwap = true;
     } else if (tile2Data.booster === 'klo_sphere' && !tile1Data.booster) {
@@ -834,6 +844,7 @@ export class Game extends Phaser.Scene {
       const tilesToRemove = this.engine.getTilesByType(tile1Data.type);
       this.levelManager.onTilesMatched(tilesToRemove);
       await this.animateMatchRemoval([{ tiles: tilesToRemove, type: tile1Data.type, direction: 'horizontal' }]);
+      if (!this.sceneActive) return;
       this.engine.removeMatches([{ tiles: tilesToRemove, type: tile1Data.type, direction: 'horizontal' }]);
       validSwap = true;
     }
@@ -867,6 +878,7 @@ export class Game extends Phaser.Scene {
           ease: 'Power2',
         }),
       ]);
+      if (!this.sceneActive) return;
 
       // Revert sprite positions
       const tempRow2 = tile1.row;
@@ -887,6 +899,7 @@ export class Game extends Phaser.Scene {
       // Process cascade
       console.log('[Game] Valid swap, processing cascade');
       await this.processCascade();
+      if (!this.sceneActive) return;
 
       // Check lose condition AFTER cascade (cascade may complete goals)
       this.levelManager.checkLoseCondition();
@@ -911,6 +924,7 @@ export class Game extends Phaser.Scene {
    * Wrap Phaser tween in Promise for async/await
    */
   private tweenAsync(config: Phaser.Types.Tweens.TweenBuilderConfig): Promise<void> {
+    if (!this.sceneActive) return Promise.resolve();
     return new Promise((resolve) => {
       this.tweens.add({
         ...config,
@@ -926,7 +940,7 @@ export class Game extends Phaser.Scene {
     let depth = 0;
     const MAX_DEPTH = 20;
 
-    while (depth < MAX_DEPTH) {
+    while (depth < MAX_DEPTH && this.sceneActive) {
       const matchResult: MatchResult = this.engine.findMatchesWithBoosters();
       if (matchResult.tilesToRemove.length === 0) break;
 
@@ -943,6 +957,7 @@ export class Game extends Phaser.Scene {
 
       // Animate tile removal
       await this.animateMatchRemoval([{ tiles: matchResult.tilesToRemove, type: 'fuel', direction: 'horizontal' }]);
+      if (!this.sceneActive) break;
 
       // Check for boosters in removed tiles and activate them
       const grid = this.engine.getGrid();
@@ -1011,6 +1026,7 @@ export class Game extends Phaser.Scene {
       if (activatedTiles.length > 0) {
         this.levelManager.onTilesMatched(activatedTiles);
         await this.animateMatchRemoval([{ tiles: activatedTiles, type: 'fuel', direction: 'horizontal' }]);
+        if (!this.sceneActive) break;
         this.engine.removeMatches([{ tiles: activatedTiles, type: 'fuel', direction: 'horizontal' }]);
       }
 
@@ -1020,6 +1036,7 @@ export class Game extends Phaser.Scene {
       // Animate movements
       if (movements.length > 0) {
         await this.animateMovements(movements);
+        if (!this.sceneActive) break;
       }
 
       // Spawn new tiles
@@ -1029,12 +1046,14 @@ export class Game extends Phaser.Scene {
       // Animate new tiles
       if (spawns.length > 0) {
         await this.animateNewTiles(spawns);
+        if (!this.sceneActive) break;
       }
 
       // Sync sprites with engine state
       this.syncSpritesToEngine();
 
       // Performance safeguard: small delay between cascade iterations
+      if (!this.sceneActive) break;
       await new Promise<void>(resolve => this.time.delayedCall(50, resolve));
     }
 

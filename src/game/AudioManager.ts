@@ -18,6 +18,7 @@ export class AudioManager {
   /** Play a sound effect by key from SOUND_KEYS */
   play(key: string, volumeOverride?: number): void {
     if (this.muted) return;
+    if (!this.scene || !this.scene.sys || !this.scene.sys.isActive()) return;
     try {
       this.scene.sound.play(key, { volume: volumeOverride ?? this.volume });
     } catch (e) {
