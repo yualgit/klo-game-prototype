@@ -16,6 +16,7 @@ import { EconomyManager } from '../game/EconomyManager';
 import { AudioManager } from '../game/AudioManager';
 import { VFXManager } from '../game/VFXManager';
 import { getResponsiveLayout, cssToGame } from '../utils/responsive';
+import eventsCenter from '../utils/EventsCenter';
 
 // Design constants from STYLE_GUIDE.md
 const KLO_YELLOW = 0xffb800;
@@ -100,6 +101,7 @@ export class Game extends Phaser.Scene {
     this.events.once('shutdown', () => {
       this.sceneActive = false;
       this.scale.off('resize', this.handleResize, this);
+      this.scene.stop('UIScene');
     });
 
     // Get level ID from scene data
@@ -119,10 +121,11 @@ export class Game extends Phaser.Scene {
     this.gridHeight = this.levelData.grid.height;
 
     // Calculate grid offsets using responsive tile size
+    // Account for UIScene header + Game HUD
     const gridPixelWidth = this.gridWidth * this.layout.tileSize;
     const gridPixelHeight = this.gridHeight * this.layout.tileSize;
     this.gridOffsetX = (width - gridPixelWidth) / 2;
-    this.gridOffsetY = this.layout.hudHeight + cssToGame(10); // HUD at top + padding
+    this.gridOffsetY = cssToGame(50) + this.layout.hudHeight + cssToGame(10); // UIScene header + game HUD + padding
 
     // Initialize engine and generate grid
     this.engine = new Match3Engine(this.gridHeight, this.gridWidth);
@@ -195,6 +198,13 @@ export class Game extends Phaser.Scene {
     // Setup input handling
     this.setupInput();
 
+    // Launch UIScene with header only (no bottom nav during gameplay)
+    this.scene.launch('UIScene', {
+      currentTab: 'levels', // Not relevant since nav hidden
+      showBottomNav: false,
+      showHeader: true,
+    });
+
     // Register resize handler
     this.scale.on('resize', this.handleResize, this);
   }
@@ -212,16 +222,18 @@ export class Game extends Phaser.Scene {
 
   private createHUD(width: number): void {
     // HUD background with styled bar (responsive height)
+    // Position below UIScene header
     this.hudBg = this.add.graphics();
     this.hudBg.fillStyle(0xFFB800, 0.15);
     const padding = cssToGame(4);
-    this.hudBg.fillRoundedRect(padding * 2, padding * 2, width - padding * 4, this.layout.hudHeight - padding * 4, cssToGame(4));
+    const hudY = cssToGame(50); // Below UIScene header
+    this.hudBg.fillRoundedRect(padding * 2, hudY + padding * 2, width - padding * 4, this.layout.hudHeight - padding * 4, cssToGame(4));
 
     // Add KLO branding stripe on left (proportional)
     this.hudBg.fillStyle(KLO_YELLOW, 1);
     const stripeWidth = cssToGame(2);
     const stripeHeight = this.layout.hudHeight - padding * 6;
-    this.hudBg.fillRoundedRect(padding * 3, padding * 3, stripeWidth, stripeHeight, cssToGame(1));
+    this.hudBg.fillRoundedRect(padding * 3, hudY + padding * 3, stripeWidth, stripeHeight, cssToGame(1));
 
     // Initial HUD text
     this.updateHUDText(width);
@@ -243,9 +255,10 @@ export class Game extends Phaser.Scene {
       .join(' | ');
 
     const text = `Рівень ${this.currentLevel}  •  Ходи: ${moves}  •  ${goalText}`;
+    const hudY = cssToGame(50) + this.layout.hudHeight / 2; // Below UIScene header
 
     if (!this.hudText) {
-      this.hudText = this.add.text(width / 2, this.layout.hudHeight / 2, text, {
+      this.hudText = this.add.text(width / 2, hudY, text, {
         fontFamily: 'Arial, sans-serif',
         fontSize: `${this.layout.hudFontSize}px`,
         color: '#1A1A1A',
@@ -305,6 +318,7 @@ export class Game extends Phaser.Scene {
     backdrop.fillStyle(0x000000, 0.6);
     backdrop.fillRect(0, 0, width, height);
     backdrop.setAlpha(0);
+    backdrop.setDepth(300); // Above UIScene (depth 200)
 
     this.tweens.add({
       targets: backdrop,
@@ -324,6 +338,7 @@ export class Game extends Phaser.Scene {
 
     // Panel container starts above screen and slides in
     const panelContainer = this.add.container(panelX, -panelH);
+    panelContainer.setDepth(301); // Above backdrop
     panelContainer.add(panel);
 
     this.tweens.add({
@@ -468,6 +483,7 @@ export class Game extends Phaser.Scene {
     backdrop.fillStyle(0x000000, 0.6);
     backdrop.fillRect(0, 0, width, height);
     backdrop.setAlpha(0);
+    backdrop.setDepth(300); // Above UIScene (depth 200)
 
     this.tweens.add({
       targets: backdrop,
@@ -487,6 +503,7 @@ export class Game extends Phaser.Scene {
 
     // Panel container starts above screen and slides in
     const panelContainer = this.add.container(panelX, -panelH);
+    panelContainer.setDepth(301); // Above backdrop
     panelContainer.add(panel);
 
     this.tweens.add({
@@ -626,9 +643,9 @@ export class Game extends Phaser.Scene {
     });
     buttonText.setOrigin(0.5);
 
-    // Create container for button (position relative to HUD area)
+    // Create container for button (position below UIScene header)
     const buttonX = cssToGame(35) + buttonWidth / 2;
-    const buttonY = this.layout.hudHeight / 2;
+    const buttonY = cssToGame(50) + this.layout.hudHeight / 2;
     this.backButton = this.add.container(buttonX, buttonY, [buttonBg, buttonText]);
     this.backButton.setSize(buttonWidth, buttonHeight);
     this.backButton.setInteractive({ useHandCursor: true });
@@ -1319,11 +1336,11 @@ export class Game extends Phaser.Scene {
     // Update camera viewport (CRITICAL for input)
     this.cameras.main.setViewport(0, 0, width, height);
 
-    // Recalculate grid offset with new layout
+    // Recalculate grid offset with new layout (account for UIScene header)
     const gridPixelWidth = this.gridWidth * this.layout.tileSize;
     const gridPixelHeight = this.gridHeight * this.layout.tileSize;
     this.gridOffsetX = (width - gridPixelWidth) / 2;
-    this.gridOffsetY = this.layout.hudHeight + cssToGame(10);
+    this.gridOffsetY = cssToGame(50) + this.layout.hudHeight + cssToGame(10);
 
     // Redraw background
     if (this.bg) {
@@ -1332,28 +1349,30 @@ export class Game extends Phaser.Scene {
       this.bg.fillRect(0, 0, width, height);
     }
 
-    // Redraw HUD background with new layout
+    // Redraw HUD background with new layout (below UIScene header)
     if (this.hudBg) {
       this.hudBg.clear();
       this.hudBg.fillStyle(0xFFB800, 0.15);
       const padding = cssToGame(4);
-      this.hudBg.fillRoundedRect(padding * 2, padding * 2, width - padding * 4, this.layout.hudHeight - padding * 4, cssToGame(4));
+      const hudY = cssToGame(50);
+      this.hudBg.fillRoundedRect(padding * 2, hudY + padding * 2, width - padding * 4, this.layout.hudHeight - padding * 4, cssToGame(4));
       this.hudBg.fillStyle(KLO_YELLOW, 1);
       const stripeWidth = cssToGame(2);
       const stripeHeight = this.layout.hudHeight - padding * 6;
-      this.hudBg.fillRoundedRect(padding * 3, padding * 3, stripeWidth, stripeHeight, cssToGame(1));
+      this.hudBg.fillRoundedRect(padding * 3, hudY + padding * 3, stripeWidth, stripeHeight, cssToGame(1));
     }
 
-    // Reposition HUD text with new font size
+    // Reposition HUD text with new font size (below UIScene header)
     if (this.hudText) {
-      this.hudText.setPosition(width / 2, this.layout.hudHeight / 2);
+      const hudY = cssToGame(50) + this.layout.hudHeight / 2;
+      this.hudText.setPosition(width / 2, hudY);
       this.hudText.setFontSize(this.layout.hudFontSize);
     }
 
-    // Reposition back button
+    // Reposition back button (below UIScene header)
     if (this.backButton) {
       const buttonX = cssToGame(35) + this.layout.backButtonWidth / 2;
-      const buttonY = this.layout.hudHeight / 2;
+      const buttonY = cssToGame(50) + this.layout.hudHeight / 2;
       this.backButton.setPosition(buttonX, buttonY);
     }
 
