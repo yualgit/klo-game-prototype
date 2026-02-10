@@ -178,24 +178,15 @@ export class Match3Engine {
    * Get a random tile type based on spawn rules
    */
   private getRandomTileType(spawnRules: SpawnRules): TileType {
-    const totalWeight =
-      spawnRules.fuel +
-      spawnRules.coffee +
-      spawnRules.snack +
-      spawnRules.road;
+    const entries = Object.entries(spawnRules) as [TileType, number][];
+    const totalWeight = entries.reduce((sum, [, w]) => sum + w, 0);
     const random = Math.random() * totalWeight;
-
     let cumulative = 0;
-    cumulative += spawnRules.fuel;
-    if (random < cumulative) return 'fuel';
-
-    cumulative += spawnRules.coffee;
-    if (random < cumulative) return 'coffee';
-
-    cumulative += spawnRules.snack;
-    if (random < cumulative) return 'snack';
-
-    return 'road';
+    for (const [type, weight] of entries) {
+      cumulative += weight;
+      if (random < cumulative) return type;
+    }
+    return entries[entries.length - 1][0]; // Fallback to last type
   }
 
   /**
@@ -659,7 +650,7 @@ export class Match3Engine {
    * Used when spawn rules aren't provided to processTurn
    */
   private estimateSpawnRules(): SpawnRules {
-    const counts = { fuel: 0, coffee: 0, snack: 0, road: 0 };
+    const counts = { burger: 0, hotdog: 0, oil: 0, water: 0, snack: 0, soda: 0 };
     let total = 0;
 
     for (let row = 0; row < this.rows; row++) {
@@ -679,14 +670,16 @@ export class Match3Engine {
 
     // Return proportional spawn rules, or equal distribution if board is empty
     if (total === 0) {
-      return { fuel: 0.25, coffee: 0.25, snack: 0.25, road: 0.25 };
+      return { burger: 0.167, hotdog: 0.167, oil: 0.167, water: 0.167, snack: 0.166, soda: 0.166 };
     }
 
     return {
-      fuel: counts.fuel / total || 0.1,
-      coffee: counts.coffee / total || 0.1,
+      burger: counts.burger / total || 0.1,
+      hotdog: counts.hotdog / total || 0.1,
+      oil: counts.oil / total || 0.1,
+      water: counts.water / total || 0.1,
       snack: counts.snack / total || 0.1,
-      road: counts.road / total || 0.1,
+      soda: counts.soda / total || 0.1,
     };
   }
 

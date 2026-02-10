@@ -61,10 +61,21 @@ export class Boot extends Phaser.Scene {
     });
 
     // --- Load tile sprites ---
-    this.load.image('tile_fuel_can', 'assets/tiles/fuel_can.png');
-    this.load.image('tile_coffee', 'assets/tiles/coffee.png');
-    this.load.image('tile_wheel', 'assets/tiles/wheel.png');
-    this.load.image('tile_light', 'assets/tiles/light.png');
+    this.load.image('tile_burger', 'assets/tiles/burger.png');
+    this.load.image('tile_hotdog', 'assets/tiles/hotdog.png');
+    this.load.image('tile_oil', 'assets/tiles/oil.png');
+    this.load.image('tile_water', 'assets/tiles/water.png');
+    this.load.image('tile_snack', 'assets/tiles/snack.png');
+    this.load.image('tile_soda', 'assets/tiles/soda.png');
+
+    // --- Load booster sprites ---
+    this.load.image('booster_bomb', 'assets/boosters/bomb.png');
+    this.load.image('booster_klo_horizontal', 'assets/boosters/klo_horizontal.png');
+    this.load.image('booster_klo_vertical', 'assets/boosters/klo_vertical.png');
+    this.load.image('booster_klo_sphere', 'assets/boosters/klo_sphere.png');
+
+    // --- Load block texture ---
+    this.load.image('block_texture', 'assets/blocks/block.png');
 
     // --- Load obstacle sprites ---
     this.load.image('obstacle_bubble', 'assets/blockers/bubble.png');
