@@ -11,16 +11,16 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 
 Phase: 11 of 16 (Art & Asset Quality Upgrade)
 Plan: 02 of 02
-Status: In progress
-Last activity: 2026-02-10 — Completed 11-01-PLAN.md (tile type system migration)
+Status: Complete
+Last activity: 2026-02-10 — Completed 11-02-PLAN.md (booster sprite rendering and visual polish)
 
 Progress: [████████████░░░░░░░░░░░░░░░░] 42% (10 of 16 phases complete from v1.0 + v1.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 26 (25 from v1.0 + v1.1, 1 from v1.2)
-- Average duration: ~4 minutes per plan
+- Total plans completed: 27 (25 from v1.0 + v1.1, 2 from v1.2)
+- Average duration: ~5 minutes per plan
 - Total execution time: ~6 days across 10 phases (v1.0 + v1.1)
 
 **By Phase:**
@@ -29,7 +29,7 @@ Progress: [████████████░░░░░░░░░░░
 |-------|-------|-----------|--------|
 | 1-5 | 15 | v1.0 MVP | Shipped 2026-02-10 |
 | 6-10 | 10 | v1.1 Kyiv Journey | Shipped 2026-02-10 |
-| 11-16 | 1/TBD | v1.2 Collections | In progress |
+| 11-16 | 2/TBD | v1.2 Collections | In progress |
 
 **Recent Trend:**
 - v1.0 completed: 5 phases, 15 plans (Feb 5-10)
@@ -38,6 +38,7 @@ Progress: [████████████░░░░░░░░░░░
 
 *Updated after roadmap creation*
 | Phase 11 P01 | 239 | 3 tasks | 19 files |
+| Phase 11 P02 | 409 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -51,6 +52,8 @@ Recent decisions affecting current work:
 - **DPR via zoom: 1/dpr pattern**: Retina rendering works on all devices (basis for Phase 11 art upgrade)
 - **setAlpha(0.001) for invisible hit areas**: Phaser gotcha documented (relevant for Phase 13 UI overlays)
 - [Phase 11]: Generic Object.entries approach for spawn rules iteration (supports any tile types)
+- [Phase 11]: Booster sprites use unique idle animations per type (pulse/shimmer/rotation)
+- [Phase 11]: Inactive cell styling is conditional based on level config (block sprite vs transparent mask)
 
 ### Pending Todos
 
@@ -68,7 +71,7 @@ None yet — foundation from v1.0 + v1.1 provides stable base for v1.2 features.
 ## Session Continuity
 
 Last session: 2026-02-10
-Stopped at: Completed 11-01-PLAN.md
+Stopped at: Completed 11-02-PLAN.md
 Resume file: None
 
-**Next action:** Execute 11-02-PLAN.md to continue Phase 11 art upgrade
+**Next action:** Phase 11 complete. Plan next phase for v1.2 milestone.
