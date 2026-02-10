@@ -6,6 +6,7 @@
 import Phaser from 'phaser';
 import { ProgressManager } from '../game/ProgressManager';
 import { EconomyManager } from '../game/EconomyManager';
+import { SettingsManager } from '../game/SettingsManager';
 import { GUI_TEXTURE_KEYS } from '../game/constants';
 
 const KLO_YELLOW = 0xffb800;
@@ -59,6 +60,9 @@ export class LevelSelect extends Phaser.Scene {
 
     // Economy HUD (top-right area)
     this.createEconomyHUD(width, economy);
+
+    // Settings gear icon
+    this.createSettingsButton(width);
 
     // 5 checkpoint positions along a winding path
     const checkpoints = [
@@ -510,5 +514,255 @@ export class LevelSelect extends Phaser.Scene {
       result += i < stars ? '★' : '☆';
     }
     return result;
+  }
+
+  private createSettingsButton(width: number): void {
+    // Position gear icon in top area, between back button and economy HUD
+    const gearIcon = this.add.text(width - 200, 30, '⚙', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '28px',
+      color: '#1A1A1A',
+    });
+    gearIcon.setOrigin(0.5);
+    gearIcon.setInteractive({ useHandCursor: true });
+
+    // Hover effects
+    gearIcon.on('pointerover', () => {
+      this.tweens.add({
+        targets: gearIcon,
+        scale: 1.15,
+        duration: 100,
+      });
+    });
+
+    gearIcon.on('pointerout', () => {
+      this.tweens.add({
+        targets: gearIcon,
+        scale: 1,
+        duration: 100,
+      });
+    });
+
+    gearIcon.on('pointerup', () => {
+      this.showSettingsOverlay();
+    });
+  }
+
+  private showSettingsOverlay(): void {
+    const settings = this.registry.get('settings') as SettingsManager;
+    if (!settings) {
+      console.warn('[LevelSelect] SettingsManager not found in registry');
+      return;
+    }
+
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+
+    // Store all overlay elements for cleanup
+    const overlayElements: Phaser.GameObjects.GameObject[] = [];
+
+    // Dark backdrop - blocks clicks to elements behind
+    const backdrop = this.add.graphics();
+    backdrop.fillStyle(0x000000, 0.7);
+    backdrop.fillRect(0, 0, width, height);
+    backdrop.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
+    backdrop.on('pointerup', () => {
+      // Click backdrop to close
+      overlayElements.forEach(el => el.destroy());
+    });
+    overlayElements.push(backdrop);
+
+    // White panel (340 x 380, centered)
+    const panelW = 340;
+    const panelH = 380;
+    const panelX = (width - panelW) / 2;
+    const panelY = (height - panelH) / 2;
+
+    const panel = this.add.graphics();
+    panel.fillStyle(0xF9F9F9, 1);
+    panel.fillRoundedRect(panelX, panelY, panelW, panelH, 16);
+    overlayElements.push(panel);
+
+    // Title
+    const title = this.add.text(width / 2, panelY + 50, 'Налаштування', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '28px',
+      color: '#1A1A1A',
+      fontStyle: 'bold',
+    });
+    title.setOrigin(0.5);
+    overlayElements.push(title);
+
+    // ---- SFX Toggle (y offset ~100 from panel top) ----
+    const sfxRowY = panelY + 100;
+
+    const sfxLabel = this.add.text(panelX + 30, sfxRowY, 'Звукові ефекти', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '18px',
+      color: '#1A1A1A',
+    });
+    sfxLabel.setOrigin(0, 0.5);
+    overlayElements.push(sfxLabel);
+
+    // Toggle switch: track state with mutable local variable
+    let sfxEnabled = settings.get('sfxEnabled');
+
+    const sfxToggleBg = this.add.graphics();
+    const sfxToggleThumb = this.add.circle(0, 0, 12, 0xFFFFFF);
+    const sfxToggleX = panelX + panelW - 80;
+
+    const updateSfxToggle = () => {
+      sfxToggleBg.clear();
+      sfxToggleBg.fillStyle(sfxEnabled ? 0x4CAF50 : 0xCCCCCC, 1);
+      sfxToggleBg.fillRoundedRect(sfxToggleX, sfxRowY - 15, 60, 30, 15);
+
+      // Position thumb: left when off, right when on
+      const thumbX = sfxEnabled ? sfxToggleX + 60 - 16 : sfxToggleX + 16;
+      sfxToggleThumb.setPosition(thumbX, sfxRowY);
+    };
+
+    updateSfxToggle();
+    overlayElements.push(sfxToggleBg, sfxToggleThumb);
+
+    // Make toggle interactive
+    const sfxToggleHitArea = this.add.rectangle(sfxToggleX + 30, sfxRowY, 60, 30);
+    sfxToggleHitArea.setInteractive({ useHandCursor: true });
+    sfxToggleHitArea.setVisible(false);
+    overlayElements.push(sfxToggleHitArea);
+
+    sfxToggleHitArea.on('pointerup', () => {
+      sfxEnabled = !sfxEnabled;
+      settings.set('sfxEnabled', sfxEnabled);
+
+      // Animate thumb position
+      const thumbX = sfxEnabled ? sfxToggleX + 60 - 16 : sfxToggleX + 16;
+      this.tweens.add({
+        targets: sfxToggleThumb,
+        x: thumbX,
+        duration: 200,
+        ease: 'Cubic.Out',
+      });
+
+      // Update background color
+      updateSfxToggle();
+    });
+
+    // ---- Volume Slider (y offset ~170 from panel top) ----
+    const volumeRowY = panelY + 170;
+
+    const volumeLabel = this.add.text(panelX + 30, volumeRowY, 'Гучність', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '18px',
+      color: '#1A1A1A',
+    });
+    volumeLabel.setOrigin(0, 0.5);
+    overlayElements.push(volumeLabel);
+
+    const sliderTrackX = panelX + panelW - 160;
+    const sliderTrackW = 140;
+
+    // Track background
+    const sliderTrack = this.add.rectangle(sliderTrackX, volumeRowY, sliderTrackW, 6, 0xDDDDDD);
+    sliderTrack.setOrigin(0, 0.5);
+    overlayElements.push(sliderTrack);
+
+    // Fill (shows current volume)
+    const sliderFill = this.add.rectangle(sliderTrackX, volumeRowY, 0, 6, 0xFFB800);
+    sliderFill.setOrigin(0, 0.5);
+    overlayElements.push(sliderFill);
+
+    // Thumb
+    const volume = settings.get('sfxVolume');
+    const thumbX = sliderTrackX + volume * sliderTrackW;
+    const sliderThumb = this.add.circle(thumbX, volumeRowY, 10, 0xFFFFFF);
+    sliderThumb.setStrokeStyle(2, 0xFFB800);
+    overlayElements.push(sliderThumb);
+
+    // Initial fill width
+    sliderFill.setDisplaySize(volume * sliderTrackW, 6);
+
+    // Make thumb draggable
+    sliderThumb.setInteractive({ useHandCursor: true, draggable: true });
+    this.input.setDraggable(sliderThumb);
+
+    sliderThumb.on('drag', (pointer: Phaser.Input.Pointer) => {
+      // Clamp thumb position to track bounds
+      const clampedX = Phaser.Math.Clamp(pointer.x, sliderTrackX, sliderTrackX + sliderTrackW);
+      sliderThumb.setX(clampedX);
+
+      // Update fill width
+      const fillWidth = clampedX - sliderTrackX;
+      sliderFill.setDisplaySize(fillWidth, 6);
+
+      // Calculate and set volume value
+      const volumeValue = (clampedX - sliderTrackX) / sliderTrackW;
+      settings.set('sfxVolume', volumeValue);
+    });
+
+    // ---- Animation Toggle (y offset ~240 from panel top) ----
+    const animRowY = panelY + 240;
+
+    const animLabel = this.add.text(panelX + 30, animRowY, 'Анімації бустерів', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '18px',
+      color: '#1A1A1A',
+    });
+    animLabel.setOrigin(0, 0.5);
+    overlayElements.push(animLabel);
+
+    // Toggle switch: track state with mutable local variable
+    let animEnabled = settings.get('animationsEnabled');
+
+    const animToggleBg = this.add.graphics();
+    const animToggleThumb = this.add.circle(0, 0, 12, 0xFFFFFF);
+    const animToggleX = panelX + panelW - 80;
+
+    const updateAnimToggle = () => {
+      animToggleBg.clear();
+      animToggleBg.fillStyle(animEnabled ? 0x4CAF50 : 0xCCCCCC, 1);
+      animToggleBg.fillRoundedRect(animToggleX, animRowY - 15, 60, 30, 15);
+
+      // Position thumb: left when off, right when on
+      const thumbX = animEnabled ? animToggleX + 60 - 16 : animToggleX + 16;
+      animToggleThumb.setPosition(thumbX, animRowY);
+    };
+
+    updateAnimToggle();
+    overlayElements.push(animToggleBg, animToggleThumb);
+
+    // Make toggle interactive
+    const animToggleHitArea = this.add.rectangle(animToggleX + 30, animRowY, 60, 30);
+    animToggleHitArea.setInteractive({ useHandCursor: true });
+    animToggleHitArea.setVisible(false);
+    overlayElements.push(animToggleHitArea);
+
+    animToggleHitArea.on('pointerup', () => {
+      animEnabled = !animEnabled;
+      settings.set('animationsEnabled', animEnabled);
+
+      // Animate thumb position
+      const thumbX = animEnabled ? animToggleX + 60 - 16 : animToggleX + 16;
+      this.tweens.add({
+        targets: animToggleThumb,
+        x: thumbX,
+        duration: 200,
+        ease: 'Cubic.Out',
+      });
+
+      // Update background color
+      updateAnimToggle();
+    });
+
+    // ---- Close Button (y offset ~320 from panel top) ----
+    const closeBtn = this.createOverlayButton(
+      width / 2,
+      panelY + 320,
+      'Закрити',
+      () => {
+        overlayElements.forEach(el => el.destroy());
+      },
+      true
+    );
+    overlayElements.push(closeBtn);
   }
 }
