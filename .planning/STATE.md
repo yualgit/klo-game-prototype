@@ -5,16 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Playable match-3 demo for client presentation
-**Current focus:** v1.0 MVP shipped — planning next milestone
+**Current focus:** v1.1 Kyiv Journey — lives, settings, advanced mechanics, visual overhaul
 
 ## Current Position
 
-Phase: v1.0 complete (all 5 phases shipped)
-Plan: N/A
-Status: Milestone archived
-Last activity: 2026-02-10 - v1.0 MVP milestone completed
-
-Progress: [██████████] 100% v1.0 MVP — SHIPPED
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-10 — Milestone v1.1 started
 
 ## Performance Metrics
 
@@ -40,11 +38,11 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-10
-Stopped at: v1.0 milestone archived
+Stopped at: v1.1 milestone started, defining requirements
 Resume file: None
 
-**Next:** `/gsd:new-milestone` to define next milestone
+**Next:** Define requirements → create roadmap
 
 ---
 *State initialized: 2026-02-05*
-*Last updated: 2026-02-10 — v1.0 milestone archived*
+*Last updated: 2026-02-10 — v1.1 milestone started*

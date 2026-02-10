@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed AI-generated assets, 5 levels, boosters, obstacles, and Firebase persistence. Built for client presentation to demonstrate gameplay feel and KLO brand integration.
+Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed AI-generated assets, 10 levels, boosters, obstacles, lives/bonus economy, and Firebase persistence. Built for client presentation to demonstrate gameplay feel, progression depth, and KLO brand integration.
 
 ## Core Value
 
@@ -23,16 +23,37 @@ Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed 
 
 ### Active
 
-(None — define in next milestone with `/gsd:new-milestone`)
+- [ ] Lives system (max 5, progressive regen, buy with bonuses)
+- [ ] Bonus balance (500 test, shop to refill lives)
+- [ ] Settings menu (volume, booster animation toggle)
+- [ ] 3-state ice & grass obstacles (progressive destruction)
+- [ ] Variable board sizes/shapes (non-8x8, per-row cell masks)
+- [ ] Pre-placed tiles in level JSON (blockers, boosters at fixed positions)
+- [ ] 5 new harder levels (L6-L10) using new mechanics
+- [ ] Scrollable level select with stylized Kyiv map background
+- [ ] Mobile-responsive game screen
+- [ ] Canvas resolution / DPI fix for crisp rendering
 
 ### Out of Scope
 
 - Об'єкти доставки (канистры) — з'являються з L8+
 - Phone auth / loyalty_id — не для демо
 - Remote Config — статичні JSON достатні
-- Рівні L6-20 — 5 рівнів достатньо для демо
 - Real-time multiplayer — не в скоупі
-- In-app purchases — безкоштовна гра з купонами
+- In-app purchases — бонуси тестові, не реальні гроші
+- Рівні L11-20 — 10 рівнів достатньо для демо v1.1
+
+## Current Milestone: v1.1 Kyiv Journey
+
+**Goal:** Додати глибину гри — життя, бонуси, налаштування, просунуті рівні зі змінними полями та 3-стадійними блокерами, скролабельна карта Києва як level select.
+
+**Target features:**
+- Lives system з прогресивною регенерацією та купівлею за бонуси
+- Settings menu (гучність, анімації)
+- Просунута механіка рівнів (pre-placed tiles, variable board shapes, 3-state ice/grass)
+- 5 нових складних рівнів (L6-L10)
+- Стилізована карта Києва як скролабельний level select
+- Mobile-responsive layout та canvas DPI fix
 
 ## Context
 
@@ -40,6 +61,7 @@ Shipped v1.0 MVP with 5,490 LOC TypeScript.
 Tech stack: Phaser 3.90 + TypeScript + Vite + Firebase (Auth, Firestore).
 68 commits across 5 phases in 6 days.
 Demo is fully playable with 5 levels, all mechanics, and KLO-branded visuals.
+v1.1 extends with economy (lives/bonuses), settings, advanced level mechanics, and visual overhaul of level select.
 
 ## Key Decisions
 
@@ -59,7 +81,7 @@ Demo is fully playable with 5 levels, all mechanics, and KLO-branded visuals.
 - **Stack**: Phaser 3 + TypeScript + Vite + Firebase — визначено в TECH_SPEC.md
 - **Platform**: PWA для мобільних браузерів (також працює на desktop)
 - **Assets**: AI-generated на основі STYLE_GUIDE.md (немає дизайнера)
-- **Scope**: Тільки L1-5 з повним набором механік
+- **Scope**: L1-10 з просунутими механіками та economy
 
 ---
-*Last updated: 2026-02-10 after v1.0 milestone*
+*Last updated: 2026-02-10 after v1.1 milestone started*
