@@ -29,8 +29,7 @@ export class UIScene extends Phaser.Scene {
 
   // Header elements
   private headerBg: Phaser.GameObjects.Graphics | null = null;
-  private heartIcon: Phaser.GameObjects.Text | null = null;
-  private livesText: Phaser.GameObjects.Text | null = null;
+  private heartIcons: Phaser.GameObjects.Image[] = [];
   private countdownText: Phaser.GameObjects.Text | null = null;
   private bonusIcon: Phaser.GameObjects.Text | null = null;
   private bonusText: Phaser.GameObjects.Text | null = null;
@@ -90,39 +89,8 @@ export class UIScene extends Phaser.Scene {
       Phaser.Geom.Rectangle.Contains
     );
 
-    // Heart icon
-    this.heartIcon = this.add.text(cssToGame(20), headerHeight / 2 - cssToGame(2), '❤', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(14)}px`,
-    });
-    this.heartIcon.setOrigin(0, 0.5);
-    this.heartIcon.setScrollFactor(0);
-    this.heartIcon.setDepth(201);
-
-    // Lives text
-    this.livesText = this.add.text(cssToGame(38), headerHeight / 2 - cssToGame(2), '5/5', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(13)}px`,
-      color: '#1A1A1A',
-      fontStyle: 'bold',
-    });
-    this.livesText.setOrigin(0, 0.5);
-    this.livesText.setScrollFactor(0);
-    this.livesText.setDepth(201);
-
-    // Countdown text (hidden when lives = 5)
-    this.countdownText = this.add.text(cssToGame(20), headerHeight / 2 + cssToGame(12), '', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(9)}px`,
-      color: '#666666',
-    });
-    this.countdownText.setOrigin(0, 0.5);
-    this.countdownText.setScrollFactor(0);
-    this.countdownText.setDepth(201);
-    this.countdownText.setVisible(false);
-
-    // Bonus icon
-    this.bonusIcon = this.add.text(cssToGame(90), headerHeight / 2 - cssToGame(2), '💎', {
+    // Bonus icon (left side of header)
+    this.bonusIcon = this.add.text(cssToGame(20), headerHeight / 2 - cssToGame(2), '💵', {
       fontFamily: 'Arial, sans-serif',
       fontSize: `${cssToGame(14)}px`,
     });
@@ -131,7 +99,7 @@ export class UIScene extends Phaser.Scene {
     this.bonusIcon.setDepth(201);
 
     // Bonus text
-    this.bonusText = this.add.text(cssToGame(108), headerHeight / 2 - cssToGame(2), '500', {
+    this.bonusText = this.add.text(cssToGame(38), headerHeight / 2 - cssToGame(2), '500', {
       fontFamily: 'Arial, sans-serif',
       fontSize: `${cssToGame(13)}px`,
       color: '#FFB800',
@@ -140,6 +108,37 @@ export class UIScene extends Phaser.Scene {
     this.bonusText.setOrigin(0, 0.5);
     this.bonusText.setScrollFactor(0);
     this.bonusText.setDepth(201);
+
+    // Heart icons (5 hearts, centered in header)
+    const heartSize = cssToGame(16);
+    const heartSpacing = cssToGame(18);
+    const totalHeartsWidth = 5 * heartSpacing - (heartSpacing - heartSize); // 5 hearts with spacing
+    const heartsStartX = (width - totalHeartsWidth) / 2;
+    this.heartIcons = [];
+
+    for (let i = 0; i < 5; i++) {
+      const heart = this.add.image(
+        heartsStartX + i * heartSpacing,
+        headerHeight / 2 - cssToGame(2),
+        'gui_heart'
+      );
+      heart.setDisplaySize(heartSize, heartSize);
+      heart.setOrigin(0, 0.5);
+      heart.setScrollFactor(0);
+      heart.setDepth(201);
+      this.heartIcons.push(heart);
+    }
+
+    // Countdown text (centered below hearts, hidden when lives = 5)
+    this.countdownText = this.add.text(width / 2, headerHeight / 2 + cssToGame(12), '', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: `${cssToGame(9)}px`,
+      color: '#666666',
+    });
+    this.countdownText.setOrigin(0.5, 0.5);
+    this.countdownText.setScrollFactor(0);
+    this.countdownText.setDepth(201);
+    this.countdownText.setVisible(false);
 
     // Settings gear icon
     this.settingsGear = this.add.text(width - cssToGame(25), headerHeight / 2, '⚙', {
@@ -288,10 +287,17 @@ export class UIScene extends Phaser.Scene {
   }
 
   private onLivesChanged = (): void => {
-    if (!this.economy || !this.livesText) return;
+    if (!this.economy || this.heartIcons.length === 0) return;
 
     const lives = this.economy.getLives();
-    this.livesText.setText(`${lives}/5`);
+
+    // Update heart icons: filled for available, dark for lost
+    for (let i = 0; i < 5; i++) {
+      const heart = this.heartIcons[i];
+      if (heart) {
+        heart.setTexture(i < lives ? 'gui_heart' : 'gui_heart_dark');
+      }
+    }
 
     this.updateCountdown();
   };
@@ -343,8 +349,8 @@ export class UIScene extends Phaser.Scene {
   private destroyAllElements(): void {
     // Destroy header elements
     if (this.headerBg) this.headerBg.destroy();
-    if (this.heartIcon) this.heartIcon.destroy();
-    if (this.livesText) this.livesText.destroy();
+    this.heartIcons.forEach((heart) => heart.destroy());
+    this.heartIcons = [];
     if (this.countdownText) this.countdownText.destroy();
     if (this.bonusIcon) this.bonusIcon.destroy();
     if (this.bonusText) this.bonusText.destroy();

@@ -38,6 +38,9 @@ export class LevelSelect extends Phaser.Scene {
   private backButton: Phaser.GameObjects.Container;
   private layout: ReturnType<typeof getResponsiveLayout>;
 
+  // X offset to center nodes on screen
+  private nodeOffsetX: number = 0;
+
   constructor() {
     super({ key: 'LevelSelect' });
   }
@@ -51,6 +54,11 @@ export class LevelSelect extends Phaser.Scene {
     // Store layout for responsive sizing
     this.layout = getResponsiveLayout(width, height);
 
+    // Calculate x offset to center nodes on screen
+    // Node x range is 260-650, center is 455
+    const nodeRangeCenter = (260 + 650) / 2;
+    this.nodeOffsetX = width / 2 - nodeRangeCenter;
+
     // Fade in from black
     this.cameras.main.fadeIn(300, 0, 0, 0);
 
@@ -59,16 +67,10 @@ export class LevelSelect extends Phaser.Scene {
     const firstLevelY = MAP_CONFIG.LEVEL_NODES[0].y;
     const worldBottom = firstLevelY + Math.round(height * 0.3);
     const worldHeight = Math.max(MAP_CONFIG.MAP_HEIGHT, worldBottom);
-    this.cameras.main.setBounds(0, 0, MAP_CONFIG.MAP_WIDTH, worldHeight);
+    this.cameras.main.setBounds(0, 0, width, worldHeight);
 
-    // Center camera horizontally on level node range
-    const nodeRangeCenterX = (260 + 650) / 2;
-    const scrollX = Phaser.Math.Clamp(
-      nodeRangeCenterX - width / 2,
-      0,
-      Math.max(0, MAP_CONFIG.MAP_WIDTH - width)
-    );
-    this.cameras.main.scrollX = scrollX;
+    // No horizontal scroll needed - nodes are centered on screen
+    this.cameras.main.scrollX = 0;
 
     // Create parallax background layers
     this.createParallaxBackground();
@@ -80,14 +82,14 @@ export class LevelSelect extends Phaser.Scene {
     for (let i = 0; i < MAP_CONFIG.LEVEL_NODES.length; i++) {
       const levelId = i + 1;
       const node = MAP_CONFIG.LEVEL_NODES[i];
-      this.createLevelCheckpoint(node.x, node.y, levelId, progress);
+      this.createLevelCheckpoint(node.x + this.nodeOffsetX, node.y, levelId, progress);
     }
 
     // Map pointer at current unlocked level
     const currentLevelId = this.getCurrentLevel(progress);
     if (currentLevelId > 0 && currentLevelId <= 10) {
       const pointerPos = MAP_CONFIG.LEVEL_NODES[currentLevelId - 1];
-      this.createMapPointer(pointerPos.x, pointerPos.y - 60);
+      this.createMapPointer(pointerPos.x + this.nodeOffsetX, pointerPos.y - 60);
     }
 
     // Back button (below UIScene header)
@@ -150,7 +152,7 @@ export class LevelSelect extends Phaser.Scene {
     const farSpacing = farEffectiveRange / 3;
     const farParts = ['kyiv_far_top', 'kyiv_far_mid', 'kyiv_far_bottom'];
     farParts.forEach((key, i) => {
-      const part = this.add.image(MAP_CONFIG.MAP_WIDTH / 2, farSpacing * i + farSpacing / 2, key);
+      const part = this.add.image(width / 2, farSpacing * i + farSpacing / 2, key);
       part.setScale(farScale);
       part.setScrollFactor(MAP_CONFIG.PARALLAX_FAR);
       part.setDepth(1);
@@ -163,7 +165,7 @@ export class LevelSelect extends Phaser.Scene {
     const midParts = ['kyiv_mid', 'kyiv_mid_0'];
     const midSpacing = midEffectiveRange / 2;
     midParts.forEach((key, i) => {
-      const part = this.add.image(MAP_CONFIG.MAP_WIDTH / 2, midSpacing * i + midSpacing / 2, key);
+      const part = this.add.image(width / 2, midSpacing * i + midSpacing / 2, key);
       part.setScale(midScale);
       part.setScrollFactor(MAP_CONFIG.PARALLAX_MID);
       part.setDepth(2);
@@ -175,13 +177,14 @@ export class LevelSelect extends Phaser.Scene {
     path.setDepth(3);
 
     const nodes = MAP_CONFIG.LEVEL_NODES;
+    const offsetX = this.nodeOffsetX;
 
     // Draw base path (light gray)
     path.lineStyle(10, 0xdddddd, 1);
     path.beginPath();
-    path.moveTo(nodes[0].x, nodes[0].y);
+    path.moveTo(nodes[0].x + offsetX, nodes[0].y);
     for (let i = 1; i < nodes.length; i++) {
-      path.lineTo(nodes[i].x, nodes[i].y);
+      path.lineTo(nodes[i].x + offsetX, nodes[i].y);
     }
     path.strokePath();
 
@@ -189,9 +192,9 @@ export class LevelSelect extends Phaser.Scene {
     // For now, just draw the full path in a lighter color overlay
     path.lineStyle(6, 0xffb800, 0.4);
     path.beginPath();
-    path.moveTo(nodes[0].x, nodes[0].y);
+    path.moveTo(nodes[0].x + offsetX, nodes[0].y);
     for (let i = 1; i < nodes.length; i++) {
-      path.lineTo(nodes[i].x, nodes[i].y);
+      path.lineTo(nodes[i].x + offsetX, nodes[i].y);
     }
     path.strokePath();
   }
@@ -264,12 +267,12 @@ export class LevelSelect extends Phaser.Scene {
   private scrollToCurrentLevel(): void {
     const progress = this.registry.get('progress') as ProgressManager;
     const currentLevelId = this.getCurrentLevel(progress);
+    const width = this.cameras.main.width;
 
     if (currentLevelId > 0 && currentLevelId <= 10) {
       const targetNode = MAP_CONFIG.LEVEL_NODES[currentLevelId - 1];
-      // Pan camera: center X on node range, Y on current level
-      const nodeRangeCenterX = (260 + 650) / 2;
-      this.cameras.main.pan(nodeRangeCenterX, targetNode.y, 800, 'Sine.easeInOut', true);
+      // Pan camera vertically to current level (X stays centered)
+      this.cameras.main.pan(width / 2, targetNode.y, 800, 'Sine.easeInOut', true);
     }
   }
 
@@ -853,16 +856,10 @@ export class LevelSelect extends Phaser.Scene {
     const firstLevelY = MAP_CONFIG.LEVEL_NODES[0].y;
     const worldBottom = firstLevelY + Math.round(height * 0.3);
     const worldHeight = Math.max(MAP_CONFIG.MAP_HEIGHT, worldBottom);
-    this.cameras.main.setBounds(0, 0, MAP_CONFIG.MAP_WIDTH, worldHeight);
+    this.cameras.main.setBounds(0, 0, width, worldHeight);
 
-    // Center camera horizontally on level node range (x=260..650)
-    const nodeRangeCenter = (260 + 650) / 2;
-    const scrollX = Phaser.Math.Clamp(
-      nodeRangeCenter - width / 2,
-      0,
-      Math.max(0, MAP_CONFIG.MAP_WIDTH - width)
-    );
-    this.cameras.main.setScroll(scrollX, this.cameras.main.scrollY);
+    // No horizontal scroll needed - nodes are centered on screen
+    this.cameras.main.setScroll(0, this.cameras.main.scrollY);
 
     // Reposition back button
     if (this.backButton) {
