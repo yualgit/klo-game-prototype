@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 
 ## Current Position
 
-Phase: 13 of 16 (Persistent UI Navigation Shell)
-Plan: 2 of 2 complete
-Status: Phase 13 complete — Persistent UI navigation shell integrated across all scenes
-Last activity: 2026-02-10 — Phase 13-02 complete (Navigation shell integration with Collections/Shop stubs)
+Phase: 14 of 16 (Collection Data Model and Viewing)
+Plan: 1 of 2 complete
+Status: Phase 14 in progress — Collection data model and Firestore persistence complete
+Last activity: 2026-02-10 — Phase 14-01 complete (Collection data model with Firestore persistence)
 
-Progress: [█████████████████░░░░░░░░░░] 56% (13 of 16 phases complete, Phase 13: 2/2 plans)
+Progress: [█████████████████░░░░░░░░░░] 56% (13 of 16 phases complete, Phase 14: 1/2 plans)
 
 ## Performance Metrics
 
@@ -47,6 +47,7 @@ Progress: [█████████████████░░░░░░
 | Phase 12 P02 | ~337 | 2 tasks | 5 files |
 | Phase 13 P01 | 154 | 2 tasks | 3 files |
 | Phase 13 P02 | 250 | 3 tasks | 6 files |
+| Phase 14 P01 | 156 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,10 @@ Recent decisions affecting current work:
 - [Phase 13]: Interactive graphics backgrounds required to block click-through (Phaser gotcha)
 - [Phase 13-02]: UIScene integrated across all scenes with conditional nav visibility (full nav on LevelSelect/Collections/Shop, header-only on Game)
 - [Phase 13-02]: Collections and Shop stub scenes created with navigation wiring, full implementation deferred to phases 14-15
+- [Phase 14-01]: CollectionsManager does NOT extend EventEmitter yet (Phase 16 will add notification dot events)
+- [Phase 14-01]: Collection state stored as nested map in existing user document (not subcollection)
+- [Phase 14-01]: Default state uses empty owned_cards arrays with pity_streak: 0
+- [Phase 14-01]: Card rarity distribution: 2 common + 2 rare + 1 epic + 1 legendary per collection
 
 ### Pending Todos
 
@@ -91,7 +96,7 @@ None yet — v1.2 milestone continuing.
 ## Session Continuity
 
 Last session: 2026-02-10
-Stopped at: Phase 13 complete - Persistent UI navigation shell integrated
+Stopped at: Completed 14-01-PLAN.md - Collection data model with Firestore persistence
 Resume file: None
 
-**Next action:** `/gsd:plan-phase 14` to plan Collections UI implementation
+**Next action:** Execute Phase 14 Plan 02 (Collections UI scene)
