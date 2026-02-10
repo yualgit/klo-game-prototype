@@ -2,7 +2,7 @@
 
 **Milestone:** v1.1 Kyiv Journey
 **Last Updated:** 2026-02-10
-**State:** Phase planning pending
+**State:** Phase 6 in progress
 
 ## Project Reference
 
@@ -15,13 +15,13 @@ Transform v1.0 MVP (5 levels, basic mechanics) into deeper experience with lives
 ## Current Position
 
 **Phase:** 6 - Economy System
-**Plan:** None (awaiting `/gsd:plan-phase 6`)
-**Status:** Not started
-**Progress:** 0/5 phases complete
+**Plan:** 2 of 2 (06-01 complete, 06-02 next)
+**Status:** In progress
+**Progress:** 1/5 phases complete
 
 ```
-[                                        ] 0%
-Phase 6: Economy System (Pending)
+[########                                ] 20%
+Phase 6: Economy System (1/2 plans complete)
 ```
 
 ## Performance Metrics
@@ -32,10 +32,16 @@ Phase 6: Economy System (Pending)
 - 6 days (Feb 5 — Feb 10, 2026)
 
 **v1.1 Progress:**
-- Velocity: TBD (first phase not started)
-- Phase Completion Rate: 0/5 (0%)
+- Velocity: 8 min/plan (1 plan completed)
+- Phase Completion Rate: 0/5 phases complete (1/2 plans in Phase 6)
+- Plans Completed: 1/10 total (06-01)
 - Requirement Coverage: 23/23 mapped (100%)
 - Active Blockers: 0
+
+**Recent Completions:**
+| Phase-Plan | Duration | Tasks | Files | Completed |
+|------------|----------|-------|-------|-----------|
+| 06-01 | 8min | 2 | 3 | 2026-02-10 |
 
 ## Accumulated Context
 
@@ -49,6 +55,9 @@ Phase 6: Economy System (Pending)
 | Settings independent | Can run parallel or immediately after economy — validates localStorage pattern | 7 | No blocking dependencies |
 | Mechanics before map | Variable boards + 3-state obstacles provide content for Kyiv map (L6-L10) | 8→9 | Enables richer level design |
 | Mobile polish last | DPI + responsiveness touch all scenes — do after features complete | 10 | Avoids rework |
+| Firebase Timestamp for lives | Prevents multi-device desync and local time exploits | 06-01 | Server-side time accuracy |
+| Throttle recalculation to 1/sec | Prevents performance impact from excessive getLives() calls | 06-01 | Performance optimization |
+| Nullish coalescing defaults | Backward-compatible economy initialization for existing users | 06-01 | No migration needed |
 
 ### Open TODOs
 
@@ -86,14 +95,18 @@ None. All phases ready for planning.
 
 ## Session Continuity
 
-**Next Action:** Run `/gsd:plan-phase 6` to begin Phase 6: Economy System planning
+**Last Session:** 2026-02-10T12:12:55Z
+**Stopped At:** Completed Phase 06 Plan 01 (Economy Foundation)
+
+**Next Action:** Execute Phase 06 Plan 02 (Lives UI Integration) via `/gsd:execute-phase 06`
 
 **Context for Next Session:**
-- v1.0 MVP shipped with 5,490 LOC, 68 commits, 5 levels, full match-3 mechanics
-- v1.1 adds lives system (5 max, 30 min regen), settings menu, 3-state obstacles, variable boards, Kyiv map journey, mobile polish
-- Roadmap complete with 5 phases, 100% requirement coverage (23/23 mapped)
-- Research summary available at `.planning/research/SUMMARY.md` with architecture approach and pitfall prevention strategies
-- Phase 6 (Economy System) is foundational — establishes EconomyManager singleton, lives timer, Firestore persistence patterns
+- Phase 06-01 complete: EconomyManager singleton with lives regeneration, bonus system, Firestore persistence
+- Economy accessible in all scenes via `game.registry.get('economy')`
+- Lives API ready: getLives(), canStartLevel(), loseLife(), getSecondsUntilNextLife()
+- Bonus refill API ready: spendBonusesForRefill() (costs 15 bonuses)
+- Next: Integrate lives display and countdown timer into UI
+- Phase 6 has 2 plans: 06-01 ✓ (foundation), 06-02 (UI integration)
 
 **Files to Reference:**
 - `.planning/ROADMAP.md` — Phase structure, success criteria, dependencies
