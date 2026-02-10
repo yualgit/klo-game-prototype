@@ -37,11 +37,11 @@ Plans:
   2. Game Board fully visible with all edge cells accessible on Android 360x740 screens
   3. HUD elements never overlap grid or crop level goals on any test device
   4. Game scales smoothly when device rotated or browser resized (no layout breaks)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 12-01: TBD
-- [ ] 12-02: TBD
+- [ ] 12-01-PLAN.md — Scale.FIT migration, safe-area CSS, scene layout adaptation
+- [ ] 12-02-PLAN.md — Layout polish for Game/LevelSelect + cross-viewport verification
 
 ### Phase 13: Persistent UI Navigation Shell
 **Goal**: Bottom navigation + global header visible across all non-game screens
@@ -117,7 +117,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15 → 16
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 11. Art & Asset Quality | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
-| 12. Responsive Layout | v1.2 | 0/TBD | Not started | - |
+| 12. Responsive Layout | v1.2 | 0/2 | Planned | - |
 | 13. Persistent UI Navigation | v1.2 | 0/TBD | Not started | - |
 | 14. Collection Data Model | v1.2 | 0/TBD | Not started | - |
 | 15. Card Acquisition Flow | v1.2 | 0/TBD | Not started | - |
