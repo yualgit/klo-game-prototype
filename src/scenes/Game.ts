@@ -231,147 +231,230 @@ export class Game extends Phaser.Scene {
   }
 
   /**
-   * Show win overlay with stars, progress save, and navigation buttons
+   * Show win overlay with animated star reveal, confetti, and coupon
    */
   private showWinOverlay(): void {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
     const progress = this.registry.get('progress') as ProgressManager;
 
-    // Play win sound and confetti VFX
-    this.audioManager.playWin();
-    this.vfxManager.confettiBurst(width / 2, 0);
-
     // Calculate stars and save progress
     const movesUsed = this.totalMoves - this.levelManager.getMovesRemaining();
-    const { stars } = progress.completeLevel(this.currentLevel, movesUsed, this.totalMoves);
+    const { stars: earnedStars } = progress.completeLevel(this.currentLevel, movesUsed, this.totalMoves);
     progress.saveProgress();
 
-    // Dark backdrop
+    // Dark backdrop with fade-in
     const backdrop = this.add.graphics();
     backdrop.fillStyle(0x000000, 0.6);
     backdrop.fillRect(0, 0, width, height);
+    backdrop.setAlpha(0);
+
+    this.tweens.add({
+      targets: backdrop,
+      alpha: 1,
+      duration: 200,
+    });
 
     // Panel background
     const panelW = 400;
-    const panelH = this.currentLevel === 5 ? 380 : 300;
+    const panelH = this.currentLevel === 5 ? 400 : 320;
     const panelX = (width - panelW) / 2;
     const panelY = (height - panelH) / 2;
 
     const panel = this.add.graphics();
     panel.fillStyle(KLO_WHITE, 1);
-    panel.fillRoundedRect(panelX, panelY, panelW, panelH, 16);
+    panel.fillRoundedRect(0, 0, panelW, panelH, 16);
+
+    // Panel container starts above screen and slides in
+    const panelContainer = this.add.container(panelX, -panelH);
+    panelContainer.add(panel);
+
+    this.tweens.add({
+      targets: panelContainer,
+      y: panelY,
+      duration: 500,
+      ease: 'Bounce.Out',
+      onComplete: () => {
+        // Play win sound and trigger confetti after panel lands
+        this.audioManager.playWin();
+        this.vfxManager.confettiBurst(width / 2, 0);
+      },
+    });
 
     // Title
-    const titleText = this.add.text(width / 2, panelY + 40, 'Рівень пройдено!', {
+    const titleText = this.add.text(panelW / 2, 40, 'Рівень пройдено!', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '32px',
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
     titleText.setOrigin(0.5);
+    panelContainer.add(titleText);
 
-    // Star display
-    let starString = '';
-    for (let i = 0; i < 3; i++) {
-      starString += i < stars ? '★' : '☆';
+    // Crown icon for 3-star completion
+    if (earnedStars === 3) {
+      const crown = this.add.image(panelW / 2, 80, GUI_TEXTURE_KEYS.crown1);
+      crown.setDisplaySize(40, 40);
+      panelContainer.add(crown);
     }
-    const starText = this.add.text(width / 2, panelY + 90, starString, {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '48px',
-      color: '#FFB800',
-    });
-    starText.setOrigin(0.5);
 
-    let nextButtonY = panelY + 150;
+    // Animated star reveal - stars appear one by one
+    const starY = earnedStars === 3 ? 120 : 90;
+    const starSpacing = 60;
+    const starStartX = panelW / 2 - starSpacing;
+
+    for (let i = 0; i < 3; i++) {
+      const filled = i < earnedStars;
+      const starText = this.add.text(starStartX + i * starSpacing, starY, filled ? '★' : '☆', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '48px',
+        color: filled ? '#FFB800' : '#CCCCCC',
+      });
+      starText.setOrigin(0.5);
+      starText.setScale(0);
+
+      panelContainer.add(starText);
+
+      // Animate star in with elastic bounce, staggered
+      this.tweens.add({
+        targets: starText,
+        scale: 1,
+        delay: 600 + i * 300,
+        duration: 400,
+        ease: 'Elastic.Out',
+      });
+    }
+
+    let nextButtonY = 200;
 
     // Coupon display for level 5
     if (this.currentLevel === 5) {
       const couponBg = this.add.graphics();
       couponBg.fillStyle(KLO_YELLOW, 1);
-      couponBg.fillRoundedRect(panelX + 40, panelY + 130, panelW - 80, 80, 12);
+      couponBg.lineStyle(3, 0xFFD700, 1);
+      couponBg.fillRoundedRect(40, 180, panelW - 80, 90, 12);
+      couponBg.strokeRoundedRect(40, 180, panelW - 80, 90, 12);
+      panelContainer.add(couponBg);
 
-      const couponTitle = this.add.text(width / 2, panelY + 150, 'Ваш купон:', {
+      const couponTitle = this.add.text(panelW / 2, 200, 'Ваш купон:', {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '16px',
+        fontSize: '18px',
         color: '#1A1A1A',
+        fontStyle: 'bold',
       });
       couponTitle.setOrigin(0.5);
+      panelContainer.add(couponTitle);
 
-      const couponText = this.add.text(width / 2, panelY + 180, 'Безкоштовна кава S', {
+      const couponText = this.add.text(panelW / 2, 235, '🎁 Безкоштовна кава S', {
         fontFamily: 'Arial, sans-serif',
         fontSize: '22px',
         color: '#1A1A1A',
         fontStyle: 'bold',
       });
       couponText.setOrigin(0.5);
+      panelContainer.add(couponText);
 
-      nextButtonY = panelY + 240;
+      nextButtonY = 290;
     }
 
     // "Далі" button → next level or LevelSelect
     const isLastLevel = this.currentLevel >= MAX_LEVELS;
     const nextLabel = isLastLevel ? 'Меню' : 'Далі';
 
-    this.createOverlayButton(width / 2, nextButtonY, nextLabel, () => {
+    const nextBtn = this.createOverlayButton(panelW / 2, nextButtonY, nextLabel, () => {
       if (isLastLevel) {
         this.scene.start('LevelSelect');
       } else {
         this.scene.start('Game', { levelId: this.currentLevel + 1 });
       }
     });
+    panelContainer.add(nextBtn);
 
     // "Рівні" button → LevelSelect (only when not last level)
     if (!isLastLevel) {
-      this.createOverlayButton(width / 2, nextButtonY + 60, 'Рівні', () => {
+      const levelsBtn = this.createOverlayButton(panelW / 2, nextButtonY + 60, 'Рівні', () => {
         this.scene.start('LevelSelect');
       }, true);
+      panelContainer.add(levelsBtn);
     }
   }
 
   /**
-   * Show lose overlay with retry and menu buttons
+   * Show lose overlay with slide-in animation and styled treatment
    */
   private showLoseOverlay(): void {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
+    // Brief camera shake before overlay
+    this.cameras.main.shake(150, 0.003);
+
     // Play lose sound
     this.audioManager.playLose();
 
-    // Dark backdrop
+    // Dark backdrop with fade-in
     const backdrop = this.add.graphics();
     backdrop.fillStyle(0x000000, 0.6);
     backdrop.fillRect(0, 0, width, height);
+    backdrop.setAlpha(0);
+
+    this.tweens.add({
+      targets: backdrop,
+      alpha: 1,
+      duration: 200,
+    });
 
     // Panel background
     const panelW = 400;
-    const panelH = 250;
+    const panelH = 280;
     const panelX = (width - panelW) / 2;
     const panelY = (height - panelH) / 2;
 
     const panel = this.add.graphics();
     panel.fillStyle(KLO_WHITE, 1);
-    panel.fillRoundedRect(panelX, panelY, panelW, panelH, 16);
+    panel.fillRoundedRect(0, 0, panelW, panelH, 16);
 
-    // Title
-    const titleText = this.add.text(width / 2, panelY + 50, 'Ходи закінчились!', {
+    // Panel container starts above screen and slides in
+    const panelContainer = this.add.container(panelX, -panelH);
+    panelContainer.add(panel);
+
+    this.tweens.add({
+      targets: panelContainer,
+      y: panelY,
+      duration: 400,
+      ease: 'Back.Out',
+    });
+
+    // Title (motivational tone)
+    const titleText = this.add.text(panelW / 2, 50, 'Ходи закінчились!', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '32px',
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
     titleText.setOrigin(0.5);
+    panelContainer.add(titleText);
+
+    // Subtitle
+    const subtitle = this.add.text(panelW / 2, 95, 'Спробуйте ще раз!', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '18px',
+      color: '#666666',
+    });
+    subtitle.setOrigin(0.5);
+    panelContainer.add(subtitle);
 
     // "Повторити" button → restart same level
-    this.createOverlayButton(width / 2, panelY + 120, 'Повторити', () => {
+    const retryBtn = this.createOverlayButton(panelW / 2, 150, 'Повторити', () => {
       this.scene.start('Game', { levelId: this.currentLevel });
     });
+    panelContainer.add(retryBtn);
 
     // "Меню" button → LevelSelect
-    this.createOverlayButton(width / 2, panelY + 180, 'Меню', () => {
+    const menuBtn = this.createOverlayButton(panelW / 2, 210, 'Меню', () => {
       this.scene.start('LevelSelect');
     }, true);
+    panelContainer.add(menuBtn);
   }
 
   /**
