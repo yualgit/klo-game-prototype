@@ -49,7 +49,6 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics ✓ | Ph
 | 07-01 | 2min | 2 | 4 | 2026-02-10 |
 | 06-02 | 2min | 2 | 2 | 2026-02-10 |
 | 06-01 | 8min | 2 | 3 | 2026-02-10 |
-| Phase 09 P02 | 101 | 2 tasks | 1 files |
 
 ## Accumulated Context
 

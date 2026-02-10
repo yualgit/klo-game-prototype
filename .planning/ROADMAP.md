@@ -132,8 +132,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Scrollable Kyiv map with camera bounds, parallax backgrounds, and winding path level nodes
-- [ ] 09-02-PLAN.md — Tap/drag interaction wiring, auto-scroll to current level, overlay fixes
+- [x] 09-01-PLAN.md — Scrollable Kyiv map with camera bounds, parallax backgrounds, and winding path level nodes
+- [x] 09-02-PLAN.md — Tap/drag interaction wiring, auto-scroll to current level, overlay fixes
 
 **Research Flags:** Medium (Phaser camera API researched, but specific UX flows may need design iteration during planning)
 
@@ -166,10 +166,10 @@ Plans:
 | 6 - Economy System | ✅ Complete (2026-02-10) | 7 (ECON-01..07) | 2/2 | 100% |
 | 7 - Settings | ✅ Complete (2026-02-10) | 4 (SETT-01..04) | 2/2 | 100% |
 | 8 - Advanced Level Mechanics | ✅ Complete (2026-02-10) | 7 (OBST-05..07, LVLD-01..04) | 2/2 | 100% |
-| 9 - Kyiv Map Experience | Planned | 3 (VISL-01..03) | 0/2 | 0% |
+| 9 - Kyiv Map Experience | ✅ Complete (2026-02-10) | 3 (VISL-01..03) | 2/2 | 100% |
 | 10 - Mobile Polish | Pending | 2 (VISL-04..05) | 0/? | 0% |
 
-**Overall:** 60% complete (3/5 phases)
+**Overall:** 80% complete (4/5 phases)
 
 ### Coverage
 
