@@ -15,13 +15,21 @@
       [1, 1, 1, 1, 1, 1, 1, 1],
       [0, 1, 1, 1, 1, 1, 1, 0]
     ],
-    "blocked_cells": []
+    "blocked_cells": [],
+    "inactive_cell_style": "block"
   },
   "goals": [
     { "type": "destroy_obstacle", "obstacleType": "ice", "count": 9, "current": 0, "description": "Знищити 9 шарів льоду" },
     { "type": "destroy_obstacle", "obstacleType": "grass", "count": 6, "current": 0, "description": "Знищити 6 шарів трави" }
   ],
-  "spawn_rules": { "fuel": 0.25, "coffee": 0.25, "snack": 0.25, "road": 0.25 },
+  "spawn_rules": {
+    "burger": 0.17,
+    "hotdog": 0.17,
+    "oil": 0.17,
+    "water": 0.16,
+    "snack": 0.17,
+    "soda": 0.16
+  },
   "obstacles": [
     { "type": "ice", "layers": 3, "positions": [[3, 3], [3, 4], [4, 3]], "description": "3-шаровий лід у центрі" },
     { "type": "grass", "layers": 3, "positions": [[1, 1], [6, 6]], "description": "3-шарова трава по кутах" },

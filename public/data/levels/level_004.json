@@ -10,22 +10,24 @@
   "goals": [
     {
       "type": "collect",
-      "item": "coffee",
+      "item": "hotdog",
       "count": 15,
-      "description": "Зібрати 15 кава"
+      "description": "Зібрати 15 хот-догів"
     },
     {
-      "type": "destroy_obstacle",
-      "obstacleType": "ice",
+      "type": "destroy",
+      "obstacle": "ice",
       "count": 5,
       "description": "Знищити 5 льоду"
     }
   ],
   "spawn_rules": {
-    "fuel": 0.25,
-    "coffee": 0.4,
-    "snack": 0.2,
-    "road": 0.15
+    "burger": 0.15,
+    "hotdog": 0.30,
+    "oil": 0.10,
+    "water": 0.10,
+    "snack": 0.15,
+    "soda": 0.20
   },
   "obstacles": [
     {
@@ -38,7 +40,7 @@
         [4, 4],
         [3, 5]
       ],
-      "description": "Знищи весь лід і збери каву"
+      "description": "Знищи весь лід і збери хот-доги"
     }
   ],
   "tutorial": {

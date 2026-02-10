@@ -15,17 +15,25 @@
       [0, 0, 1, 1, 1, 1, 0, 0],
       [0, 0, 1, 1, 1, 1, 0, 0]
     ],
-    "blocked_cells": []
+    "blocked_cells": [],
+    "inactive_cell_style": "block"
   },
   "goals": [
     { "type": "collect", "item": "snack", "count": 30, "current": 0, "description": "Зібрати 30 снеки" },
     { "type": "create_booster", "boosterType": "bomb", "count": 2, "current": 0, "description": "Створити 2 бомби" }
   ],
-  "spawn_rules": { "fuel": 0.2, "coffee": 0.2, "snack": 0.35, "road": 0.25 },
+  "spawn_rules": {
+    "burger": 0.15,
+    "hotdog": 0.10,
+    "oil": 0.15,
+    "water": 0.15,
+    "snack": 0.25,
+    "soda": 0.20
+  },
   "obstacles": [],
   "pre_placed_tiles": [
-    { "row": 3, "col": 3, "type": "fuel", "booster": "linear_horizontal" },
-    { "row": 4, "col": 4, "type": "coffee", "booster": "linear_vertical" }
+    { "row": 3, "col": 3, "type": "burger", "booster": "linear_horizontal" },
+    { "row": 4, "col": 4, "type": "hotdog", "booster": "linear_vertical" }
   ],
   "difficulty": "medium",
   "target_fail_rate": 0.20

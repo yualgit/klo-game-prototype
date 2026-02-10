@@ -10,7 +10,7 @@
   "goals": [
     {
       "type": "create_booster",
-      "boosterType": "linear_horizontal",
+      "booster_type": "linear",
       "count": 1,
       "description": "Створити 1 лінійний бустер"
     },
@@ -22,14 +22,16 @@
     }
   ],
   "spawn_rules": {
-    "fuel": 0.2,
-    "coffee": 0.2,
-    "snack": 0.4,
-    "road": 0.2
+    "burger": 0.15,
+    "hotdog": 0.10,
+    "oil": 0.15,
+    "water": 0.10,
+    "snack": 0.30,
+    "soda": 0.20
   },
   "obstacles": [
     {
-      "type": "dirt",
+      "type": "grass",
       "layers": 1,
       "positions": [
         [3, 3],

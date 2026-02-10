@@ -10,16 +10,18 @@
   "goals": [
     {
       "type": "collect",
-      "item": "fuel",
+      "item": "burger",
       "count": 20,
-      "description": "Зібрати 20 паливо"
+      "description": "Зібрати 20 бургерів"
     }
   ],
   "spawn_rules": {
-    "fuel": 0.4,
-    "coffee": 0.2,
-    "snack": 0.2,
-    "road": 0.2
+    "burger": 0.30,
+    "hotdog": 0.15,
+    "oil": 0.15,
+    "water": 0.10,
+    "snack": 0.15,
+    "soda": 0.15
   },
   "obstacles": [],
   "tutorial": {
@@ -27,7 +29,7 @@
     "steps": [
       "Вітаємо в KLO Match-3!",
       "Міняй сусідні фішки місцями, щоб зібрати 3 в ряд",
-      "Збери 20 'паливо', щоб пройти рівень"
+      "Збери 20 'бургери', щоб пройти рівень"
     ]
   },
   "rewards": {
