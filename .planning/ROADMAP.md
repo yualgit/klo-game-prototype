@@ -40,8 +40,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — DPR-aware responsive utility + Game scene adaptive layout
-- [ ] 12-02-PLAN.md — LevelSelect + Menu responsive layout + iOS safe area + verification
+- [x] 12-01-PLAN.md — DPR-aware responsive utility + Game scene adaptive layout
+- [x] 12-02-PLAN.md — LevelSelect + Menu responsive layout + iOS safe area + verification
 
 ### Phase 13: Persistent UI Navigation Shell
 **Goal**: Bottom navigation + global header visible across all non-game screens
@@ -117,7 +117,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15 → 16
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 11. Art & Asset Quality | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
-| 12. Responsive Layout | v1.2 | 0/2 | Planned | - |
+| 12. Responsive Layout | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
 | 13. Persistent UI Navigation | v1.2 | 0/TBD | Not started | - |
 | 14. Collection Data Model | v1.2 | 0/TBD | Not started | - |
 | 15. Card Acquisition Flow | v1.2 | 0/TBD | Not started | - |
