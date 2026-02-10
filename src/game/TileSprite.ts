@@ -301,8 +301,8 @@ export class TileSprite extends Phaser.GameObjects.Container {
         this.add(this.obstacleImage);
         break;
       }
-      case 'dirt': {
-        // Use grass sprites for dirt (grss01/02/03 based on layers)
+      case 'grass': {
+        // Use grass sprites for grass (grss01/02/03 based on layers)
         const grassKeys = OBSTACLE_TEXTURE_KEYS.grass;
         const idx = Math.max(0, Math.min(2, 3 - this.obstacleData.layers));
         const key = grassKeys[idx];

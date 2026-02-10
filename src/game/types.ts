@@ -6,7 +6,7 @@ export type TileType = 'fuel' | 'coffee' | 'snack' | 'road' | 'empty';
 
 export type BoosterType = 'linear_horizontal' | 'linear_vertical' | 'bomb' | 'klo_sphere';
 
-export type ObstacleType = 'ice' | 'dirt' | 'crate' | 'blocked';
+export type ObstacleType = 'ice' | 'grass' | 'crate' | 'blocked';
 
 export interface ObstacleData {
   type: ObstacleType;
@@ -79,6 +79,14 @@ export type LevelEvent =
   | { type: 'level_won' }
   | { type: 'level_lost' };
 
+export interface PrePlacedTile {
+  row: number;
+  col: number;
+  type: TileType;
+  booster?: BoosterType;
+  obstacle?: ObstacleData;
+}
+
 export interface LevelData {
   level_id: number;
   name: string;
@@ -87,6 +95,7 @@ export interface LevelData {
     width: number;
     height: number;
     blocked_cells: [number, number][];
+    cell_map?: number[][];
   };
   goals: LevelGoal[];
   spawn_rules: SpawnRules;
@@ -96,6 +105,7 @@ export interface LevelData {
     positions: [number, number][];
     description: string;
   }[];
+  pre_placed_tiles?: PrePlacedTile[];
 }
 
 export interface CascadeResult {

@@ -535,12 +535,12 @@ describe('Match3Engine', () => {
       expect(grid[3][3].obstacle).toBeUndefined();
     });
 
-    test('dirt obstacle destroyed by adjacent match (1 hit)', () => {
+    test('grass obstacle destroyed by adjacent match (1 hit)', () => {
       engine.generateGrid(defaultSpawnRules);
       const grid = engine.getGrid();
 
-      // Place dirt obstacle (layers: 1) at (4,4)
-      grid[4][4].obstacle = { type: 'dirt', layers: 1 };
+      // Place grass obstacle (layers: 1) at (4,4)
+      grid[4][4].obstacle = { type: 'grass', layers: 1 };
 
       // Create adjacent horizontal match at row 4, cols 1-3 (adjacent to col 4)
       grid[4][1].type = 'snack';
