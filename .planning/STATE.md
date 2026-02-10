@@ -14,10 +14,10 @@ Transform v1.0 MVP (5 levels, basic mechanics) into deeper experience with lives
 
 ## Current Position
 
-**Phase:** 8 - Advanced Level Mechanics (in progress)
-**Plan:** 08-01 complete, 08-02 next
-**Status:** Phase 8 plan 01 complete ✓
-**Progress:** [██████████] 95%
+**Phase:** 8 - Advanced Level Mechanics (complete)
+**Plan:** 08-02 complete
+**Status:** Phase 8 complete ✓ (all 2 plans executed)
+**Progress:** [██████████] 100%
 
 ```
 [████████████████░░░░░░░░░░░░░░░░░░░░░░░░] 40%
@@ -32,20 +32,21 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics (Pending
 - 6 days (Feb 5 — Feb 10, 2026)
 
 **v1.1 Progress:**
-- Velocity: 4 min/plan (5 plans completed)
-- Phase Completion Rate: 2/5 phases complete (Phase 6 done, Phase 7 done)
-- Plans Completed: 5/12 total (06-01, 06-02, 07-01, 07-02, 08-01)
+- Velocity: 4 min/plan (6 plans completed)
+- Phase Completion Rate: 3/5 phases complete (Phase 6 done, Phase 7 done, Phase 8 done)
+- Plans Completed: 6/12 total (06-01, 06-02, 07-01, 07-02, 08-01, 08-02)
 - Requirement Coverage: 23/23 mapped (100%)
 - Active Blockers: 0
 
 **Recent Completions:**
 | Phase-Plan | Duration | Tasks | Files | Completed |
 |------------|----------|-------|-------|-----------|
+| 08-02 | 4min | 2 | 8 | 2026-02-10 |
 | 08-01 | 5min | 2 | 6 | 2026-02-10 |
 | 07-02 | 1min | 1 | 1 | 2026-02-10 |
 | 07-01 | 2min | 2 | 4 | 2026-02-10 |
 | 06-02 | 2min | 2 | 2 | 2026-02-10 |
-| 06-01 | 8min | 2 | 3 | 2026-02-10 |
+| Phase 08 P02 | 4 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,10 @@ Phase 6: Economy ✓ | Phase 7: Settings ✓ | Phase 8: Level Mechanics (Pending
 | Panel interactive to block backdrop | Without it, clicks on panel pass through to backdrop close handler | 07-02 | Fix: dialog stays open |
 | Cell map uses number[][] (1=active, 0=inactive) | Backward compatibility for levels without cell_map | 08-01 | No migration needed for L1-L5 |
 | Inactive cells as blocked obstacles | Reuses existing gravity/spawn skip logic for inactive cells | 08-01 | Clean implementation |
+| Read gridWidth/gridHeight from level data | Enables dynamic board sizing instead of hardcoded 8x8 | 08-02 | Variable boards work |
+| tileSprites array (TileSprite \| null)[][] | Null entries for inactive cells prevent rendering/interaction | 08-02 | Clean inactive cell handling |
+| Inactive cells masked with scene background | Creates clean visual holes in variable boards (0xFFFBF0 fill) | 08-02 | Diamond/hourglass shapes visible |
+| Coupon trigger moved to level 10 | Final challenge reward for completing all levels (was level 5) | 08-02 | Better progression feel |
 
 ### Open TODOs
 
@@ -111,20 +116,20 @@ None. All phases ready for planning.
 
 ## Session Continuity
 
-**Last Session:** 2026-02-10T13:21:51.764Z
-**Stopped At:** Completed 08-01-PLAN.md
+**Last Session:** 2026-02-10T13:29:58.974Z
+**Stopped At:** Completed 08-02-PLAN.md
 
-**Next Action:** Execute 08-02-PLAN.md to author L6-L10 levels with variable boards
+**Next Action:** Phase 8 complete. Proceed to Phase 9 (Kyiv Map Experience) or Phase 10 (Mobile Polish)
 
 **Context for Next Session:**
-- Phase 08 plan 01 complete ✓: Cell map support and grass obstacles
-- Match3Engine: isCellActive(), setCellMap(), applyCellMap() for non-rectangular boards
-- All algorithms updated: findMatches, applyGravity, spawnNewTiles, hasValidMoves skip inactive cells
-- Types extended: PrePlacedTile, cell_map, pre_placed_tiles fields added to LevelData
-- ObstacleType renamed: 'dirt' → 'grass' (aligns with grss01/02/03.png assets)
-- 43 tests passing (7 new non-rectangular board tests added)
-- Phase 8 deliverables so far: 1 plan, 2 tasks, 6 files, 2 commits
-- Next: 08-02 — Author L6-L10 with diamond/hexagon/cross shapes and 3-layer grass obstacles
+- Phase 08 complete ✓: Variable board shapes, 3-layer obstacles, pre-placed tiles, L6-L10 levels
+- Game scene fully dynamic: gridWidth/gridHeight from level data, cell_map integration, pre-placed tile spawning
+- TileSprites array changed to (TileSprite | null)[][] with null guards in all rendering methods
+- 5 new levels created: L6 (diamond), L7 (hourglass), L8 (cross + pre-placed boosters), L9 (wide-center + mixed obstacles), L10 (L-shape + all mechanics)
+- Boot loads all 10 levels, LevelSelect displays 10 checkpoints with Ukrainian names
+- MAX_LEVELS = 10, coupon trigger moved to level 10
+- Phase 8 deliverables: 2 plans, 4 tasks, 14 files, 4 commits
+- Next: Phase 9 (Kyiv Map Experience) — landmark backgrounds, map progression visuals, cultural integration
 
 **Files to Reference:**
 - `.planning/ROADMAP.md` — Phase structure, success criteria, dependencies
