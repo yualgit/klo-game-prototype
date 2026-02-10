@@ -1,0 +1,41 @@
+{
+  "level_id": 1,
+  "name": "Перша заправка",
+  "moves": 15,
+  "grid": {
+    "width": 8,
+    "height": 8,
+    "blocked_cells": []
+  },
+  "goals": [
+    {
+      "type": "collect",
+      "item": "fuel",
+      "count": 20,
+      "description": "Зібрати 20 паливо"
+    }
+  ],
+  "spawn_rules": {
+    "fuel": 0.4,
+    "coffee": 0.2,
+    "snack": 0.2,
+    "road": 0.2
+  },
+  "obstacles": [],
+  "tutorial": {
+    "enabled": true,
+    "steps": [
+      "Вітаємо в KLO Match-3!",
+      "Міняй сусідні фішки місцями, щоб зібрати 3 в ряд",
+      "Збери 20 'паливо', щоб пройти рівень"
+    ]
+  },
+  "rewards": {
+    "stars": 1,
+    "boosters": {
+      "linear": 1
+    }
+  },
+  "difficulty": "tutorial",
+  "target_fail_rate": 0.05
+}
