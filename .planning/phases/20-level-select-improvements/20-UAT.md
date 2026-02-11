@@ -1,9 +1,9 @@
 ---
-status: complete
+status: diagnosed
 phase: 20-level-select-improvements
 source: 20-01-SUMMARY.md, 20-02-SUMMARY.md
 started: 2026-02-11T19:00:00Z
-updated: 2026-02-11T19:03:00Z
+updated: 2026-02-11T19:05:00Z
 ---
 
 ## Current Test
@@ -45,7 +45,12 @@ skipped: 0
   reason: "User reported: Зараз дорога рівнів зміщена на мобілці вправу сторону, дорога рівнів повинна бути розміщена по центру екрану (по ширині)"
   severity: major
   test: 1
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "calculateNodeOffsetX() centers the node RANGE (260-650, center=455) on viewport instead of centering the MAP_WIDTH (1024, center=512). This shifts nodes 57px right of where they should be. Fix: use width/2 - MAP_CONFIG.MAP_WIDTH/2 instead of width/2 - nodeRangeCenter."
+  artifacts:
+    - path: "src/scenes/LevelSelect.ts"
+      issue: "Line 63: offsetX = width/2 - nodeRangeCenter centers node range, not world"
+    - path: "src/game/constants.ts"
+      issue: "MAP_WIDTH (512) needed as reference for correct centering"
+  missing:
+    - "Change offsetX formula to width/2 - MAP_CONFIG.MAP_WIDTH/2 to preserve original world-relative positioning"
+  debug_session: ".planning/debug/level-road-shifted-right-mobile.md"
