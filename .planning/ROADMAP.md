@@ -14,7 +14,7 @@
 | 1-5 | v1.0 MVP | 15/15 | ✓ Complete | 2026-02-10 |
 | 6-10 | v1.1 Kyiv Journey | 10/10 | ✓ Complete | 2026-02-10 |
 | 11-16 | v1.2 Polish & Collections | 14/14 | ✓ Complete | 2026-02-11 |
-| 17 | v1.3 UI Polish | 0/1 | Planned | - |
+| 17 | v1.3 UI Polish | 1/1 | ✓ Complete | 2026-02-11 |
 | 18 | v1.3 UI Polish | 0/? | Not started | - |
 | 19 | v1.3 UI Polish | 0/? | Not started | - |
 | 20 | v1.3 UI Polish | 0/? | Not started | - |
@@ -39,7 +39,7 @@
 **Plans**: 1 plan
 
 Plans:
-- [ ] 17-01-PLAN.md — Header polish (settings button container, remove bonus display) + Navigation polish (tab order, rounded rect indicator)
+- [x] 17-01-PLAN.md — Header polish (settings button container, remove bonus display) + Navigation polish (tab order, rounded rect indicator) — completed 2026-02-11
 
 ### Phase 18: Welcome Screen Refinement
 **Goal**: Welcome screen adapts to mobile and blocks back navigation after start
