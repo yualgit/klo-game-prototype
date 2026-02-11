@@ -35,7 +35,6 @@ export class LevelSelect extends Phaser.Scene {
   private levelNodes: Phaser.GameObjects.Container[] = [];
 
   // UI elements for resize repositioning
-  private backButton: Phaser.GameObjects.Container;
   private layout: ReturnType<typeof getResponsiveLayout>;
 
   // X offset to center nodes on screen
@@ -91,9 +90,6 @@ export class LevelSelect extends Phaser.Scene {
       const pointerPos = MAP_CONFIG.LEVEL_NODES[currentLevelId - 1];
       this.createMapPointer(pointerPos.x + this.nodeOffsetX, pointerPos.y - 60);
     }
-
-    // Back button (below UIScene header)
-    this.createBackButton();
 
     // Setup drag scrolling
     this.setupDragScrolling();
@@ -420,52 +416,6 @@ export class LevelSelect extends Phaser.Scene {
     return container;
   }
 
-  private createBackButton(): void {
-    const buttonWidth = cssToGame(60);
-    const buttonHeight = cssToGame(28);
-    const buttonY = cssToGame(50) + cssToGame(15); // Below UIScene header
-
-    // Button background using GUI sprite
-    const buttonBg = this.add.image(0, 0, GUI_TEXTURE_KEYS.buttonYellow);
-    buttonBg.setDisplaySize(buttonWidth, buttonHeight);
-
-    const buttonText = this.add.text(0, 0, '< Меню', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(11)}px`,
-      color: '#1A1A1A',
-    });
-    buttonText.setOrigin(0.5);
-
-    this.backButton = this.add.container(cssToGame(40), buttonY, [buttonBg, buttonText]);
-    this.backButton.setSize(buttonWidth, buttonHeight);
-    this.backButton.setInteractive({ useHandCursor: true });
-    this.backButton.setScrollFactor(0);
-    this.backButton.setDepth(11);
-
-    this.backButton.on('pointerover', () => {
-      this.tweens.add({
-        targets: this.backButton,
-        scale: 1.05,
-        duration: 100,
-      });
-    });
-
-    this.backButton.on('pointerout', () => {
-      this.tweens.add({
-        targets: this.backButton,
-        scale: 1,
-        duration: 100,
-      });
-    });
-
-    this.backButton.on('pointerup', () => {
-      // Fade out to black before returning to menu
-      this.cameras.main.fadeOut(300, 0, 0, 0);
-      this.cameras.main.once('camerafadeoutcomplete', () => {
-        this.scene.start('Menu');
-      });
-    });
-  }
 
   private createLevelCheckpoint(
     x: number,
@@ -860,11 +810,6 @@ export class LevelSelect extends Phaser.Scene {
 
     // No horizontal scroll needed - nodes are centered on screen
     this.cameras.main.setScroll(0, this.cameras.main.scrollY);
-
-    // Reposition back button
-    if (this.backButton) {
-      this.backButton.setPosition(cssToGame(40), cssToGame(50) + cssToGame(15));
-    }
   }
 
   shutdown(): void {
