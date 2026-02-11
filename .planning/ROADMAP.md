@@ -6,11 +6,11 @@
 - ✅ **v1.1 Kyiv Journey** — Phases 6-10 (shipped 2026-02-10) — [Archive](milestones/v1.1-ROADMAP.md)
 - ✅ **v1.2 Polish & Collections** — Phases 11-16 (shipped 2026-02-11) — [Archive](milestones/v1.2-ROADMAP.md)
 - ✅ **v1.3 UI Polish** — Phases 17-22 (shipped 2026-02-11) — [Archive](milestones/v1.3-ROADMAP.md)
-- 🚧 **v1.4 Content Expansion** — Phases 23-25 (in progress)
+- ✅ **v1.4 Content Expansion** — Phases 23-25 (shipped 2026-02-11) — [Archive](milestones/v1.4-ROADMAP.md)
 
 ## Phases
 
-### 🚧 v1.4 Content Expansion (In Progress)
+### ✅ v1.4 Content Expansion (Complete)
 
 **Milestone Goal:** Expand game content with data-driven tile system, 9 tile types, 7x7 boards, and 10 new levels.
 
@@ -76,8 +76,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 25-01-PLAN.md — Create L11-L20 level JSONs with progressive difficulty and all 9 tile types
-- [ ] 25-02-PLAN.md — Extend level select map, Boot loader, and navigation for 20 levels
+- [x] 25-01-PLAN.md — Create L11-L20 level JSONs with progressive difficulty and all 9 tile types
+- [x] 25-02-PLAN.md — Extend level select map, Boot loader, and navigation for 20 levels
 
 ---
 
@@ -94,7 +94,7 @@ Phases execute in numeric order. v1.4 continues from Phase 23.
 | 17-22 | v1.3 UI Polish | 10/10 | ✓ Complete | 2026-02-11 |
 | **23. Tile System Refactor** | **v1.4** | **2/2** | **✓ Complete** | **2026-02-11** |
 | **24. 7x7 Board Transition** | **v1.4** | **2/2** | **✓ Complete** | **2026-02-11** |
-| **25. New Levels** | **v1.4** | **0/TBD** | **Not started** | **—** |
+| **25. New Levels** | **v1.4** | **2/2** | **✓ Complete** | **2026-02-11** |
 
 ---
 
