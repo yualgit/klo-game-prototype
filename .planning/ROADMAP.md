@@ -103,11 +103,11 @@ Plans:
   3. Exchange animation plays (cards fold → compress → explode → coupon reveal)
   4. After exchange, collection can be collected again (repeatable)
   5. Collections tab shows notification dot when at least one collection ready for exchange
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 16-01: TBD
-- [ ] 16-02: TBD
+- [ ] 16-01-PLAN.md — CollectionsManager EventEmitter + exchange logic + notification dot in UIScene
+- [ ] 16-02-PLAN.md — Exchange button + animation overlay in Collections scene
 
 ## Progress
 
