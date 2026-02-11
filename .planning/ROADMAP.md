@@ -4,11 +4,11 @@
 
 - ✅ **v1.0 MVP** — Phases 1-5 (shipped 2026-02-10) — [Archive](milestones/v1.0-ROADMAP.md)
 - ✅ **v1.1 Kyiv Journey** — Phases 6-10 (shipped 2026-02-10) — [Archive](milestones/v1.1-ROADMAP.md)
-- 🚧 **v1.2 Polish & Collections** — Phases 11-16 (in progress)
+- ✅ **v1.2 Polish & Collections** — Phases 11-16 (shipped 2026-02-11) — [Archive](milestones/v1.2-ROADMAP.md)
 
 ---
 
-## 🚧 v1.2 Polish & Collections (In Progress)
+## ✅ v1.2 Polish & Collections (Shipped 2026-02-11)
 
 **Milestone Goal:** Add collection cards meta-progression, overhaul UI with global header + bottom navigation, improve art quality, fix mobile responsiveness.
 
@@ -106,8 +106,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 16-01-PLAN.md — CollectionsManager EventEmitter + exchange logic + notification dot in UIScene
-- [ ] 16-02-PLAN.md — Exchange button + animation overlay in Collections scene
+- [x] 16-01-PLAN.md — CollectionsManager EventEmitter + exchange logic + notification dot in UIScene
+- [x] 16-02-PLAN.md — Exchange button + animation overlay in Collections scene
 
 ## Progress
 
@@ -121,7 +121,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15 → 16
 | 13. Persistent UI Navigation | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
 | 14. Collection Data Model | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
 | 15. Card Acquisition Flow | v1.2 | 4/4 | ✓ Complete | 2026-02-11 |
-| 16. Collection Exchange | v1.2 | 0/TBD | Not started | - |
+| 16. Collection Exchange | v1.2 | 2/2 | ✓ Complete | 2026-02-11 |
 
 ---
 
