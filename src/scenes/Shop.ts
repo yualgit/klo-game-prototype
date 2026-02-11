@@ -4,7 +4,6 @@
  */
 
 import Phaser from 'phaser';
-import { SettingsManager } from '../game/SettingsManager';
 import { cssToGame } from '../utils/responsive';
 import eventsCenter from '../utils/EventsCenter';
 
@@ -40,7 +39,6 @@ export class Shop extends Phaser.Scene {
 
     // Listen for navigation
     eventsCenter.on('navigate-to', this.handleNavigation, this);
-    eventsCenter.on('open-settings', this.showSettings, this);
 
     // Register resize handler
     this.scale.on('resize', this.handleResize, this);
@@ -48,7 +46,6 @@ export class Shop extends Phaser.Scene {
     // Register shutdown cleanup
     this.events.once('shutdown', () => {
       eventsCenter.off('navigate-to', this.handleNavigation, this);
-      eventsCenter.off('open-settings', this.showSettings, this);
       this.scale.off('resize', this.handleResize, this);
       this.scene.stop('UIScene');
     });
@@ -68,11 +65,6 @@ export class Shop extends Phaser.Scene {
         // Already on shop, no-op
         break;
     }
-  };
-
-  private showSettings = (): void => {
-    // For now, just log. Full settings overlay can be added later.
-    console.log('[Shop] Settings requested');
   };
 
   private handleResize = (gameSize: Phaser.Structs.Size): void => {
