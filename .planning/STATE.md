@@ -9,18 +9,18 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 
 ## Current Position
 
-Phase: 17 of 22 (Header & Navigation Polish) — COMPLETE
-Plan: All plans complete
-Status: Phase 17 verified and complete
-Last activity: 2026-02-11 — Phase 17 executed and verified (4/4 must-haves passed)
+Phase: 18 of 22 (Welcome Screen Refinement) — IN PROGRESS
+Plan: 1 of 1 complete
+Status: Phase 18 Plan 01 executed and complete
+Last activity: 2026-02-11 — Phase 18-01 executed (2/2 tasks complete)
 
-Progress: [█████████████████████░░░] 77% (17/22 phases complete)
+Progress: [█████████████████████░░░] 77% (17/22 phases complete, 18 in progress)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 40 (15 v1.0 + 10 v1.1 + 14 v1.2 + 1 v1.3)
-- Total phases completed: 17
+- Total plans completed: 41 (15 v1.0 + 10 v1.1 + 14 v1.2 + 2 v1.3)
+- Total phases completed: 17 (Phase 18 in progress)
 - Total execution time: ~7 days across 3 milestones
 
 **By Milestone:**
@@ -30,7 +30,13 @@ Progress: [█████████████████████░░
 | v1.0 MVP | 1-5 | 15 | Feb 5-10, 2026 |
 | v1.1 Kyiv Journey | 6-10 | 10 | Feb 10, 2026 |
 | v1.2 Polish & Collections | 11-16 | 14 | Feb 10-11, 2026 |
-| v1.3 UI Polish | 17-22 | 1 | In progress |
+| v1.3 UI Polish | 17-22 | 2 | In progress |
+
+**Recent Plans:**
+
+| Phase | Plan | Duration | Tasks | Files | Date |
+|-------|------|----------|-------|-------|------|
+| 18 | 01 | 88s | 2 | 2 | 2026-02-11 |
 
 ## Accumulated Context
 
@@ -44,6 +50,8 @@ Recent decisions:
 - v1.2: Collection state in user document (not subcollection)
 - v1.2: DPR via zoom: 1/dpr pattern for retina rendering
 - v1.2: Scale.RESIZE over Scale.FIT for mobile adaptation
+- [Phase 18-01]: Removed back-to-menu button from LevelSelect to enforce one-way flow
+- [Phase 18-01]: Title font size capped at 18% viewport width for mobile responsiveness
 
 ### Pending Todos
 
@@ -56,10 +64,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Phase 17 complete and verified
+Stopped at: Completed 18-01-PLAN.md
 Resume file: None
 
-**Next action:** `/gsd:plan-phase 18` to plan Welcome Screen Refinement.
+**Next action:** Phase 18 complete (1/1 plans done). Ready for Phase 19 or phase verification.
 
 ---
-*Updated: 2026-02-11 after Phase 17 execution and verification*
+*Updated: 2026-02-11 after Phase 18-01 execution*
