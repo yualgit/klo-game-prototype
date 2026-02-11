@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 15-card-acquisition-flow
 source: [15-01-SUMMARY.md, 15-02-SUMMARY.md]
 started: 2026-02-11T09:00:00Z
@@ -65,27 +65,42 @@ skipped: 0
   reason: "User reported: Сам текст налазить на зірочки але його видно"
   severity: cosmetic
   test: 1
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Bonus hint at cssToGame(42), stars at cssToGame(45) for 1-2 stars — only 3px gap insufficient for 16px font"
+  artifacts:
+    - path: "src/scenes/Game.ts"
+      issue: "Lines 373-393: bonus hint Y=42 too close to stars Y=45"
+  missing:
+    - "Move bonus hint below stars or adjust star/hint Y positions for proper spacing"
+  debug_session: ".planning/debug/bonus-hint-text-overlaps-stars.md"
 
-- truth: "Rarity label and 'обрано' badge positioned without overlapping on revealed card"
+- truth: "Card name and rarity label positioned without overlapping on revealed card"
   status: failed
   reason: "User reported: текст рідкості та 'обрано' налазять один на одного"
   severity: cosmetic
   test: 3
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Card name at cardHeight/2 + cssToGame(15) ≈ Y+106.5, rarity label at card.y + cssToGame(110) — only 3.5px gap"
+  artifacts:
+    - path: "src/scenes/CardPickOverlay.ts"
+      issue: "Line 124: card name Y offset, Line 222: rarity label Y offset too close"
+  missing:
+    - "Increase rarity label offset from cssToGame(110) to ~cssToGame(135) for proper spacing"
+  debug_session: ".planning/debug/card-pick-overlay-text-overlap.md"
 
 - truth: "Collections screen shows duplicate card count for cards owned more than once"
   status: failed
   reason: "User reported: Правильно, але немає відображень кількості дубльованих карток"
   severity: minor
   test: 6
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "owned_cards is string[] (no counts), addCard() blocks duplicates, selectCard() only tracks pity_streak not per-card count"
+  artifacts:
+    - path: "src/firebase/firestore.ts"
+      issue: "Lines 38-41: CollectionProgress lacks card_counts field"
+    - path: "src/game/CollectionsManager.ts"
+      issue: "Lines 124-144: selectCard() doesn't track per-card duplicate count"
+    - path: "src/scenes/Collections.ts"
+      issue: "Lines 145-158: No duplicate count badge rendering"
+  missing:
+    - "Add card_counts Record<string, number> to CollectionProgress"
+    - "Track per-card count in selectCard()"
+    - "Render 'x2', 'x3' badge on owned cards in Collections scene"
+  debug_session: ".planning/debug/collections-duplicate-count.md"
