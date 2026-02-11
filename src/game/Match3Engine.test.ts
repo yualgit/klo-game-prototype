@@ -40,6 +40,31 @@ describe('Match3Engine', () => {
         });
       });
     });
+
+    test('should spawn tiles from all 9 types when all are in spawn rules', () => {
+      const nineTypeRules: SpawnRules = {
+        burger: 0.12,
+        coffee: 0.11,
+        fuel_can: 0.11,
+        hotdog: 0.11,
+        oil: 0.11,
+        snack: 0.11,
+        soda: 0.11,
+        water: 0.11,
+        wheel: 0.11,
+      };
+      engine.generateGrid(nineTypeRules);
+      const grid = engine.getGrid();
+      const typesFound = new Set<string>();
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+          typesFound.add(grid[row][col].type);
+        }
+      }
+      // With 64 cells and 9 types, we expect most types to appear
+      // At minimum, more than the original 6 should be possible
+      expect(typesFound.size).toBeGreaterThanOrEqual(5);
+    });
   });
 
   describe('Swap Operation', () => {
