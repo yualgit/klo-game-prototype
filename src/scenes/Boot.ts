@@ -105,6 +105,7 @@ export class Boot extends Phaser.Scene {
     this.load.image('gui_slider_bg', 'assets/gui/Slider Background.png');
     this.load.image('gui_fill_orange', 'assets/gui/Fill Orange.png');
     this.load.image('gui_fill_yellow', 'assets/gui/Fill Yellow.png');
+    this.load.image('gui_small_square_button_blue', 'assets/gui/Small Square Button Blue.png');
 
     // --- Load collection card assets ---
     // Coffee collection

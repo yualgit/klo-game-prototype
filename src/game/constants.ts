@@ -59,6 +59,7 @@ export const GUI_TEXTURE_KEYS = {
   buttonYellow: 'gui_button_yellow',
   buttonRed: 'gui_button_red',
   buttonGreen: 'gui_button_green',
+  smallSquareButtonBlue: 'gui_small_square_button_blue',
   close: 'gui_close',
   crown1: 'gui_crown1',
   crown2: 'gui_crown2',
