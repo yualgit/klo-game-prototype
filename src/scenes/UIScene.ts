@@ -13,6 +13,7 @@
 
 import Phaser from 'phaser';
 import { EconomyManager } from '../game/EconomyManager';
+import { CollectionsManager } from '../game/CollectionsManager';
 import { cssToGame, getDpr } from '../utils/responsive';
 import eventsCenter from '../utils/EventsCenter';
 
@@ -43,6 +44,10 @@ export class UIScene extends Phaser.Scene {
   // Reactive updates
   private countdownTimer: Phaser.Time.TimerEvent | null = null;
   private economy: EconomyManager | null = null;
+  private collections: CollectionsManager | null = null;
+
+  // Notification dot
+  private collectionsNotificationDot: Phaser.GameObjects.Arc | null = null;
 
   constructor() {
     super({ key: 'UIScene' });
@@ -257,6 +262,17 @@ export class UIScene extends Phaser.Scene {
     });
     elements.push(hitArea);
 
+    // Add notification dot for Collections tab
+    if (tabId === 'collections') {
+      const dotRadius = cssToGame(4);
+      const dotX = x + cssToGame(12); // Top-right offset from icon center
+      const dotY = navCenterY - cssToGame(16); // Above the icon
+      this.collectionsNotificationDot = this.add.circle(dotX, dotY, dotRadius, 0xff4444, 1);
+      this.collectionsNotificationDot.setScrollFactor(0);
+      this.collectionsNotificationDot.setDepth(202);
+      this.collectionsNotificationDot.setVisible(false); // Hidden by default
+    }
+
     // Store elements for later updates
     this.tabElements.set(tabId, elements);
   }
@@ -284,6 +300,19 @@ export class UIScene extends Phaser.Scene {
     // Initial update
     this.onLivesChanged();
     this.onBonusesChanged();
+
+    // Subscribe to collections events
+    this.collections = this.registry.get('collections') as CollectionsManager;
+    if (this.collections) {
+      this.collections.on('collection-exchangeable', this.showNotificationDot, this);
+      this.collections.on('collection-exchanged', this.updateNotificationDot, this);
+      this.collections.on('no-exchangeable-collections', this.hideNotificationDot, this);
+
+      // Initial check on create
+      if (this.collections.hasExchangeableCollection()) {
+        this.showNotificationDot();
+      }
+    }
   }
 
   private onLivesChanged = (): void => {
@@ -326,6 +355,24 @@ export class UIScene extends Phaser.Scene {
     this.countdownText.setVisible(true);
   };
 
+  private showNotificationDot = (): void => {
+    if (this.collectionsNotificationDot) {
+      this.collectionsNotificationDot.setVisible(true);
+    }
+  };
+
+  private hideNotificationDot = (): void => {
+    if (this.collectionsNotificationDot) {
+      this.collectionsNotificationDot.setVisible(false);
+    }
+  };
+
+  private updateNotificationDot = (): void => {
+    if (this.collections && this.collectionsNotificationDot) {
+      this.collectionsNotificationDot.setVisible(this.collections.hasExchangeableCollection());
+    }
+  };
+
   private handleResize = (gameSize: Phaser.Structs.Size): void => {
     const width = gameSize.width;
     const height = gameSize.height;
@@ -364,6 +411,12 @@ export class UIScene extends Phaser.Scene {
     });
     this.tabElements.clear();
 
+    // Destroy notification dot
+    if (this.collectionsNotificationDot) {
+      this.collectionsNotificationDot.destroy();
+      this.collectionsNotificationDot = null;
+    }
+
     // Clear timers
     if (this.countdownTimer) {
       this.countdownTimer.remove();
@@ -375,6 +428,13 @@ export class UIScene extends Phaser.Scene {
       this.economy.off('lives-changed', this.onLivesChanged);
       this.economy.off('bonuses-changed', this.onBonusesChanged);
     }
+
+    // Remove collection event listeners
+    if (this.collections) {
+      this.collections.off('collection-exchangeable', this.showNotificationDot);
+      this.collections.off('collection-exchanged', this.updateNotificationDot);
+      this.collections.off('no-exchangeable-collections', this.hideNotificationDot);
+    }
   }
 
   private onShutdown = (): void => {
@@ -385,6 +445,13 @@ export class UIScene extends Phaser.Scene {
     if (this.economy) {
       this.economy.off('lives-changed', this.onLivesChanged);
       this.economy.off('bonuses-changed', this.onBonusesChanged);
+    }
+
+    // Remove collection event listeners
+    if (this.collections) {
+      this.collections.off('collection-exchangeable', this.showNotificationDot);
+      this.collections.off('collection-exchanged', this.updateNotificationDot);
+      this.collections.off('no-exchangeable-collections', this.hideNotificationDot);
     }
 
     // Remove timer event
