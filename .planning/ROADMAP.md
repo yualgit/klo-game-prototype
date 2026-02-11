@@ -105,10 +105,10 @@ Plans:
   1. Scroll has proper bounds (infinite scroll bug fixed)
   2. Collection cards display in horizontal row with snap-to-card swipe navigation
   3. Card container has colored background (0xffb800, 0.15 opacity) behind cards
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 22-01: TBD
+- [ ] 22-01-PLAN.md — Fix scroll bounds, horizontal card swiper with snap, colored background
 
 ---
 
