@@ -1,0 +1,57 @@
+{
+  "level_id": 13,
+  "name": "Колесо фортуни",
+  "moves": 18,
+  "grid": {
+    "width": 7,
+    "height": 7,
+    "cell_map": [
+      [0, 1, 1, 1, 1, 1, 0],
+      [1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1],
+      [0, 1, 1, 1, 1, 1, 0]
+    ],
+    "blocked_cells": [],
+    "inactive_cell_style": "block"
+  },
+  "goals": [
+    {
+      "type": "collect",
+      "item": "wheel",
+      "count": 12,
+      "current": 0,
+      "description": "Зібрати 12 коліс"
+    },
+    {
+      "type": "collect",
+      "item": "burger",
+      "count": 15,
+      "current": 0,
+      "description": "Зібрати 15 бургерів"
+    }
+  ],
+  "spawn_rules": {
+    "burger": 0.12,
+    "coffee": 0.12,
+    "fuel_can": 0.12,
+    "hotdog": 0.12,
+    "oil": 0.10,
+    "snack": 0.12,
+    "soda": 0.12,
+    "water": 0.10,
+    "wheel": 0.08
+  },
+  "obstacles": [
+    {
+      "type": "grass",
+      "layers": 2,
+      "positions": [[3, 3], [2, 3], [4, 3]],
+      "description": "2-шарова трава"
+    }
+  ],
+  "difficulty": "medium",
+  "target_fail_rate": 0.22
+}

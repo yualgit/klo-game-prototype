@@ -1,0 +1,39 @@
+{
+  "level_id": 11,
+  "bonus_level": true,
+  "name": "Кавовий ранок",
+  "moves": 18,
+  "grid": {
+    "width": 7,
+    "height": 7,
+    "blocked_cells": []
+  },
+  "goals": [
+    {
+      "type": "collect",
+      "item": "coffee",
+      "count": 25,
+      "current": 0,
+      "description": "Зібрати 25 кави"
+    }
+  ],
+  "spawn_rules": {
+    "burger": 0.15,
+    "coffee": 0.20,
+    "hotdog": 0.15,
+    "oil": 0.10,
+    "snack": 0.15,
+    "soda": 0.15,
+    "water": 0.10
+  },
+  "obstacles": [
+    {
+      "type": "ice",
+      "layers": 1,
+      "positions": [[2, 2], [2, 4], [4, 2], [4, 4]],
+      "description": "1-шаровий лід"
+    }
+  ],
+  "difficulty": "medium",
+  "target_fail_rate": 0.20
+}

@@ -1,0 +1,55 @@
+{
+  "level_id": 12,
+  "name": "Паливна станція",
+  "moves": 17,
+  "grid": {
+    "width": 7,
+    "height": 7,
+    "cell_map": [
+      [1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1],
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 0, 1, 1, 1, 0, 0]
+    ],
+    "blocked_cells": [],
+    "inactive_cell_style": "block"
+  },
+  "goals": [
+    {
+      "type": "collect",
+      "item": "fuel_can",
+      "count": 18,
+      "current": 0,
+      "description": "Зібрати 18 каністр пального"
+    },
+    {
+      "type": "destroy_obstacle",
+      "obstacleType": "ice",
+      "count": 6,
+      "current": 0,
+      "description": "Знищити 6 шарів льоду"
+    }
+  ],
+  "spawn_rules": {
+    "burger": 0.15,
+    "fuel_can": 0.20,
+    "hotdog": 0.15,
+    "oil": 0.10,
+    "snack": 0.15,
+    "soda": 0.15,
+    "water": 0.10
+  },
+  "obstacles": [
+    {
+      "type": "ice",
+      "layers": 2,
+      "positions": [[0, 2], [0, 4], [1, 3]],
+      "description": "2-шаровий лід"
+    }
+  ],
+  "difficulty": "medium",
+  "target_fail_rate": 0.20
+}

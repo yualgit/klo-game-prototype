@@ -1,0 +1,54 @@
+{
+  "level_id": 15,
+  "name": "Бульбашкове поле",
+  "moves": 16,
+  "grid": {
+    "width": 7,
+    "height": 7,
+    "blocked_cells": []
+  },
+  "goals": [
+    {
+      "type": "collect",
+      "item": "coffee",
+      "count": 15,
+      "current": 0,
+      "description": "Зібрати 15 кави"
+    },
+    {
+      "type": "collect",
+      "item": "fuel_can",
+      "count": 15,
+      "current": 0,
+      "description": "Зібрати 15 каністр пального"
+    },
+    {
+      "type": "destroy_obstacle",
+      "obstacleType": "crate",
+      "count": 4,
+      "current": 0,
+      "description": "Знищити 4 ящики"
+    }
+  ],
+  "spawn_rules": {
+    "burger": 0.12,
+    "coffee": 0.12,
+    "fuel_can": 0.12,
+    "hotdog": 0.12,
+    "oil": 0.10,
+    "snack": 0.12,
+    "soda": 0.12,
+    "water": 0.10,
+    "wheel": 0.08
+  },
+  "obstacles": [
+    {
+      "type": "crate",
+      "layers": 2,
+      "positions": [[1, 1], [1, 5], [5, 1], [5, 5]],
+      "description": "2-шарові ящики"
+    }
+  ],
+  "difficulty": "medium-hard",
+  "target_fail_rate": 0.25
+}
