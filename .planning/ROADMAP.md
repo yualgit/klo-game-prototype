@@ -62,10 +62,10 @@ Plans:
   2. Settings overlay renders above header and bottom navigation (z-order correct)
   3. Only one settings overlay can be open at a time (no duplicates)
   4. Settings overlay opens from level/game pages without crash
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 19-01: TBD
+- [ ] 19-01-PLAN.md — Move settings overlay to UIScene with mobile scaling, z-order fix, singleton guard, and cleanup of per-scene handlers
 
 ### Phase 20: Level Select Improvements
 **Goal**: Level select displays all nodes on mobile and buttons remain interactive
