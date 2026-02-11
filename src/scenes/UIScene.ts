@@ -418,7 +418,7 @@ export class UIScene extends Phaser.Scene {
     // ---- SFX Toggle ----
     const sfxRowY = panelY + cssToGame(85);
 
-    const sfxLabel = this.add.text(panelX + cssToGame(30), sfxRowY, 'Звукові ефекти', {
+    const sfxLabel = this.add.text(panelX + cssToGame(10), sfxRowY, 'Звукові ефекти', {
       fontFamily: 'Arial, sans-serif',
       fontSize: `${cssToGame(15)}px`,
       color: '#1A1A1A',
@@ -437,7 +437,7 @@ export class UIScene extends Phaser.Scene {
     const sfxToggleThumb = this.add.circle(0, 0, cssToGame(9), 0xFFFFFF);
     sfxToggleThumb.setScrollFactor(0);
     sfxToggleThumb.setDepth(303);
-    const sfxToggleX = panelX + panelW - cssToGame(80);
+    const sfxToggleX = panelX + panelW - cssToGame(50);
     const toggleWidth = cssToGame(44);
     const toggleHeight = cssToGame(22);
 
@@ -483,7 +483,7 @@ export class UIScene extends Phaser.Scene {
     const volumeRowY = panelY + cssToGame(140);
     const volumeSliderY = panelY + cssToGame(170);
 
-    const volumeLabel = this.add.text(panelX + cssToGame(30), volumeRowY, 'Гучність', {
+    const volumeLabel = this.add.text(panelX + cssToGame(10), volumeRowY, 'Гучність', {
       fontFamily: 'Arial, sans-serif',
       fontSize: `${cssToGame(15)}px`,
       color: '#1A1A1A',
@@ -493,8 +493,8 @@ export class UIScene extends Phaser.Scene {
     volumeLabel.setDepth(302);
     this.settingsOverlayElements.push(volumeLabel);
 
-    const sliderTrackX = panelX + cssToGame(30);
-    const sliderTrackW = panelW - cssToGame(60);
+    const sliderTrackX = panelX + cssToGame(10);
+    const sliderTrackW = panelW - cssToGame(20);
     const sliderTrackH = cssToGame(6);
 
     // Track background
@@ -544,7 +544,7 @@ export class UIScene extends Phaser.Scene {
     // ---- Animation Toggle ----
     const animRowY = panelY + cssToGame(225);
 
-    const animLabel = this.add.text(panelX + cssToGame(30), animRowY, 'Анімації бустерів', {
+    const animLabel = this.add.text(panelX + cssToGame(10), animRowY, 'Анімації бустерів', {
       fontFamily: 'Arial, sans-serif',
       fontSize: `${cssToGame(15)}px`,
       color: '#1A1A1A',
@@ -563,7 +563,7 @@ export class UIScene extends Phaser.Scene {
     const animToggleThumb = this.add.circle(0, 0, cssToGame(9), 0xFFFFFF);
     animToggleThumb.setScrollFactor(0);
     animToggleThumb.setDepth(303);
-    const animToggleX = panelX + panelW - cssToGame(80);
+    const animToggleX = panelX + panelW - cssToGame(50);
 
     const updateAnimToggle = () => {
       animToggleBg.clear();
@@ -610,7 +610,11 @@ export class UIScene extends Phaser.Scene {
     closeBtnBg.setDisplaySize(cssToGame(140), cssToGame(36));
     closeBtnBg.setOrigin(0.5);
     closeBtnBg.setScrollFactor(0);
-    closeBtnBg.setDepth(302);
+    closeBtnBg.setDepth(303);
+    closeBtnBg.setInteractive({ useHandCursor: true });
+    closeBtnBg.on('pointerup', () => {
+      this.closeSettingsOverlay();
+    });
     this.settingsOverlayElements.push(closeBtnBg);
 
     const closeBtnText = this.add.text(width / 2, closeBtnY, 'Закрити', {
@@ -621,16 +625,8 @@ export class UIScene extends Phaser.Scene {
     });
     closeBtnText.setOrigin(0.5);
     closeBtnText.setScrollFactor(0);
-    closeBtnText.setDepth(302);
+    closeBtnText.setDepth(304);
     this.settingsOverlayElements.push(closeBtnText);
-
-    const closeBtnContainer = this.add.container(0, 0, [closeBtnBg, closeBtnText]);
-    closeBtnContainer.setSize(cssToGame(140), cssToGame(36));
-    closeBtnContainer.setInteractive({ useHandCursor: true });
-    closeBtnContainer.on('pointerup', () => {
-      this.closeSettingsOverlay();
-    });
-    this.settingsOverlayElements.push(closeBtnContainer);
   }
 
   private closeSettingsOverlay(): void {
