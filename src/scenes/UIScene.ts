@@ -14,6 +14,8 @@
 import Phaser from 'phaser';
 import { EconomyManager } from '../game/EconomyManager';
 import { CollectionsManager } from '../game/CollectionsManager';
+import { SettingsManager } from '../game/SettingsManager';
+import { GUI_TEXTURE_KEYS } from '../game/constants';
 import { cssToGame, getDpr } from '../utils/responsive';
 import eventsCenter from '../utils/EventsCenter';
 
@@ -47,6 +49,10 @@ export class UIScene extends Phaser.Scene {
 
   // Notification dot
   private collectionsNotificationDot: Phaser.GameObjects.Arc | null = null;
+
+  // Settings overlay
+  private settingsOpen: boolean = false;
+  private settingsOverlayElements: Phaser.GameObjects.GameObject[] = [];
 
   constructor() {
     super({ key: 'UIScene' });
@@ -132,7 +138,7 @@ export class UIScene extends Phaser.Scene {
     this.settingsButton.setDepth(201);
     this.settingsButton.setInteractive({ useHandCursor: true });
     this.settingsButton.on('pointerup', () => {
-      eventsCenter.emit('open-settings');
+      this.showSettingsOverlay();
     });
 
     // Settings gear icon on top of button
@@ -354,6 +360,284 @@ export class UIScene extends Phaser.Scene {
     }
   };
 
+  private showSettingsOverlay(): void {
+    // Singleton guard - only one overlay at a time
+    if (this.settingsOpen) {
+      return;
+    }
+
+    const settings = this.registry.get('settings') as SettingsManager;
+    if (!settings) {
+      console.warn('[UIScene] SettingsManager not found in registry');
+      return;
+    }
+
+    this.settingsOpen = true;
+
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+
+    // Dark backdrop - blocks clicks to elements behind
+    const backdrop = this.add.graphics();
+    backdrop.fillStyle(0x000000, 0.7);
+    backdrop.fillRect(0, 0, width, height);
+    backdrop.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
+    backdrop.setScrollFactor(0);
+    backdrop.setDepth(300);
+    backdrop.on('pointerup', () => {
+      this.closeSettingsOverlay();
+    });
+    this.settingsOverlayElements.push(backdrop);
+
+    // White panel (responsive width, centered)
+    const panelW = Math.min(cssToGame(340), width * 0.85);
+    const panelH = cssToGame(340);
+    const panelX = (width - panelW) / 2;
+    const panelY = (height - panelH) / 2;
+
+    const panel = this.add.graphics();
+    panel.fillStyle(0xF9F9F9, 1);
+    panel.fillRoundedRect(panelX, panelY, panelW, panelH, cssToGame(16));
+    panel.setInteractive(new Phaser.Geom.Rectangle(panelX, panelY, panelW, panelH), Phaser.Geom.Rectangle.Contains);
+    panel.setScrollFactor(0);
+    panel.setDepth(301);
+    this.settingsOverlayElements.push(panel);
+
+    // Title
+    const title = this.add.text(width / 2, panelY + cssToGame(50), 'Налаштування', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: `${cssToGame(22)}px`,
+      color: '#1A1A1A',
+      fontStyle: 'bold',
+    });
+    title.setOrigin(0.5);
+    title.setScrollFactor(0);
+    title.setDepth(302);
+    this.settingsOverlayElements.push(title);
+
+    // ---- SFX Toggle ----
+    const sfxRowY = panelY + cssToGame(80);
+
+    const sfxLabel = this.add.text(panelX + cssToGame(30), sfxRowY, 'Звукові ефекти', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: `${cssToGame(15)}px`,
+      color: '#1A1A1A',
+    });
+    sfxLabel.setOrigin(0, 0.5);
+    sfxLabel.setScrollFactor(0);
+    sfxLabel.setDepth(302);
+    this.settingsOverlayElements.push(sfxLabel);
+
+    // Toggle switch: track state with mutable local variable
+    let sfxEnabled = settings.get('sfxEnabled');
+
+    const sfxToggleBg = this.add.graphics();
+    sfxToggleBg.setScrollFactor(0);
+    sfxToggleBg.setDepth(302);
+    const sfxToggleThumb = this.add.circle(0, 0, cssToGame(12), 0xFFFFFF);
+    sfxToggleThumb.setScrollFactor(0);
+    sfxToggleThumb.setDepth(303);
+    const sfxToggleX = panelX + panelW - cssToGame(80);
+    const toggleWidth = cssToGame(60);
+    const toggleHeight = cssToGame(30);
+
+    const updateSfxToggle = () => {
+      sfxToggleBg.clear();
+      sfxToggleBg.fillStyle(sfxEnabled ? 0x4CAF50 : 0xCCCCCC, 1);
+      sfxToggleBg.fillRoundedRect(sfxToggleX, sfxRowY - toggleHeight/2, toggleWidth, toggleHeight, toggleHeight/2);
+
+      // Position thumb: left when off, right when on
+      const thumbX = sfxEnabled ? sfxToggleX + toggleWidth - cssToGame(16) : sfxToggleX + cssToGame(16);
+      sfxToggleThumb.setPosition(thumbX, sfxRowY);
+    };
+
+    updateSfxToggle();
+    this.settingsOverlayElements.push(sfxToggleBg, sfxToggleThumb);
+
+    // Make toggle interactive
+    const sfxToggleHitArea = this.add.rectangle(sfxToggleX + toggleWidth/2, sfxRowY, toggleWidth, toggleHeight);
+    sfxToggleHitArea.setInteractive({ useHandCursor: true });
+    sfxToggleHitArea.setAlpha(0.001);
+    sfxToggleHitArea.setScrollFactor(0);
+    sfxToggleHitArea.setDepth(303);
+    this.settingsOverlayElements.push(sfxToggleHitArea);
+
+    sfxToggleHitArea.on('pointerup', () => {
+      sfxEnabled = !sfxEnabled;
+      settings.set('sfxEnabled', sfxEnabled);
+
+      // Animate thumb position
+      const thumbX = sfxEnabled ? sfxToggleX + toggleWidth - cssToGame(16) : sfxToggleX + cssToGame(16);
+      this.tweens.add({
+        targets: sfxToggleThumb,
+        x: thumbX,
+        duration: 200,
+        ease: 'Cubic.Out',
+      });
+
+      // Update background color
+      updateSfxToggle();
+    });
+
+    // ---- Volume Slider ----
+    const volumeRowY = panelY + cssToGame(145);
+
+    const volumeLabel = this.add.text(panelX + cssToGame(30), volumeRowY, 'Гучність', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: `${cssToGame(15)}px`,
+      color: '#1A1A1A',
+    });
+    volumeLabel.setOrigin(0, 0.5);
+    volumeLabel.setScrollFactor(0);
+    volumeLabel.setDepth(302);
+    this.settingsOverlayElements.push(volumeLabel);
+
+    const sliderTrackX = panelX + panelW - cssToGame(160);
+    const sliderTrackW = cssToGame(140);
+    const sliderTrackH = cssToGame(6);
+
+    // Track background
+    const sliderTrack = this.add.rectangle(sliderTrackX, volumeRowY, sliderTrackW, sliderTrackH, 0xDDDDDD);
+    sliderTrack.setOrigin(0, 0.5);
+    sliderTrack.setScrollFactor(0);
+    sliderTrack.setDepth(302);
+    this.settingsOverlayElements.push(sliderTrack);
+
+    // Fill (shows current volume)
+    const sliderFill = this.add.rectangle(sliderTrackX, volumeRowY, 0, sliderTrackH, 0xFFB800);
+    sliderFill.setOrigin(0, 0.5);
+    sliderFill.setScrollFactor(0);
+    sliderFill.setDepth(302);
+    this.settingsOverlayElements.push(sliderFill);
+
+    // Thumb
+    const volume = settings.get('sfxVolume');
+    const thumbX = sliderTrackX + volume * sliderTrackW;
+    const sliderThumb = this.add.circle(thumbX, volumeRowY, cssToGame(10), 0xFFFFFF);
+    sliderThumb.setStrokeStyle(cssToGame(2), 0xFFB800);
+    sliderThumb.setScrollFactor(0);
+    sliderThumb.setDepth(303);
+    this.settingsOverlayElements.push(sliderThumb);
+
+    // Initial fill width
+    sliderFill.setDisplaySize(volume * sliderTrackW, sliderTrackH);
+
+    // Make thumb draggable
+    sliderThumb.setInteractive({ useHandCursor: true, draggable: true });
+    this.input.setDraggable(sliderThumb);
+
+    sliderThumb.on('drag', (pointer: Phaser.Input.Pointer) => {
+      // Clamp thumb position to track bounds
+      const clampedX = Phaser.Math.Clamp(pointer.x, sliderTrackX, sliderTrackX + sliderTrackW);
+      sliderThumb.setX(clampedX);
+
+      // Update fill width
+      const fillWidth = clampedX - sliderTrackX;
+      sliderFill.setDisplaySize(fillWidth, sliderTrackH);
+
+      // Calculate and set volume value
+      const volumeValue = (clampedX - sliderTrackX) / sliderTrackW;
+      settings.set('sfxVolume', volumeValue);
+    });
+
+    // ---- Animation Toggle ----
+    const animRowY = panelY + cssToGame(210);
+
+    const animLabel = this.add.text(panelX + cssToGame(30), animRowY, 'Анімації бустерів', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: `${cssToGame(15)}px`,
+      color: '#1A1A1A',
+    });
+    animLabel.setOrigin(0, 0.5);
+    animLabel.setScrollFactor(0);
+    animLabel.setDepth(302);
+    this.settingsOverlayElements.push(animLabel);
+
+    // Toggle switch: track state with mutable local variable
+    let animEnabled = settings.get('animationsEnabled');
+
+    const animToggleBg = this.add.graphics();
+    animToggleBg.setScrollFactor(0);
+    animToggleBg.setDepth(302);
+    const animToggleThumb = this.add.circle(0, 0, cssToGame(12), 0xFFFFFF);
+    animToggleThumb.setScrollFactor(0);
+    animToggleThumb.setDepth(303);
+    const animToggleX = panelX + panelW - cssToGame(80);
+
+    const updateAnimToggle = () => {
+      animToggleBg.clear();
+      animToggleBg.fillStyle(animEnabled ? 0x4CAF50 : 0xCCCCCC, 1);
+      animToggleBg.fillRoundedRect(animToggleX, animRowY - toggleHeight/2, toggleWidth, toggleHeight, toggleHeight/2);
+
+      // Position thumb: left when off, right when on
+      const thumbX = animEnabled ? animToggleX + toggleWidth - cssToGame(16) : animToggleX + cssToGame(16);
+      animToggleThumb.setPosition(thumbX, animRowY);
+    };
+
+    updateAnimToggle();
+    this.settingsOverlayElements.push(animToggleBg, animToggleThumb);
+
+    // Make toggle interactive
+    const animToggleHitArea = this.add.rectangle(animToggleX + toggleWidth/2, animRowY, toggleWidth, toggleHeight);
+    animToggleHitArea.setInteractive({ useHandCursor: true });
+    animToggleHitArea.setAlpha(0.001);
+    animToggleHitArea.setScrollFactor(0);
+    animToggleHitArea.setDepth(303);
+    this.settingsOverlayElements.push(animToggleHitArea);
+
+    animToggleHitArea.on('pointerup', () => {
+      animEnabled = !animEnabled;
+      settings.set('animationsEnabled', animEnabled);
+
+      // Animate thumb position
+      const thumbX = animEnabled ? animToggleX + toggleWidth - cssToGame(16) : animToggleX + cssToGame(16);
+      this.tweens.add({
+        targets: animToggleThumb,
+        x: thumbX,
+        duration: 200,
+        ease: 'Cubic.Out',
+      });
+
+      // Update background color
+      updateAnimToggle();
+    });
+
+    // ---- Close Button ----
+    const closeBtnY = panelY + cssToGame(280);
+
+    const closeBtnBg = this.add.image(width / 2, closeBtnY, GUI_TEXTURE_KEYS.buttonYellow);
+    closeBtnBg.setDisplaySize(cssToGame(140), cssToGame(36));
+    closeBtnBg.setOrigin(0.5);
+    closeBtnBg.setScrollFactor(0);
+    closeBtnBg.setDepth(302);
+    this.settingsOverlayElements.push(closeBtnBg);
+
+    const closeBtnText = this.add.text(width / 2, closeBtnY, 'Закрити', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: `${cssToGame(14)}px`,
+      color: '#1A1A1A',
+      fontStyle: 'bold',
+    });
+    closeBtnText.setOrigin(0.5);
+    closeBtnText.setScrollFactor(0);
+    closeBtnText.setDepth(302);
+    this.settingsOverlayElements.push(closeBtnText);
+
+    const closeBtnContainer = this.add.container(0, 0, [closeBtnBg, closeBtnText]);
+    closeBtnContainer.setSize(cssToGame(140), cssToGame(36));
+    closeBtnContainer.setInteractive({ useHandCursor: true });
+    closeBtnContainer.on('pointerup', () => {
+      this.closeSettingsOverlay();
+    });
+    this.settingsOverlayElements.push(closeBtnContainer);
+  }
+
+  private closeSettingsOverlay(): void {
+    this.settingsOverlayElements.forEach(el => el.destroy());
+    this.settingsOverlayElements = [];
+    this.settingsOpen = false;
+  }
+
   private handleResize = (gameSize: Phaser.Structs.Size): void => {
     const width = gameSize.width;
     const height = gameSize.height;
@@ -375,6 +659,9 @@ export class UIScene extends Phaser.Scene {
   };
 
   private destroyAllElements(): void {
+    // Close settings overlay if open
+    this.closeSettingsOverlay();
+
     // Destroy header elements
     if (this.headerBg) this.headerBg.destroy();
     this.heartIcons.forEach((heart) => heart.destroy());
@@ -417,6 +704,9 @@ export class UIScene extends Phaser.Scene {
   }
 
   private onShutdown = (): void => {
+    // Close settings overlay if open
+    this.closeSettingsOverlay();
+
     // Remove resize listener
     this.scale.off('resize', this.handleResize);
 
