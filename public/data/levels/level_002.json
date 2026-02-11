@@ -1,24 +1,24 @@
 {
   "level_id": 2,
   "name": "Кава в дорогу",
-  "moves": 15,
+  "moves": 13,
   "grid": {
-    "width": 8,
-    "height": 8,
+    "width": 7,
+    "height": 7,
     "blocked_cells": []
   },
   "goals": [
     {
       "type": "collect",
       "item": "burger",
-      "count": 15,
-      "description": "Зібрати 15 бургерів"
+      "count": 12,
+      "description": "Зібрати 12 бургерів"
     },
     {
       "type": "collect",
       "item": "hotdog",
-      "count": 15,
-      "description": "Зібрати 15 хот-догів"
+      "count": 12,
+      "description": "Зібрати 12 хот-догів"
     }
   ],
   "spawn_rules": {

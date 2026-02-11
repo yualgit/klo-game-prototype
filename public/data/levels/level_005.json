@@ -1,18 +1,18 @@
 {
   "level_id": 5,
   "name": "Перший бустер",
-  "moves": 15,
+  "moves": 13,
   "grid": {
-    "width": 8,
-    "height": 8,
+    "width": 7,
+    "height": 7,
     "blocked_cells": []
   },
   "goals": [
     {
       "type": "collect",
       "item": "snack",
-      "count": 20,
-      "description": "Зібрати 20 снеки"
+      "count": 15,
+      "description": "Зібрати 15 снеки"
     }
   ],
   "spawn_rules": {

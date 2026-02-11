@@ -4,16 +4,16 @@
   "name": "Перший лід",
   "moves": 14,
   "grid": {
-    "width": 8,
-    "height": 8,
+    "width": 7,
+    "height": 7,
     "blocked_cells": []
   },
   "goals": [
     {
       "type": "collect",
       "item": "burger",
-      "count": 20,
-      "description": "Зібрати 20 бургерів"
+      "count": 15,
+      "description": "Зібрати 15 бургерів"
     }
   ],
   "spawn_rules": {

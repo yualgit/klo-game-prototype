@@ -4,16 +4,16 @@
   "name": "Льодяна кава",
   "moves": 14,
   "grid": {
-    "width": 8,
-    "height": 8,
+    "width": 7,
+    "height": 7,
     "blocked_cells": []
   },
   "goals": [
     {
       "type": "collect",
       "item": "hotdog",
-      "count": 15,
-      "description": "Зібрати 15 хот-догів"
+      "count": 12,
+      "description": "Зібрати 12 хот-догів"
     },
     {
       "type": "destroy",
