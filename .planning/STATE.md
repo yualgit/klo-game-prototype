@@ -11,17 +11,17 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 ## Current Position
 
 Phase: 25 of 25 (New Levels)
-Plan: 1 of 2 in current phase
-Status: In Progress
-Last activity: 2026-02-11 — Completed 25-01-PLAN.md (Create 10 New Level JSONs)
+Plan: 2 of 2 in current phase
+Status: Complete
+Last activity: 2026-02-11 — Completed 25-02-PLAN.md (Wire 20-Level Support)
 
-Progress: [████████████████████░] 96% (24 of 25 phases complete)
+Progress: [█████████████████████] 100% (25 of 25 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 55 (15 v1.0 + 10 v1.1 + 14 v1.2 + 10 v1.3 + 6 v1.4)
-- Total phases completed: 24 (Phase 25 in progress: 1 of 2 plans complete)
+- Total plans completed: 56 (15 v1.0 + 10 v1.1 + 14 v1.2 + 10 v1.3 + 7 v1.4)
+- Total phases completed: 25 (all phases complete)
 - Total execution time: ~7 days across 4 milestones
 
 **By Milestone:**
@@ -32,7 +32,7 @@ Progress: [████████████████████░] 96% 
 | v1.1 Kyiv Journey | 6-10 | 10 | Feb 10, 2026 |
 | v1.2 Polish & Collections | 11-16 | 14 | Feb 10-11, 2026 |
 | v1.3 UI Polish | 17-22 | 10 | Feb 11, 2026 |
-| v1.4 Content Expansion | 23-25 | 5/TBD | Feb 11, 2026 |
+| v1.4 Content Expansion | 23-25 | 7 | Feb 11, 2026 |
 
 **Recent Plan Metrics:**
 
@@ -43,8 +43,9 @@ Progress: [████████████████████░] 96% 
 | 24-01 | 2 min | 1 | 2 | 2026-02-11 |
 | 24-02 | 2.7 min | 2 | 10 | 2026-02-11 |
 | 25-01 | 2.1 min | 2 | 10 | 2026-02-11 |
+| 25-02 | 2 min | 2 | 5 | 2026-02-11 |
 
-*Performance tracking continues with v1.4*
+*v1.4 Content Expansion complete*
 
 ## Accumulated Context
 
@@ -73,9 +74,13 @@ Recent decisions from v1.3:
 - **Destroy-recreate for viewport UI** (Phase 21): Mobile layout needs different rendering — may need adjustment for smaller 7x7 board
 
 Full decision log in PROJECT.md Key Decisions table.
-- [Phase 25]: Progressive tile type introduction (coffee→fuel_can→wheel) gives players time to recognize new tiles before mixing all 9
-- [Phase 25]: Bonus level rotation pattern (every 3rd level) maintains card collection mechanic cadence from L1-L10
-- [Phase 25]: Board shape variety (6 unique cell_maps + 4 full boards) prevents visual monotony across 10 new levels
+
+Recent decisions from Phase 25:
+
+- **Progressive tile type introduction** (Phase 25-01): coffee→fuel_can→wheel sequence gives players time to recognize new tiles before mixing all 9
+- **Bonus level rotation pattern** (Phase 25-01): every 3rd level maintains card collection mechanic cadence from L1-L10
+- **Board shape variety** (Phase 25-01): 6 unique cell_maps + 4 full boards prevents visual monotony across 10 new levels
+- **Map scaling strategy** (Phase 25-02): Shift existing L1-L10 nodes down by 2000px instead of changing coordinate system — preserves path pattern, places new levels above existing ones on scrollable map
 
 ### Pending Todos
 
@@ -95,11 +100,11 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-11 (Phase 25-01 execution)
-Stopped at: Completed 25-01-PLAN.md (Create 10 New Level JSONs)
-Resume file: .planning/phases/25-new-levels/25-01-SUMMARY.md
+Last session: 2026-02-11 (Phase 25-02 execution)
+Stopped at: Completed 25-02-PLAN.md (Wire 20-Level Support)
+Resume file: .planning/phases/25-new-levels/25-02-SUMMARY.md
 
-**Next action:** Execute 25-02-PLAN.md (final plan of v1.4 Content Expansion)
+**Next action:** All phases complete. v1.4 Content Expansion milestone achieved.
 
 ---
 *Updated: 2026-02-11 after v1.4 roadmap creation*
