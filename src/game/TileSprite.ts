@@ -5,8 +5,9 @@
  */
 
 import Phaser from 'phaser';
-import { TILE_COLORS, TILE_SIZE, TILE_GAP, TileType, TEXTURE_KEYS, OBSTACLE_TEXTURE_KEYS, BOOSTER_TEXTURE_KEYS } from './constants';
+import { TILE_COLORS, TILE_SIZE, TILE_GAP, TEXTURE_KEYS, OBSTACLE_TEXTURE_KEYS, BOOSTER_TEXTURE_KEYS } from './constants';
 import { BoosterType, ObstacleData } from './types';
+import { TileTypeId } from './tileConfig';
 
 // Grid offset configuration (can be set per-instance or use defaults)
 const DEFAULT_OFFSET_X = 100;
@@ -16,7 +17,7 @@ export class TileSprite extends Phaser.GameObjects.Container {
   // Public properties for engine synchronization
   public row: number;
   public col: number;
-  public type: TileType;
+  public type: TileTypeId;
 
   // Private image object for tile rendering
   private tileImage: Phaser.GameObjects.Image;
@@ -43,7 +44,7 @@ export class TileSprite extends Phaser.GameObjects.Container {
     scene: Phaser.Scene,
     row: number,
     col: number,
-    type: TileType,
+    type: TileTypeId,
     offsetX: number = DEFAULT_OFFSET_X,
     offsetY: number = DEFAULT_OFFSET_Y,
     tileSize: number = TILE_SIZE
@@ -110,7 +111,7 @@ export class TileSprite extends Phaser.GameObjects.Container {
   /**
    * Update tile type and redraw.
    */
-  public setType(type: TileType): void {
+  public setType(type: TileTypeId): void {
     this.type = type;
     this.draw();
   }
@@ -153,7 +154,7 @@ export class TileSprite extends Phaser.GameObjects.Container {
    * Reset tile for object pooling reuse.
    * Sets new type, position, and redraws.
    */
-  public reset(type: TileType, row: number, col: number): void {
+  public reset(type: TileTypeId, row: number, col: number): void {
     // Cleanup booster tween and image
     if (this.boosterIdleTween) {
       this.boosterIdleTween.stop();

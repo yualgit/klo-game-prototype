@@ -3,19 +3,16 @@
  * Used by TileSprite and Match3Engine.
  */
 
+import { TILE_CONFIG, TileTypeId, TILE_TYPE_IDS } from './tileConfig';
+
 // Tile types for match-3 game (KLO fuel stations)
-export const TILE_TYPES = ['burger', 'hotdog', 'oil', 'water', 'snack', 'soda'] as const;
-export type TileType = typeof TILE_TYPES[number];
+export const TILE_TYPES = TILE_TYPE_IDS;
+export type { TileType } from './types';
 
 // Tile colors mapped to KLO brand and thematic colors
-export const TILE_COLORS: Record<TileType, number> = {
-  burger: 0xFFB800,   // KLO yellow
-  hotdog: 0xFF6B35,   // Orange
-  oil: 0x1A1A1A,      // Dark/black
-  water: 0x4A90E2,    // Blue
-  snack: 0xF39C12,    // Golden
-  soda: 0xE74C3C,     // Red
-};
+export const TILE_COLORS: Record<TileTypeId, number> = Object.fromEntries(
+  Object.entries(TILE_CONFIG).map(([key, val]) => [key, val.color])
+) as Record<TileTypeId, number>;
 
 // Tile dimensions (import from utils/constants for consistency)
 export { TILE_SIZE } from '../utils/constants';
@@ -24,14 +21,9 @@ export { TILE_SIZE } from '../utils/constants';
 export const TILE_GAP = 4;
 
 // Tile texture keys (mapping game types to asset filenames)
-export const TEXTURE_KEYS: Record<TileType, string> = {
-  burger: 'tile_burger',
-  hotdog: 'tile_hotdog',
-  oil: 'tile_oil',
-  water: 'tile_water',
-  snack: 'tile_snack',
-  soda: 'tile_soda',
-};
+export const TEXTURE_KEYS: Record<TileTypeId, string> = Object.fromEntries(
+  Object.entries(TILE_CONFIG).map(([key, val]) => [key, val.textureKey])
+) as Record<TileTypeId, string>;
 
 // Booster texture keys
 export const BOOSTER_TEXTURE_KEYS: Record<string, string> = {

@@ -11,6 +11,7 @@ import {
   ObstacleData,
   ObstacleType,
 } from './types';
+import { TILE_TYPE_IDS } from './tileConfig';
 
 /**
  * Match3Engine - Pure game logic for match-3 mechanics
@@ -650,7 +651,10 @@ export class Match3Engine {
    * Used when spawn rules aren't provided to processTurn
    */
   private estimateSpawnRules(): SpawnRules {
-    const counts = { burger: 0, hotdog: 0, oil: 0, water: 0, snack: 0, soda: 0 };
+    const counts: Record<string, number> = {};
+    for (const id of TILE_TYPE_IDS) {
+      counts[id] = 0;
+    }
     let total = 0;
 
     for (let row = 0; row < this.rows; row++) {
@@ -661,7 +665,7 @@ export class Match3Engine {
         const type = this.grid[row][col].type;
         if (type !== 'empty' && !this.grid[row][col].isEmpty) {
           if (type in counts) {
-            counts[type as keyof typeof counts]++;
+            counts[type]++;
             total++;
           }
         }
@@ -670,17 +674,19 @@ export class Match3Engine {
 
     // Return proportional spawn rules, or equal distribution if board is empty
     if (total === 0) {
-      return { burger: 0.167, hotdog: 0.167, oil: 0.167, water: 0.167, snack: 0.166, soda: 0.166 };
+      const equalWeight = 1 / TILE_TYPE_IDS.length;
+      const rules: Record<string, number> = {};
+      for (const id of TILE_TYPE_IDS) {
+        rules[id] = equalWeight;
+      }
+      return rules as SpawnRules;
     }
 
-    return {
-      burger: counts.burger / total || 0.1,
-      hotdog: counts.hotdog / total || 0.1,
-      oil: counts.oil / total || 0.1,
-      water: counts.water / total || 0.1,
-      snack: counts.snack / total || 0.1,
-      soda: counts.soda / total || 0.1,
-    };
+    const rules: Record<string, number> = {};
+    for (const id of TILE_TYPE_IDS) {
+      rules[id] = counts[id] / total || 0.1;
+    }
+    return rules as SpawnRules;
   }
 
   /**

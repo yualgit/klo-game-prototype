@@ -20,6 +20,7 @@ import eventsCenter from '../utils/EventsCenter';
 import { getActiveCollectionId, CARD_DEFINITIONS, CardRarity } from '../game/collectionConfig';
 import { rollCard, DROP_CONFIG } from '../game/cardDropLogic';
 import { CollectionsManager } from '../game/CollectionsManager';
+import { TileTypeId } from '../game/tileConfig';
 
 // Design constants from STYLE_GUIDE.md
 const KLO_YELLOW = 0xffb800;
@@ -1009,7 +1010,7 @@ export class Game extends Phaser.Scene {
         const tileData = grid[row][col];
 
         // Engine should never generate empty tiles, but safeguard
-        const tileType = (tileData.type === 'empty' ? 'burger' : tileData.type) as 'burger' | 'hotdog' | 'oil' | 'water' | 'snack' | 'soda';
+        const tileType = (tileData.type === 'empty' ? 'burger' : tileData.type) as TileTypeId;
 
         // Create TileSprite with responsive tile size
         const tile = new TileSprite(
@@ -1445,7 +1446,7 @@ export class Game extends Phaser.Scene {
         // Update visual
         const sprite = this.tileSprites[boosterSpawn.row]?.[boosterSpawn.col];
         if (sprite) {
-          const baseType = (boosterSpawn.baseType === 'empty' ? 'burger' : boosterSpawn.baseType) as 'burger' | 'hotdog' | 'oil' | 'water' | 'snack' | 'soda';
+          const baseType = (boosterSpawn.baseType === 'empty' ? 'burger' : boosterSpawn.baseType) as TileTypeId;
           sprite.setType(baseType);
           sprite.setBooster(boosterSpawn.boosterType);
           sprite.setScale(1);
@@ -1566,7 +1567,7 @@ export class Game extends Phaser.Scene {
       if (!sprite) return;
 
       // Set type and position above screen (safeguard against empty type)
-      const tileType = (spawn.type === 'empty' ? 'burger' : spawn.type) as 'burger' | 'hotdog' | 'oil' | 'water' | 'snack' | 'soda';
+      const tileType = (spawn.type === 'empty' ? 'burger' : spawn.type) as TileTypeId;
       sprite.setType(tileType);
       sprite.x = this.gridOffsetX + spawn.col * this.layout.tileSize + this.layout.tileSize / 2;
       sprite.y = this.gridOffsetY - (index + 1) * this.layout.tileSize;
@@ -1743,7 +1744,7 @@ export class Game extends Phaser.Scene {
         const tileData = grid[row][col];
 
         // Engine should never have empty tiles after spawn, but safeguard
-        const tileType = (tileData.type === 'empty' ? 'burger' : tileData.type) as 'burger' | 'hotdog' | 'oil' | 'water' | 'snack' | 'soda';
+        const tileType = (tileData.type === 'empty' ? 'burger' : tileData.type) as TileTypeId;
 
         sprite.setType(tileType);
         sprite.setBooster(tileData.booster);
