@@ -18,7 +18,7 @@
 | 18 | v1.3 UI Polish | 1/1 | ✓ Complete | 2026-02-11 |
 | 19 | v1.3 UI Polish | 2/2 | ✓ Complete | 2026-02-11 |
 | 20 | v1.3 UI Polish | 3/3 | ✓ Complete | 2026-02-11 |
-| 21 | v1.3 UI Polish | 0/? | Not started | - |
+| 21 | v1.3 UI Polish | 2/2 | ✓ Complete | 2026-02-11 |
 | 22 | v1.3 UI Polish | 0/? | Not started | - |
 
 ---
@@ -94,8 +94,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 21-01-PLAN.md — Mobile-adaptive HUD (two-line layout), icon-only back button, LevelSelect viewport fix
-- [ ] 21-02-PLAN.md — Board width constraint with 16px padding, 1024px max, height adjustment
+- [x] 21-01-PLAN.md — Mobile-adaptive HUD (two-line layout), icon-only back button, LevelSelect viewport fix — completed 2026-02-11
+- [x] 21-02-PLAN.md — Board width constraint with 16px padding, 1024px max, height adjustment — completed 2026-02-11
 
 ### Phase 22: Collections UX Upgrade
 **Goal**: Collections screen provides horizontal swiper navigation with proper scroll bounds

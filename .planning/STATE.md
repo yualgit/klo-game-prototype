@@ -9,18 +9,18 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 
 ## Current Position
 
-Phase: 21 of 22 (Game Screen Polish) — IN PROGRESS
-Plan: 21-02 complete (board width constraint with padding and max-width cap)
-Status: Plan 21-02 executed (1/1 tasks complete, 1 commit)
-Last activity: 2026-02-11 — Phase 21-02 executed (constrained board width)
+Phase: 21 of 22 (Game Screen Polish) — COMPLETE & VERIFIED
+Plan: All plans complete (21-01, 21-02)
+Status: Phase 21 verified and approved (8/8 must-haves passed, human approved)
+Last activity: 2026-02-11 — Phase 21 complete (back button moved to UIScene header)
 
-Progress: [████████████████████████░] 91% (20/22 phases complete)
+Progress: [█████████████████████████░] 95% (21/22 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 48 (15 v1.0 + 10 v1.1 + 14 v1.2 + 9 v1.3)
-- Total phases completed: 20
+- Total phases completed: 21
 - Total execution time: ~7 days across 3 milestones
 
 **By Milestone:**
@@ -71,6 +71,7 @@ Recent decisions:
 - [Phase 21-02]: Board width constraint: min(viewport width - 32px, 1024px CSS)
 - [Phase 21-02]: Dual-constraint tile sizing: min(tileSizeByWidth, tileSizeByHeight) for square tiles
 - [Phase 21-02]: Height-aware board scaling for narrow viewports (e.g., 1366x768 laptops)
+- [Phase 21]: Back button moved from Game scene to UIScene header (showBackButton option + eventsCenter 'game-back')
 
 ### Pending Todos
 
@@ -83,10 +84,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 21-02-PLAN.md
+Stopped at: Phase 21 complete and verified
 Resume file: None
 
-**Next action:** Continue Phase 21 Game Screen Polish plans or verify phase completion.
+**Next action:** `/gsd:plan-phase 22` to plan Collections UX Upgrade.
 
 ---
-*Updated: 2026-02-11 after Phase 21-02 execution*
+*Updated: 2026-02-11 after Phase 21 execution and verification*
