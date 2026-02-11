@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 15 of 16 (Card Acquisition Flow)
-Plan: 3 of 3 complete
-Status: Phase 15-03 complete — UAT gap closure (text overlaps + duplicate card tracking)
-Last activity: 2026-02-11 — Phase 15-03 complete (all UAT issues resolved)
+Plan: 4 of 4 complete
+Status: Phase 15-04 complete — Final UAT text overlap coordinate fixes
+Last activity: 2026-02-11 — Phase 15-04 complete (bonus hint + rarity label positioning)
 
-Progress: [█████████████████████████░░░] 78% (14 phases complete + 3/3 of Phase 15)
+Progress: [█████████████████████████░░░] 79% (14 phases complete + 4/4 of Phase 15)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 35 (25 from v1.0 + v1.1, 10 from v1.2)
+- Total plans completed: 36 (25 from v1.0 + v1.1, 11 from v1.2)
 - Average duration: ~3 minutes per plan
 - Total execution time: ~6 days across 15 phases
 
@@ -33,13 +33,13 @@ Progress: [███████████████████████
 | 12 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
 | 13 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
 | 14 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
-| 15 | 3 | v1.2 Collections | ✓ Complete 2026-02-11 |
+| 15 | 4 | v1.2 Collections | ✓ Complete 2026-02-11 |
 | 16 | TBD | v1.2 Collections | Not started |
 
 **Recent Trend:**
 - v1.0 completed: 5 phases, 15 plans (Feb 5-10)
 - v1.1 completed: 5 phases, 10 plans (Feb 10)
-- v1.2 progress: 5 phases, 10 plans (Feb 10-11)
+- v1.2 progress: 5 phases, 11 plans (Feb 10-11)
 - Trend: Stable velocity with increasing phase complexity
 
 *Plan metrics:*
@@ -54,6 +54,7 @@ Progress: [███████████████████████
 | Phase 15 P01 | 142 | 2 tasks | 6 files |
 | Phase 15 P02 | 166 | 2 tasks | 4 files |
 | Phase 15 P03 | 114 | 2 tasks | 6 files |
+| Phase 15 P04 | 38 | 1 task | 1 file |
 
 ## Accumulated Context
 
@@ -112,7 +113,7 @@ None yet — v1.2 milestone continuing.
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 15-03-PLAN.md - UAT gap closure
+Stopped at: Completed 15-04-PLAN.md - Final UAT text overlap fixes
 Resume file: None
 
-**Next action:** Phase 15 complete. Ready for Phase 16 (if planned) or v1.2 milestone completion.
+**Next action:** Phase 15 complete (4/4 plans). Ready for Phase 16 (if planned) or v1.2 milestone completion.
