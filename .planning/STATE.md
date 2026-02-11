@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 
 ## Current Position
 
-Phase: 20 of 22 (Level Select Improvements) — COMPLETE & VERIFIED
-Plan: All plans complete (20-01, 20-02, 20-03)
-Status: Phase 20 verified (6/6 must-haves passed after gap closure)
-Last activity: 2026-02-11 — Phase 20-03 executed (map width centering)
+Phase: 21 of 22 (Game Screen Polish) — IN PROGRESS
+Plan: 21-01 complete (mobile HUD and back button)
+Status: Plan 21-01 executed (2/2 tasks complete, 2 commits)
+Last activity: 2026-02-11 — Phase 21-01 executed (mobile-adaptive Game UI)
 
 Progress: [████████████████████████░] 91% (20/22 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 46 (15 v1.0 + 10 v1.1 + 14 v1.2 + 7 v1.3)
+- Total plans completed: 47 (15 v1.0 + 10 v1.1 + 14 v1.2 + 8 v1.3)
 - Total phases completed: 20
 - Total execution time: ~7 days across 3 milestones
 
@@ -30,17 +30,17 @@ Progress: [███████████████████████
 | v1.0 MVP | 1-5 | 15 | Feb 5-10, 2026 |
 | v1.1 Kyiv Journey | 6-10 | 10 | Feb 10, 2026 |
 | v1.2 Polish & Collections | 11-16 | 14 | Feb 10-11, 2026 |
-| v1.3 UI Polish | 17-22 | 7 | In progress |
+| v1.3 UI Polish | 17-22 | 8 | In progress |
 
 **Recent Plans:**
 
 | Phase | Plan | Duration | Tasks | Files | Date |
 |-------|------|----------|-------|-------|------|
+| 21 | 01 | 90s | 2 | 2 | 2026-02-11 |
 | 20 | 03 | 47s | 1 | 1 | 2026-02-11 |
 | 20 | 02 | 152s | 1 | 2 | 2026-02-11 |
 | 20 | 01 | 176s | 2 | 2 | 2026-02-11 |
 | 19 | 02 | 118s | 1 | 1 | 2026-02-11 |
-| 19 | 01 | 291s | 2 | 4 | 2026-02-11 |
 
 ## Accumulated Context
 
@@ -66,6 +66,8 @@ Recent decisions:
 - [Phase 20-02]: Horizontal clamping: center node range (260-650), clamp to edges, scale if needed
 - [Phase 20-02]: Fallback x-position scaling for viewports < 468px game width
 - [Phase 20-03]: Center MAP_WIDTH coordinate space (512) not node range center (455) for correct mobile centering
+- [Phase 21-01]: Mobile threshold: 600px CSS width for HUD and back button variants
+- [Phase 21-01]: Destroy-recreate pattern for viewport-dependent UI (HUD + back button on resize)
 
 ### Pending Todos
 
@@ -78,10 +80,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 20-03-PLAN.md
+Stopped at: Completed 21-01-PLAN.md
 Resume file: None
 
-**Next action:** `/gsd:plan-phase 21` to plan Game Screen Polish.
+**Next action:** Continue Phase 21 Game Screen Polish plans or verify phase completion.
 
 ---
-*Updated: 2026-02-11 after Phase 20 execution and verification*
+*Updated: 2026-02-11 after Phase 21-01 execution*
