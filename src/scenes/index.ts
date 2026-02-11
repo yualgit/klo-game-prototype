@@ -9,3 +9,4 @@ export { Game } from './Game';
 export { UIScene } from './UIScene';
 export { Collections } from './Collections';
 export { Shop } from './Shop';
+export { CardPickOverlay } from './CardPickOverlay';

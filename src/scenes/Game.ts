@@ -17,6 +17,7 @@ import { AudioManager } from '../game/AudioManager';
 import { VFXManager } from '../game/VFXManager';
 import { getResponsiveLayout, cssToGame } from '../utils/responsive';
 import eventsCenter from '../utils/EventsCenter';
+import { getActiveCollectionId } from '../game/collectionConfig';
 
 // Design constants from STYLE_GUIDE.md
 const KLO_YELLOW = 0xffb800;
@@ -363,6 +364,21 @@ export class Game extends Phaser.Scene {
     titleText.setOrigin(0.5);
     panelContainer.add(titleText);
 
+    // Detect bonus level
+    const isBonusLevel = this.levelData.bonus_level === true;
+
+    // Bonus level hint
+    if (isBonusLevel) {
+      const bonusHint = this.add.text(panelW / 2, cssToGame(42), 'Бонус: обери картку!', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: `${this.layout.overlaySubtitleSize}px`,
+        color: '#FFB800',
+        fontStyle: 'bold',
+      });
+      bonusHint.setOrigin(0.5);
+      panelContainer.add(bonusHint);
+    }
+
     // Crown icon for 3-star completion
     if (earnedStars === 3) {
       const crown = this.add.image(panelW / 2, cssToGame(40), GUI_TEXTURE_KEYS.crown1);
@@ -444,7 +460,10 @@ export class Game extends Phaser.Scene {
     const nextLabel = isLastLevel ? 'Меню' : 'Далі';
 
     const nextBtn = this.createOverlayButton(panelW / 2, panelH - cssToGame(80), nextLabel, () => {
-      if (isLastLevel) {
+      if (isBonusLevel) {
+        // Launch card pick overlay — pass levelId for collection rotation and next level logic
+        this.scene.start('CardPickOverlay', { levelId: this.currentLevel });
+      } else if (isLastLevel) {
         this.scene.start('LevelSelect');
       } else {
         this.scene.start('Game', { levelId: this.currentLevel + 1 });
