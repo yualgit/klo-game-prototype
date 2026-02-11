@@ -39,8 +39,8 @@ export class LevelSelect extends Phaser.Scene {
   // X offset to center nodes on screen
   private nodeOffsetX: number = 0;
 
-  // Dynamically calculated node positions (computed from viewport height)
-  private nodePositions: { x: number; y: number; label: string }[] = [];
+  // X scale for narrow viewports (< 1 means nodes compressed horizontally)
+  private nodeXScale: number = 1;
 
   // Road path graphics (stored for resize recreation)
   private roadPath: Phaser.GameObjects.Graphics | null = null;
@@ -49,26 +49,54 @@ export class LevelSelect extends Phaser.Scene {
     super({ key: 'LevelSelect' });
   }
 
-  private calculateNodePositions(): { x: number; y: number; label: string }[] {
-    const height = this.cameras.main.height;
-    const headerHeight = cssToGame(50);  // UIScene header
-    const navHeight = cssToGame(56);     // UIScene bottom nav
-    const topPadding = cssToGame(20);    // Breathing room below header
-    const bottomPadding = cssToGame(20); // Breathing room above nav
+  private calculateNodeOffsetX(width: number): number {
+    const horizontalPadding = cssToGame(20);
+    const nodeSize = cssToGame(38);
+    const halfNode = nodeSize / 2;
 
-    const availableHeight = height - headerHeight - navHeight - topPadding - bottomPadding;
-    const nodeCount = MAP_CONFIG.LEVEL_NODES.length;
-    const spacing = availableHeight / (nodeCount - 1);
+    // Original x range in LEVEL_NODES: min=260, max=650
+    const minNodeX = 260;
+    const maxNodeX = 650;
+    const nodeRangeCenter = (minNodeX + maxNodeX) / 2; // 455
 
-    // Nodes go from bottom (L1) to top (L10)
-    // L1 at bottom of available area, L10 at top
-    const startY = height - navHeight - bottomPadding;
+    // Default: center the node range on screen
+    let offsetX = width / 2 - nodeRangeCenter;
 
-    return MAP_CONFIG.LEVEL_NODES.map((node, i) => ({
-      x: node.x,
-      y: startY - (i * spacing),
-      label: node.label,
-    }));
+    // Clamp: ensure leftmost node center - halfNode >= padding
+    const leftEdge = minNodeX + offsetX - halfNode;
+    if (leftEdge < horizontalPadding) {
+      offsetX = horizontalPadding + halfNode - minNodeX;
+    }
+
+    // Clamp: ensure rightmost node center + halfNode <= width - padding
+    const rightEdge = maxNodeX + offsetX + halfNode;
+    if (rightEdge > width - horizontalPadding) {
+      offsetX = width - horizontalPadding - halfNode - maxNodeX;
+    }
+
+    // If viewport is SO narrow that even clamping can't fit (unlikely),
+    // scale x-positions instead. Check if left and right clamp conflict:
+    const neededWidth = (maxNodeX - minNodeX) + nodeSize + 2 * horizontalPadding;
+    if (width < neededWidth) {
+      // Scale factor to squeeze nodes into available width
+      // Store on instance for use in node positioning
+      this.nodeXScale = (width - 2 * horizontalPadding - nodeSize) / (maxNodeX - minNodeX);
+      offsetX = horizontalPadding + halfNode - minNodeX * this.nodeXScale;
+    } else {
+      this.nodeXScale = 1;
+    }
+
+    return offsetX;
+  }
+
+  private getNodeScreenX(nodeX: number): number {
+    if (this.nodeXScale < 1) {
+      // Scale x-positions to fit narrow viewport
+      const minNodeX = 260;
+      const scaledX = minNodeX + (nodeX - minNodeX) * this.nodeXScale;
+      return scaledX + this.nodeOffsetX;
+    }
+    return nodeX + this.nodeOffsetX;
   }
 
   create(): void {
@@ -80,20 +108,17 @@ export class LevelSelect extends Phaser.Scene {
     // Store layout for responsive sizing
     this.layout = getResponsiveLayout(width, height);
 
-    // Calculate dynamic node positions based on viewport height
-    this.nodePositions = this.calculateNodePositions();
-
-    // Calculate x offset to center nodes on screen
-    // Node x range is 260-650, center is 455
-    const nodeRangeCenter = (260 + 650) / 2;
-    this.nodeOffsetX = width / 2 - nodeRangeCenter;
+    // Calculate x offset with horizontal clamping
+    this.nodeOffsetX = this.calculateNodeOffsetX(width);
 
     // Fade in from black
     this.cameras.main.fadeIn(300, 0, 0, 0);
 
-    // Camera setup - nodes fit within viewport, so bounds = viewport
-    // Keep drag scroll as fallback for very small screens
-    this.cameras.main.setBounds(0, 0, width, height);
+    // Camera setup - restore original vertical scrolling
+    const firstLevelY = MAP_CONFIG.LEVEL_NODES[0].y;
+    const worldBottom = firstLevelY + Math.round(height * 0.3);
+    const worldHeight = Math.max(MAP_CONFIG.MAP_HEIGHT, worldBottom);
+    this.cameras.main.setBounds(0, 0, width, worldHeight);
 
     // No horizontal scroll needed - nodes are centered on screen
     this.cameras.main.scrollX = 0;
@@ -104,18 +129,18 @@ export class LevelSelect extends Phaser.Scene {
     // Draw the road path connecting level nodes
     this.drawRoadPath();
 
-    // Create level checkpoint buttons using dynamic positions
-    for (let i = 0; i < this.nodePositions.length; i++) {
+    // Create level checkpoint buttons using MAP_CONFIG positions
+    for (let i = 0; i < MAP_CONFIG.LEVEL_NODES.length; i++) {
       const levelId = i + 1;
-      const node = this.nodePositions[i];
-      this.createLevelCheckpoint(node.x + this.nodeOffsetX, node.y, levelId, progress);
+      const node = MAP_CONFIG.LEVEL_NODES[i];
+      this.createLevelCheckpoint(this.getNodeScreenX(node.x), node.y, levelId, progress);
     }
 
     // Map pointer at current unlocked level
     const currentLevelId = this.getCurrentLevel(progress);
     if (currentLevelId > 0 && currentLevelId <= 10) {
-      const pointerPos = this.nodePositions[currentLevelId - 1];
-      this.createMapPointer(pointerPos.x + this.nodeOffsetX, pointerPos.y - 60);
+      const pointerNode = MAP_CONFIG.LEVEL_NODES[currentLevelId - 1];
+      this.createMapPointer(this.getNodeScreenX(pointerNode.x), pointerNode.y - 60);
     }
 
     // Setup drag scrolling
@@ -157,9 +182,7 @@ export class LevelSelect extends Phaser.Scene {
   private createParallaxBackground(): void {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
-    // With dynamic positioning, world height = viewport height, so maxScroll = 0
-    // Keep parallax layers but they won't scroll much (fallback for tiny screens)
-    const maxScroll = Math.max(0, 0);
+    const maxScroll = MAP_CONFIG.MAP_HEIGHT - height;
 
     // Sky layer - static, covers entire viewport (scrollFactor=0 = screen coords)
     const sky = this.add.image(width / 2, height / 2, 'kyiv_sky');
@@ -199,16 +222,14 @@ export class LevelSelect extends Phaser.Scene {
   private drawRoadPath(): void {
     const path = this.add.graphics();
     path.setDepth(3);
-
-    const nodes = this.nodePositions;
-    const offsetX = this.nodeOffsetX;
+    const nodes = MAP_CONFIG.LEVEL_NODES;
 
     // Draw base path (light gray)
     path.lineStyle(10, 0xdddddd, 1);
     path.beginPath();
-    path.moveTo(nodes[0].x + offsetX, nodes[0].y);
+    path.moveTo(this.getNodeScreenX(nodes[0].x), nodes[0].y);
     for (let i = 1; i < nodes.length; i++) {
-      path.lineTo(nodes[i].x + offsetX, nodes[i].y);
+      path.lineTo(this.getNodeScreenX(nodes[i].x), nodes[i].y);
     }
     path.strokePath();
 
@@ -216,9 +237,9 @@ export class LevelSelect extends Phaser.Scene {
     // For now, just draw the full path in a lighter color overlay
     path.lineStyle(6, 0xffb800, 0.4);
     path.beginPath();
-    path.moveTo(nodes[0].x + offsetX, nodes[0].y);
+    path.moveTo(this.getNodeScreenX(nodes[0].x), nodes[0].y);
     for (let i = 1; i < nodes.length; i++) {
-      path.lineTo(nodes[i].x + offsetX, nodes[i].y);
+      path.lineTo(this.getNodeScreenX(nodes[i].x), nodes[i].y);
     }
     path.strokePath();
 
@@ -259,9 +280,7 @@ export class LevelSelect extends Phaser.Scene {
     const width = this.cameras.main.width;
 
     if (currentLevelId > 0 && currentLevelId <= 10) {
-      const targetNode = this.nodePositions[currentLevelId - 1];
-      // Pan camera vertically to current level (X stays centered)
-      // With nodes fitting in viewport, this may not scroll much, but keeps the animation
+      const targetNode = MAP_CONFIG.LEVEL_NODES[currentLevelId - 1];
       this.cameras.main.pan(width / 2, targetNode.y, 800, 'Sine.easeInOut', true);
     }
   }
@@ -564,26 +583,25 @@ export class LevelSelect extends Phaser.Scene {
       this.roadPath = null;
     }
 
-    // Recalculate node positions for new viewport height
-    this.nodePositions = this.calculateNodePositions();
+    // Recalculate x offset with horizontal clamping
+    this.nodeOffsetX = this.calculateNodeOffsetX(width);
 
-    // Recalculate x offset for centering
-    const nodeRangeCenter = (260 + 650) / 2;
-    this.nodeOffsetX = width / 2 - nodeRangeCenter;
+    // Restore original camera bounds calculation
+    const firstLevelY = MAP_CONFIG.LEVEL_NODES[0].y;
+    const worldBottom = firstLevelY + Math.round(height * 0.3);
+    const worldHeight = Math.max(MAP_CONFIG.MAP_HEIGHT, worldBottom);
+    this.cameras.main.setBounds(0, 0, width, worldHeight);
 
     // Redraw road path with new positions
     this.drawRoadPath();
 
-    // Recreate level checkpoints with new positions
+    // Recreate level checkpoints with MAP_CONFIG positions
     const progress = this.registry.get('progress') as ProgressManager;
-    for (let i = 0; i < this.nodePositions.length; i++) {
+    for (let i = 0; i < MAP_CONFIG.LEVEL_NODES.length; i++) {
       const levelId = i + 1;
-      const node = this.nodePositions[i];
-      this.createLevelCheckpoint(node.x + this.nodeOffsetX, node.y, levelId, progress);
+      const node = MAP_CONFIG.LEVEL_NODES[i];
+      this.createLevelCheckpoint(this.getNodeScreenX(node.x), node.y, levelId, progress);
     }
-
-    // Update camera bounds (world height = viewport height)
-    this.cameras.main.setBounds(0, 0, width, height);
 
     // No horizontal scroll needed - nodes are centered on screen
     this.cameras.main.setScroll(0, this.cameras.main.scrollY);
