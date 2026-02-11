@@ -160,6 +160,16 @@ export class Boot extends Phaser.Scene {
     this.load.json('level_008', 'data/levels/level_008.json');
     this.load.json('level_009', 'data/levels/level_009.json');
     this.load.json('level_010', 'data/levels/level_010.json');
+    this.load.json('level_011', 'data/levels/level_011.json');
+    this.load.json('level_012', 'data/levels/level_012.json');
+    this.load.json('level_013', 'data/levels/level_013.json');
+    this.load.json('level_014', 'data/levels/level_014.json');
+    this.load.json('level_015', 'data/levels/level_015.json');
+    this.load.json('level_016', 'data/levels/level_016.json');
+    this.load.json('level_017', 'data/levels/level_017.json');
+    this.load.json('level_018', 'data/levels/level_018.json');
+    this.load.json('level_019', 'data/levels/level_019.json');
+    this.load.json('level_020', 'data/levels/level_020.json');
   }
 
   private updateProgressBar(value: number): void {

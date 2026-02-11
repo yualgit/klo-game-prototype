@@ -81,22 +81,33 @@ export const SOUND_KEYS = {
 // Map configuration for scrollable Kyiv level select
 export const MAP_CONFIG = {
   MAP_WIDTH: 512,
-  MAP_HEIGHT: 2200,       // Tall enough for 10 nodes with generous spacing
+  MAP_HEIGHT: 4400,       // Tall enough for 20 nodes with generous spacing
   DRAG_THRESHOLD: 10,
   PARALLAX_SKY: 0,
   PARALLAX_FAR: 0.25,
   PARALLAX_MID: 0.6,
   // Level node positions along winding Kyiv journey path (world coordinates)
+  // 20 nodes - L1-L10 (bottom half: y:4050-2250), L11-L20 (top half: y:2050-250)
   LEVEL_NODES: [
-    { x: 200, y: 2050, label: 'Оболонь' },
-    { x: 480, y: 1850, label: 'Поштова площа' },
-    { x: 200, y: 1650, label: 'Контрактова' },
-    { x: 480, y: 1450, label: 'Андріївський' },
-    { x: 200, y: 1250, label: 'Золоті ворота' },
-    { x: 480, y: 1050, label: 'Хрещатик' },
-    { x: 200, y: 860, label: 'Майдан' },
-    { x: 480, y: 660, label: 'Бессарабка' },
-    { x: 200, y: 460, label: 'Палац спорту' },
-    { x: 480, y: 250, label: 'Печерська Лавра' },
+    { x: 200, y: 4050, label: 'Оболонь' },
+    { x: 480, y: 3850, label: 'Поштова площа' },
+    { x: 200, y: 3650, label: 'Контрактова' },
+    { x: 480, y: 3450, label: 'Андріївський' },
+    { x: 200, y: 3250, label: 'Золоті ворота' },
+    { x: 480, y: 3050, label: 'Хрещатик' },
+    { x: 200, y: 2860, label: 'Майдан' },
+    { x: 480, y: 2660, label: 'Бессарабка' },
+    { x: 200, y: 2460, label: 'Палац спорту' },
+    { x: 480, y: 2250, label: 'Печерська Лавра' },
+    { x: 200, y: 2050, label: 'Мистецький Арсенал' },
+    { x: 480, y: 1850, label: 'Ботанічний сад' },
+    { x: 200, y: 1650, label: 'Видубичі' },
+    { x: 480, y: 1450, label: 'Родина-Мати' },
+    { x: 200, y: 1250, label: 'Олімпійський' },
+    { x: 480, y: 1050, label: 'Палац Україна' },
+    { x: 200, y: 860, label: 'Університет' },
+    { x: 480, y: 660, label: 'Софія Київська' },
+    { x: 200, y: 460, label: 'Михайлівський' },
+    { x: 480, y: 250, label: 'Арка Свободи' },
   ],
 } as const;
