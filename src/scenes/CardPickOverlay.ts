@@ -12,7 +12,7 @@ import { cssToGame, getResponsiveLayout } from '../utils/responsive';
 // Design constants from STYLE_GUIDE.md
 const KLO_YELLOW = 0xffb800;
 
-const MAX_LEVELS = 10;
+const MAX_LEVELS = 20;
 
 export class CardPickOverlay extends Phaser.Scene {
   private cards: Phaser.GameObjects.Container[] = [];
@@ -83,10 +83,11 @@ export class CardPickOverlay extends Phaser.Scene {
     title.setDepth(401);
 
     // Card dimensions (696:1158 portrait ratio)
-    const cardWidth = cssToGame(110);
-    const cardHeight = cssToGame(183);
-    const cardSpacing = cssToGame(20);
-    const cardY = height * 0.45;
+    const cardAspect = 1158 / 696; // card images are 696x1158 (portrait)
+    const cardWidth = cssToGame(60);
+    const cardHeight = cardWidth * cardAspect;
+    const cardSpacing = cssToGame(10);
+    const cardY = height * 0.55;
 
     // Create 2 card containers side by side
     const totalWidth = cardWidth * 2 + cardSpacing;

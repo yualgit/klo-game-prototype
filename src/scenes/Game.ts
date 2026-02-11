@@ -27,7 +27,7 @@ const KLO_YELLOW = 0xffb800;
 const KLO_BLACK = 0x1a1a1a;
 const KLO_WHITE = 0xf9f9f9;
 
-const MAX_LEVELS = 10;
+const MAX_LEVELS = 20;
 
 export class Game extends Phaser.Scene {
   // UI elements
@@ -436,7 +436,7 @@ export class Game extends Phaser.Scene {
 
     // Bonus level hint
     if (isBonusLevel) {
-      const bonusHint = this.add.text(panelW / 2, cssToGame(100), 'Бонус: обери картку!', {
+      const bonusHint = this.add.text(panelW / 2, cssToGame(150), 'Бонус: обери картку!', {
         fontFamily: 'Arial, sans-serif',
         fontSize: `${this.layout.overlaySubtitleSize}px`,
         color: '#FFB800',
@@ -448,13 +448,13 @@ export class Game extends Phaser.Scene {
 
     // Crown icon for 3-star completion
     if (earnedStars === 3) {
-      const crown = this.add.image(panelW / 2, cssToGame(40), GUI_TEXTURE_KEYS.crown1);
+      const crown = this.add.image(panelW / 2, cssToGame(50), GUI_TEXTURE_KEYS.crown1);
       crown.setDisplaySize(cssToGame(20), cssToGame(20));
       panelContainer.add(crown);
     }
 
     // Animated star reveal - stars appear one by one
-    const starY = earnedStars === 3 ? cssToGame(60) : cssToGame(45);
+    const starY = earnedStars === 3 ? cssToGame(80) : cssToGame(65);
     const starSpacing = cssToGame(30);
     const starStartX = panelW / 2 - starSpacing;
 
@@ -483,7 +483,7 @@ export class Game extends Phaser.Scene {
     // Lives display (informational - no life lost on win)
     const economyMgr = this.registry.get('economy') as EconomyManager;
     const currentLives = economyMgr.getLives();
-    const livesDisplay = this.add.text(panelW / 2, starY + cssToGame(25), `❤ ${currentLives}/5`, {
+    const livesDisplay = this.add.text(panelW / 2, starY + cssToGame(35), `❤ ${currentLives}/5`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: `${this.layout.overlaySubtitleSize}px`,
       color: '#FFB800',
@@ -833,7 +833,7 @@ export class Game extends Phaser.Scene {
     const livesRemaining = economy.getLives();
     const livesInfo = this.add.text(panelW / 2, cssToGame(75), `Залишилось життів: ${livesRemaining}/5`, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${this.layout.overlaySubtitleSize}px`,
+      fontSize: `${cssToGame(14)}px`,
       color: '#FFB800',
       fontStyle: 'bold',
     });

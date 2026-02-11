@@ -25,6 +25,16 @@ const LEVEL_NAMES: Record<number, string> = {
   8: 'Подарунок на старті',
   9: 'Льодяна фортеця',
   10: 'Фінальний виклик',
+  11: 'Кавовий ранок',
+  12: 'Паливна станція',
+  13: 'Колесо фортуни',
+  14: 'Крижана дорога',
+  15: 'Бульбашкове поле',
+  16: 'Льодяний хрест',
+  17: 'Подвійний удар',
+  18: 'Фортеця KLO',
+  19: 'Останній рубіж',
+  20: 'Фінал KLO',
 };
 
 export class LevelSelect extends Phaser.Scene {
@@ -54,9 +64,9 @@ export class LevelSelect extends Phaser.Scene {
     const nodeSize = cssToGame(38);
     const halfNode = nodeSize / 2;
 
-    // Original x range in LEVEL_NODES: min=200, max=520
+    // Original x range in LEVEL_NODES: min=200, max=480
     const minNodeX = 200;
-    const maxNodeX = 520;
+    const maxNodeX = 480;
 
     // Default: center the entire MAP_WIDTH coordinate space (1024px, center at 512) on viewport
     let offsetX = width / 2 - MAP_CONFIG.MAP_WIDTH / 2;
@@ -137,7 +147,7 @@ export class LevelSelect extends Phaser.Scene {
 
     // Map pointer at current unlocked level
     const currentLevelId = this.getCurrentLevel(progress);
-    if (currentLevelId > 0 && currentLevelId <= 10) {
+    if (currentLevelId > 0 && currentLevelId <= 20) {
       const pointerNode = MAP_CONFIG.LEVEL_NODES[currentLevelId - 1];
       this.createMapPointer(this.getNodeScreenX(pointerNode.x), pointerNode.y - 60);
     }
@@ -278,7 +288,7 @@ export class LevelSelect extends Phaser.Scene {
     const currentLevelId = this.getCurrentLevel(progress);
     const width = this.cameras.main.width;
 
-    if (currentLevelId > 0 && currentLevelId <= 10) {
+    if (currentLevelId > 0 && currentLevelId <= 20) {
       const targetNode = MAP_CONFIG.LEVEL_NODES[currentLevelId - 1];
       this.cameras.main.pan(width / 2, targetNode.y, 800, 'Sine.easeInOut', true);
     }
@@ -547,12 +557,12 @@ export class LevelSelect extends Phaser.Scene {
 
   private getCurrentLevel(progress: ProgressManager): number {
     // Find the first locked level (that's the current target)
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= 20; i++) {
       if (!progress.isLevelUnlocked(i)) {
         return i - 1; // Previous level is current
       }
     }
-    return 10; // All unlocked
+    return 20; // All unlocked
   }
 
   private getStarString(stars: number): string {
