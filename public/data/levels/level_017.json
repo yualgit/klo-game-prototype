@@ -1,0 +1,60 @@
+{
+  "level_id": 17,
+  "name": "Подвійний удар",
+  "moves": 18,
+  "grid": {
+    "width": 7,
+    "height": 7,
+    "blocked_cells": []
+  },
+  "goals": [
+    {
+      "type": "collect",
+      "item": "coffee",
+      "count": 18,
+      "current": 0,
+      "description": "Зібрати 18 кави"
+    },
+    {
+      "type": "collect",
+      "item": "fuel_can",
+      "count": 18,
+      "current": 0,
+      "description": "Зібрати 18 каністр пального"
+    },
+    {
+      "type": "destroy_obstacle",
+      "obstacleType": "grass",
+      "count": 9,
+      "current": 0,
+      "description": "Знищити 9 шарів трави"
+    }
+  ],
+  "spawn_rules": {
+    "burger": 0.11,
+    "coffee": 0.11,
+    "fuel_can": 0.11,
+    "hotdog": 0.11,
+    "oil": 0.11,
+    "snack": 0.11,
+    "soda": 0.11,
+    "water": 0.11,
+    "wheel": 0.12
+  },
+  "obstacles": [
+    {
+      "type": "grass",
+      "layers": 3,
+      "positions": [[0, 0], [0, 6], [6, 0]],
+      "description": "3-шарова трава"
+    },
+    {
+      "type": "crate",
+      "layers": 2,
+      "positions": [[3, 3]],
+      "description": "2-шаровий ящик"
+    }
+  ],
+  "difficulty": "hard",
+  "target_fail_rate": 0.30
+}

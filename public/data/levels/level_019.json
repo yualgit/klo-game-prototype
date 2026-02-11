@@ -1,0 +1,77 @@
+{
+  "level_id": 19,
+  "bonus_level": true,
+  "name": "Останній рубіж",
+  "moves": 20,
+  "grid": {
+    "width": 7,
+    "height": 7,
+    "cell_map": [
+      [1, 1, 1, 0, 0, 0, 0],
+      [1, 1, 1, 1, 0, 0, 0],
+      [0, 1, 1, 1, 1, 0, 0],
+      [0, 0, 1, 1, 1, 1, 0],
+      [0, 0, 0, 1, 1, 1, 1],
+      [0, 0, 0, 0, 1, 1, 1],
+      [0, 0, 0, 0, 0, 1, 1]
+    ],
+    "blocked_cells": [],
+    "inactive_cell_style": "block"
+  },
+  "goals": [
+    {
+      "type": "destroy_obstacle",
+      "obstacleType": "ice",
+      "count": 9,
+      "current": 0,
+      "description": "Знищити 9 шарів льоду"
+    },
+    {
+      "type": "destroy_obstacle",
+      "obstacleType": "grass",
+      "count": 9,
+      "current": 0,
+      "description": "Знищити 9 шарів трави"
+    },
+    {
+      "type": "destroy_obstacle",
+      "obstacleType": "crate",
+      "count": 4,
+      "current": 0,
+      "description": "Знищити 4 ящики"
+    }
+  ],
+  "spawn_rules": {
+    "burger": 0.11,
+    "coffee": 0.11,
+    "fuel_can": 0.11,
+    "hotdog": 0.11,
+    "oil": 0.11,
+    "snack": 0.11,
+    "soda": 0.11,
+    "water": 0.11,
+    "wheel": 0.12
+  },
+  "obstacles": [
+    {
+      "type": "ice",
+      "layers": 3,
+      "positions": [[0, 0], [1, 3]],
+      "description": "3-шаровий лід"
+    },
+    {
+      "type": "grass",
+      "layers": 3,
+      "positions": [[4, 5], [6, 6]],
+      "description": "3-шарова трава"
+    },
+    {
+      "type": "crate",
+      "layers": 2,
+      "positions": [[2, 2], [3, 4]],
+      "description": "2-шарові ящики"
+    }
+  ],
+  "difficulty": "expert",
+  "target_fail_rate": 0.35
+}

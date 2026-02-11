@@ -1,0 +1,64 @@
+{
+  "level_id": 16,
+  "bonus_level": true,
+  "name": "Льодяний хрест",
+  "moves": 20,
+  "grid": {
+    "width": 7,
+    "height": 7,
+    "cell_map": [
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 0, 1, 1, 1, 0, 0],
+      [1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1],
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 0, 1, 1, 1, 0, 0]
+    ],
+    "blocked_cells": [],
+    "inactive_cell_style": "block"
+  },
+  "goals": [
+    {
+      "type": "destroy_obstacle",
+      "obstacleType": "ice",
+      "count": 15,
+      "current": 0,
+      "description": "Знищити 15 шарів льоду"
+    },
+    {
+      "type": "collect",
+      "item": "wheel",
+      "count": 18,
+      "current": 0,
+      "description": "Зібрати 18 коліс"
+    }
+  ],
+  "spawn_rules": {
+    "burger": 0.12,
+    "coffee": 0.12,
+    "fuel_can": 0.10,
+    "hotdog": 0.12,
+    "oil": 0.10,
+    "snack": 0.12,
+    "soda": 0.10,
+    "water": 0.10,
+    "wheel": 0.12
+  },
+  "obstacles": [
+    {
+      "type": "ice",
+      "layers": 3,
+      "positions": [[2, 3], [3, 2], [3, 3], [3, 4], [4, 3]],
+      "description": "3-шаровий лід"
+    },
+    {
+      "type": "grass",
+      "layers": 2,
+      "positions": [[2, 2], [4, 4]],
+      "description": "2-шарова трава"
+    }
+  ],
+  "difficulty": "hard",
+  "target_fail_rate": 0.30
+}

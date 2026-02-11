@@ -1,0 +1,71 @@
+{
+  "level_id": 18,
+  "name": "Фортеця KLO",
+  "moves": 22,
+  "grid": {
+    "width": 7,
+    "height": 7,
+    "cell_map": [
+      [1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 0, 1, 1, 1],
+      [1, 1, 0, 0, 0, 1, 1],
+      [1, 0, 0, 0, 0, 0, 1],
+      [1, 1, 0, 0, 0, 1, 1],
+      [1, 1, 1, 0, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1]
+    ],
+    "blocked_cells": [],
+    "inactive_cell_style": "block"
+  },
+  "goals": [
+    {
+      "type": "collect",
+      "item": "burger",
+      "count": 20,
+      "current": 0,
+      "description": "Зібрати 20 бургерів"
+    },
+    {
+      "type": "destroy_obstacle",
+      "obstacleType": "ice",
+      "count": 12,
+      "current": 0,
+      "description": "Знищити 12 шарів льоду"
+    }
+  ],
+  "spawn_rules": {
+    "burger": 0.12,
+    "coffee": 0.12,
+    "fuel_can": 0.10,
+    "hotdog": 0.12,
+    "oil": 0.10,
+    "snack": 0.12,
+    "soda": 0.10,
+    "water": 0.10,
+    "wheel": 0.12
+  },
+  "obstacles": [
+    {
+      "type": "ice",
+      "layers": 3,
+      "positions": [[0, 3], [3, 0], [6, 3], [3, 6]],
+      "description": "3-шаровий лід"
+    },
+    {
+      "type": "crate",
+      "layers": 3,
+      "positions": [[1, 1], [5, 5]],
+      "description": "3-шарові ящики"
+    }
+  ],
+  "pre_placed_tiles": [
+    {
+      "row": 0,
+      "col": 0,
+      "type": "coffee",
+      "booster": "linear_horizontal"
+    }
+  ],
+  "difficulty": "hard",
+  "target_fail_rate": 0.30
+}
