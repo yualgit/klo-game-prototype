@@ -5,7 +5,7 @@
 
 import Phaser from 'phaser';
 import { TEXTURE_KEYS, GUI_TEXTURE_KEYS } from '../game/constants';
-import { cssToGame } from '../utils/responsive';
+import { cssToGame, getDpr } from '../utils/responsive';
 
 // Design constants from STYLE_GUIDE.md
 const KLO_YELLOW = 0xffb800;
@@ -38,11 +38,14 @@ export class Menu extends Phaser.Scene {
     this.createFloatingTiles(width, height);
 
     // Title: "KLO Match-3" with bounce-in animation
+    // Responsive font size: cap at 18% of viewport width to prevent clipping on narrow screens
+    const titleFontSize = Math.min(cssToGame(48), width * 0.18);
     this.title = this.add.text(width / 2, -100, 'KLO Match-3', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(48)}px`,
+      fontSize: `${titleFontSize}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
+      wordWrap: { width: width * 0.85 },
     });
     this.title.setOrigin(0.5);
 
@@ -224,9 +227,16 @@ export class Menu extends Phaser.Scene {
       this.bg.fillRect(0, 0, width, height);
     }
 
-    // Reposition title and subtitle
-    if (this.title) this.title.setPosition(width / 2, height / 3);
-    if (this.subtitle) this.subtitle.setPosition(width / 2, height / 3 + cssToGame(45));
+    // Reposition title and subtitle, update font sizes dynamically
+    if (this.title) {
+      const titleFontSize = Math.min(cssToGame(48), width * 0.18);
+      this.title.setPosition(width / 2, height / 3);
+      this.title.setFontSize(titleFontSize);
+      this.title.setWordWrapWidth(width * 0.85);
+    }
+    if (this.subtitle) {
+      this.subtitle.setPosition(width / 2, height / 3 + cssToGame(45));
+    }
 
     // Reposition play button
     if (this.playButton) this.playButton.setPosition(width / 2, height / 2 + 50);
