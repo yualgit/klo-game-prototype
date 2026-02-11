@@ -75,10 +75,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. All level nodes fit on mobile screen without scrolling (reduced spacing)
   2. Level buttons remain clickable after scene changes and navigation (no reload needed)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 20-01: TBD
+- [ ] 20-01-PLAN.md — Dynamic node spacing for mobile fit + container-level click handlers for reliable interactivity
 
 ### Phase 21: Game Screen Polish
 **Goal**: Game screen adapts to mobile with responsive HUD and board sizing
