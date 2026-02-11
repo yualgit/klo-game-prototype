@@ -74,31 +74,31 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| WELC-01 | — | Pending |
-| WELC-02 | — | Pending |
-| HDR-01 | — | Pending |
-| HDR-02 | — | Pending |
-| SETT-01 | — | Pending |
-| SETT-02 | — | Pending |
-| SETT-03 | — | Pending |
-| SETT-04 | — | Pending |
-| NAV-01 | — | Pending |
-| NAV-02 | — | Pending |
-| LVLS-01 | — | Pending |
-| LVLS-02 | — | Pending |
-| GAME-01 | — | Pending |
-| GAME-02 | — | Pending |
-| GAME-03 | — | Pending |
-| GAME-04 | — | Pending |
-| COLL-01 | — | Pending |
-| COLL-02 | — | Pending |
-| COLL-03 | — | Pending |
+| WELC-01 | Phase 18 | Pending |
+| WELC-02 | Phase 18 | Pending |
+| HDR-01 | Phase 17 | Pending |
+| HDR-02 | Phase 17 | Pending |
+| SETT-01 | Phase 19 | Pending |
+| SETT-02 | Phase 19 | Pending |
+| SETT-03 | Phase 19 | Pending |
+| SETT-04 | Phase 19 | Pending |
+| NAV-01 | Phase 17 | Pending |
+| NAV-02 | Phase 17 | Pending |
+| LVLS-01 | Phase 20 | Pending |
+| LVLS-02 | Phase 20 | Pending |
+| GAME-01 | Phase 21 | Pending |
+| GAME-02 | Phase 21 | Pending |
+| GAME-03 | Phase 21 | Pending |
+| GAME-04 | Phase 21 | Pending |
+| COLL-01 | Phase 22 | Pending |
+| COLL-02 | Phase 22 | Pending |
+| COLL-03 | Phase 22 | Pending |
 
 **Coverage:**
 - v1.3 requirements: 19 total
-- Mapped to phases: 0
-- Unmapped: 19 ⚠️
+- Mapped to phases: 19/19 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-11*
-*Last updated: 2026-02-11 after initial definition*
+*Last updated: 2026-02-11 after v1.3 roadmap creation*
