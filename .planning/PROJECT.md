@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed AI-generated assets, 10 levels with variable board shapes and progressive obstacles, boosters with combo matrix, lives/bonus economy, settings, scrollable Kyiv map journey, mobile-responsive rendering, persistent UI navigation shell, collection cards meta-progression with card pick UX, pity system and coupon exchange, and production-ready mobile UI polish across all screens. Built for client presentation to demonstrate gameplay feel, progression depth, and KLO brand integration.
+Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed AI-generated assets, 20 levels on 7x7 boards with variable shapes and progressive obstacles, 9 tile types, boosters with combo matrix, lives/bonus economy, settings, scrollable Kyiv map journey, mobile-responsive rendering, persistent UI navigation shell, collection cards meta-progression with card pick UX, pity system and coupon exchange, and production-ready mobile UI polish across all screens. Built for client presentation to demonstrate gameplay feel, progression depth, and KLO brand integration.
 
 ## Core Value
 
@@ -41,7 +41,15 @@ Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed 
 
 ### Active
 
-(None — planning next milestone)
+## Current Milestone: v1.4 Content Expansion
+
+**Goal:** Expand game content with data-driven tile system, 9 tile types, 7x7 boards, and 10 new levels.
+
+**Target features:**
+- Refactor tile type system from hardcoded literals to data-driven configuration
+- Wire up 3 missing tile types (coffee, fuel_can, wheel) for 9 total
+- Reduce all boards from 8x8 to 7x7
+- Add 10 new levels (L11-L20) with 7x7 boards and all 9 tile types
 
 ### Out of Scope
 
@@ -50,7 +58,7 @@ Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed 
 - Remote Config — статичні JSON достатні
 - Real-time multiplayer — не в скоупі
 - In-app purchases — бонуси тестові, не реальні гроші
-- Рівні L11-20 — 10 рівнів достатньо для демо
+- ~~Рівні L11-20~~ — moved to v1.4 scope
 - Progressive lives regen (30→45→60→90→120 min) — unvalidated, defer to experiment
 - Analytics events — defer to future milestone
 - Collection tutorial — defer to future milestone
@@ -65,7 +73,7 @@ Shipped v1.3 UI Polish with 10,057 LOC TypeScript.
 Tech stack: Phaser 3.90 + TypeScript + Vite + Firebase (Auth, Firestore).
 ~250+ commits across 22 phases in 7 days (v1.0 + v1.1 + v1.2 + v1.3).
 Demo is fully playable with 10 levels, all mechanics, economy system, settings, Kyiv map journey, mobile-responsive rendering, bottom navigation, global header, collection cards meta-progression, and production-ready mobile UI across all screens.
-Known tech debt: console.log statements in Game.ts, GUI_TEXTURE_KEYS constant unused in UIScene.
+Known tech debt: console.log statements in Game.ts, GUI_TEXTURE_KEYS constant unused in UIScene, hardcoded tile type literals violating DRY/KISS.
 
 ## Key Decisions
 
@@ -102,7 +110,7 @@ Known tech debt: console.log statements in Game.ts, GUI_TEXTURE_KEYS constant un
 - **Stack**: Phaser 3 + TypeScript + Vite + Firebase — визначено в TECH_SPEC.md
 - **Platform**: PWA для мобільних браузерів (також працює на desktop)
 - **Assets**: AI-generated на основі STYLE_GUIDE.md (немає дизайнера)
-- **Scope**: L1-10 з просунутими механіками та economy (демо)
+- **Scope**: L1-20 з просунутими механіками та economy (демо)
 
 ---
-*Last updated: 2026-02-11 after v1.3 milestone*
+*Last updated: 2026-02-11 after v1.4 milestone start*
