@@ -1,5 +1,6 @@
 {
   "level_id": 4,
+  "bonus_level": true,
   "name": "Льодяна кава",
   "moves": 14,
   "grid": {

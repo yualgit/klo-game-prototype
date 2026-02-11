@@ -1,5 +1,6 @@
 {
   "level_id": 1,
+  "bonus_level": true,
   "name": "Перша заправка",
   "moves": 15,
   "grid": {
