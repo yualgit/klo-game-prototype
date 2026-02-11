@@ -3,16 +3,17 @@
   "name": "Фінал KLO",
   "moves": 22,
   "grid": {
-    "width": 7,
-    "height": 7,
+    "width": 6,
+    "height": 8,
     "cell_map": [
-      [1, 0, 1, 1, 1, 0, 1],
-      [1, 1, 1, 1, 1, 1, 1],
-      [1, 1, 1, 1, 1, 1, 1],
-      [1, 1, 1, 1, 1, 1, 1],
-      [1, 1, 1, 1, 1, 1, 1],
-      [1, 1, 1, 1, 1, 1, 1],
-      [1, 0, 1, 1, 1, 0, 1]
+      [1, 0, 1, 1, 1, 0],
+      [1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1],
+      [1, 0, 1, 1, 1, 0]
     ],
     "blocked_cells": [],
     "inactive_cell_style": "block"
@@ -26,14 +27,14 @@
       "description": "Зібрати 22 колеса"
     },
     {
-      "type": "destroy_obstacle",
+      "type": "destroy",
       "obstacleType": "ice",
       "count": 15,
       "current": 0,
       "description": "Знищити 15 шарів льоду"
     },
     {
-      "type": "destroy_obstacle",
+      "type": "destroy",
       "obstacleType": "grass",
       "count": 9,
       "current": 0,
@@ -41,15 +42,13 @@
     }
   ],
   "spawn_rules": {
-    "burger": 0.11,
-    "coffee": 0.11,
-    "fuel_can": 0.11,
-    "hotdog": 0.11,
-    "oil": 0.11,
-    "snack": 0.11,
-    "soda": 0.11,
-    "water": 0.11,
-    "wheel": 0.12
+    "burger": 0.13,
+    "coffee": 0.13,
+    "hotdog": 0.13,
+    "snack": 0.13,
+    "soda": 0.13,
+    "water": 0.13,
+    "wheel": 0.22
   },
   "obstacles": [
     {

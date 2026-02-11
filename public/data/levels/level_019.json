@@ -4,12 +4,13 @@
   "name": "Останній рубіж",
   "moves": 20,
   "grid": {
-    "width": 7,
-    "height": 7,
+    "width": 6,
+    "height": 8,
     "cell_map": [
       [1, 1, 1, 0, 0, 0, 0],
       [1, 1, 1, 1, 0, 0, 0],
       [0, 1, 1, 1, 1, 0, 0],
+      [0, 0, 1, 1, 1, 1, 0],
       [0, 0, 1, 1, 1, 1, 0],
       [0, 0, 0, 1, 1, 1, 1],
       [0, 0, 0, 0, 1, 1, 1],
@@ -32,25 +33,16 @@
       "count": 9,
       "current": 0,
       "description": "Знищити 9 шарів трави"
-    },
-    {
-      "type": "destroy_obstacle",
-      "obstacleType": "crate",
-      "count": 4,
-      "current": 0,
-      "description": "Знищити 4 ящики"
     }
   ],
   "spawn_rules": {
-    "burger": 0.11,
-    "coffee": 0.11,
-    "fuel_can": 0.11,
-    "hotdog": 0.11,
-    "oil": 0.11,
-    "snack": 0.11,
-    "soda": 0.11,
-    "water": 0.11,
-    "wheel": 0.12
+    "burger": 0.15,
+    "coffee": 0.15,
+    "hotdog": 0.14,
+    "snack": 0.14,
+    "soda": 0.14,
+    "water": 0.14,
+    "wheel": 0.14
   },
   "obstacles": [
     {
