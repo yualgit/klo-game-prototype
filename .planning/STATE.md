@@ -9,18 +9,18 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 
 ## Current Position
 
-Phase: 21 of 22 (Game Screen Polish) — COMPLETE & VERIFIED
-Plan: All plans complete (21-01, 21-02)
-Status: Phase 21 verified and approved (8/8 must-haves passed, human approved)
-Last activity: 2026-02-11 — Phase 21 complete (back button moved to UIScene header)
+Phase: 22 of 22 (Collections UX Upgrade) — IN PROGRESS
+Plan: 1 of 1 complete (22-01)
+Status: Phase 22 Plan 01 complete (horizontal card swiper with snap navigation)
+Last activity: 2026-02-11 — Phase 22-01 complete (horizontal card swiper implementation)
 
-Progress: [█████████████████████████░] 95% (21/22 phases complete)
+Progress: [█████████████████████████░] 96% (21.5/22 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 48 (15 v1.0 + 10 v1.1 + 14 v1.2 + 9 v1.3)
-- Total phases completed: 21
+- Total plans completed: 49 (15 v1.0 + 10 v1.1 + 14 v1.2 + 10 v1.3)
+- Total phases completed: 21 (Phase 22 in progress: 1/1 plans)
 - Total execution time: ~7 days across 3 milestones
 
 **By Milestone:**
@@ -30,17 +30,17 @@ Progress: [███████████████████████
 | v1.0 MVP | 1-5 | 15 | Feb 5-10, 2026 |
 | v1.1 Kyiv Journey | 6-10 | 10 | Feb 10, 2026 |
 | v1.2 Polish & Collections | 11-16 | 14 | Feb 10-11, 2026 |
-| v1.3 UI Polish | 17-22 | 9 | In progress |
+| v1.3 UI Polish | 17-22 | 10 | In progress |
 
 **Recent Plans:**
 
 | Phase | Plan | Duration | Tasks | Files | Date |
 |-------|------|----------|-------|-------|------|
+| 22 | 01 | 113s | 2 | 1 | 2026-02-11 |
 | 21 | 02 | 71s | 1 | 1 | 2026-02-11 |
 | 21 | 01 | 90s | 2 | 2 | 2026-02-11 |
 | 20 | 03 | 47s | 1 | 1 | 2026-02-11 |
 | 20 | 02 | 152s | 1 | 2 | 2026-02-11 |
-| 20 | 01 | 176s | 2 | 2 | 2026-02-11 |
 
 ## Accumulated Context
 
@@ -48,6 +48,9 @@ Progress: [███████████████████████
 
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions:
+- v1.3 (22-01): Direction detection with 10px threshold prevents horizontal/vertical scroll conflicts
+- v1.3 (22-01): Snap animation uses Cubic.Out easing with 300ms duration for smooth feel
+- v1.3 (22-01): Golden background (0xffb800, 0.15 opacity) behind card rows for visual hierarchy
 - v1.3 (20-02): Horizontal clamping: center node range (260-650), clamp to edges, scale if needed
 - v1.3 (20-02): Fallback x-position scaling for viewports < 468px game width
 - v1.3 (20-02): Reverted 20-01's vertical compression - requirement was horizontal width clamping
@@ -84,10 +87,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Phase 21 complete and verified
+Stopped at: Phase 22-01 complete (horizontal card swiper with snap navigation)
 Resume file: None
 
-**Next action:** `/gsd:plan-phase 22` to plan Collections UX Upgrade.
+**Next action:** Phase 22 complete (1/1 plans). Phase 22 ready for verification.
 
 ---
-*Updated: 2026-02-11 after Phase 21 execution and verification*
+*Updated: 2026-02-11 after Phase 22-01 execution*
