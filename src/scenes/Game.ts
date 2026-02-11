@@ -371,7 +371,7 @@ export class Game extends Phaser.Scene {
 
     // Bonus level hint
     if (isBonusLevel) {
-      const bonusHint = this.add.text(panelW / 2, cssToGame(75), 'Бонус: обери картку!', {
+      const bonusHint = this.add.text(panelW / 2, cssToGame(100), 'Бонус: обери картку!', {
         fontFamily: 'Arial, sans-serif',
         fontSize: `${this.layout.overlaySubtitleSize}px`,
         color: '#FFB800',
@@ -635,7 +635,7 @@ export class Game extends Phaser.Scene {
       const cardId = card.getData('cardId') as string;
       const cardDef = CARD_DEFINITIONS[cardId];
       if (!cardDef) return;
-      const label = this.add.text(card.x, card.y + cssToGame(98), rarityLabels[cardDef.rarity], {
+      const label = this.add.text(card.x, card.y + cssToGame(120), rarityLabels[cardDef.rarity], {
         fontFamily: 'Arial, sans-serif',
         fontSize: `${cssToGame(11)}px`,
         color: rarityColors[cardDef.rarity],
