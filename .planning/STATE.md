@@ -9,18 +9,18 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 
 ## Current Position
 
-Phase: 19 of 22 (Settings Overlay Fixes) — COMPLETE & VERIFIED
-Plan: All plans complete
-Status: Phase 19 verified (8/8 truths passed, gap closure successful)
-Last activity: 2026-02-11 — Phase 19 gap closure executed and re-verified
+Phase: 20 of 22 (Level Select Improvements) — IN PROGRESS
+Plan: 1 of 1 complete
+Status: Phase 20 Plan 01 complete (dynamic node positioning + container click handlers)
+Last activity: 2026-02-11 — Phase 20 Plan 01 executed
 
-Progress: [██████████████████████░░] 86% (19/22 phases complete)
+Progress: [████████████████████████░] 91% (20/22 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 43 (15 v1.0 + 10 v1.1 + 14 v1.2 + 4 v1.3)
-- Total phases completed: 19
+- Total plans completed: 44 (15 v1.0 + 10 v1.1 + 14 v1.2 + 5 v1.3)
+- Total phases completed: 20
 - Total execution time: ~7 days across 3 milestones
 
 **By Milestone:**
@@ -36,9 +36,9 @@ Progress: [██████████████████████░
 
 | Phase | Plan | Duration | Tasks | Files | Date |
 |-------|------|----------|-------|-------|------|
+| 20 | 01 | 176s | 2 | 2 | 2026-02-11 |
 | 19 | 02 | 118s | 1 | 1 | 2026-02-11 |
 | 19 | 01 | 291s | 2 | 4 | 2026-02-11 |
-| 18 | 01 | 88s | 2 | 2 | 2026-02-11 |
 
 ## Accumulated Context
 
@@ -46,6 +46,9 @@ Progress: [██████████████████████░
 
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions:
+- v1.3 (20-01): Dynamic y-position calculation: availableHeight / (nodeCount-1) for even node distribution
+- v1.3 (20-01): Camera bounds = viewport dimensions (no scrolling when nodes fit within viewport)
+- v1.3 (20-01): Container direct event handlers over scene-level input for reliable cross-scene interaction
 - v1.3 (17-01): Settings gear font size reduced to cssToGame(16) for better fit in square button
 - v1.3 (17-01): Active tab rounded rectangle dimensions: 44x28 with 8px corner radius
 - v1.2: UIScene parallel launch pattern for persistent header/nav
@@ -69,10 +72,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Phase 19 complete and verified (gap closure)
+Stopped at: Phase 20 Plan 01 complete (mobile level select fit + button interactivity fix)
 Resume file: None
 
-**Next action:** `/gsd:plan-phase 20` to plan Level Select Improvements.
+**Next action:** Phase 20 complete. Continue with Phase 21 planning.
 
 ---
-*Updated: 2026-02-11 after Phase 19 gap closure execution and re-verification*
+*Updated: 2026-02-11 after Phase 20 Plan 01 execution*
