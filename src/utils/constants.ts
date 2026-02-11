@@ -1,6 +1,6 @@
 // Game grid constants
-export const GRID_WIDTH = 8;
-export const GRID_HEIGHT = 8;
+export const GRID_WIDTH = 7;
+export const GRID_HEIGHT = 7;
 export const TILE_SIZE = 64;
 
 // Canvas dimensions (reference design dimensions only — canvas is now dynamic with Scale.RESIZE)

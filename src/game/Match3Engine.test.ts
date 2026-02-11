@@ -13,7 +13,7 @@ describe('Match3Engine', () => {
   };
 
   beforeEach(() => {
-    engine = new Match3Engine(8, 8);
+    engine = new Match3Engine(7, 7);
   });
 
   describe('Grid Generation', () => {
@@ -26,8 +26,8 @@ describe('Match3Engine', () => {
     test('generates grid with correct dimensions', () => {
       engine.generateGrid(defaultSpawnRules);
       const grid = engine.getGrid();
-      expect(grid.length).toBe(8);
-      expect(grid[0].length).toBe(8);
+      expect(grid.length).toBe(7);
+      expect(grid[0].length).toBe(7);
     });
 
     test('all tiles are non-empty initially', () => {
@@ -56,12 +56,12 @@ describe('Match3Engine', () => {
       engine.generateGrid(nineTypeRules);
       const grid = engine.getGrid();
       const typesFound = new Set<string>();
-      for (let row = 0; row < 8; row++) {
-        for (let col = 0; col < 8; col++) {
+      for (let row = 0; row < 7; row++) {
+        for (let col = 0; col < 7; col++) {
           typesFound.add(grid[row][col].type);
         }
       }
-      // With 64 cells and 9 types, we expect most types to appear
+      // With 49 cells and 9 types, we expect most types to appear
       // At minimum, more than the original 6 should be possible
       expect(typesFound.size).toBeGreaterThanOrEqual(5);
     });
@@ -145,8 +145,8 @@ describe('Match3Engine', () => {
       const grid = engine.getGrid();
 
       // Clear grid with non-matching pattern to avoid random matches
-      for (let row = 0; row < 8; row++) {
-        for (let col = 0; col < 8; col++) {
+      for (let row = 0; row < 7; row++) {
+        for (let col = 0; col < 7; col++) {
           grid[row][col].type = ((row + col) % 2 === 0) ? 'burger' : 'hotdog';
         }
       }
@@ -188,17 +188,17 @@ describe('Match3Engine', () => {
       engine.generateGrid(defaultSpawnRules);
       const grid = engine.getGrid();
 
-      // Create empty space at row 7 (bottom), put tile at row 0
+      // Create empty space at row 6 (bottom), put tile at row 0
       const topTileType = grid[0][0].type;
-      grid[7][0].isEmpty = true;
-      grid[7][0].type = 'empty';
+      grid[6][0].isEmpty = true;
+      grid[6][0].type = 'empty';
 
       const movements = engine.applyGravity();
       const newGrid = engine.getGrid();
 
       // Check that top tile fell down
       expect(movements.length).toBeGreaterThan(0);
-      expect(newGrid[7][0].isEmpty).toBe(false);
+      expect(newGrid[6][0].isEmpty).toBe(false);
     });
 
     test('returns movement data for all falling tiles', () => {
@@ -206,9 +206,9 @@ describe('Match3Engine', () => {
       const grid = engine.getGrid();
 
       // Remove entire bottom row
-      for (let col = 0; col < 8; col++) {
-        grid[7][col].isEmpty = true;
-        grid[7][col].type = 'empty';
+      for (let col = 0; col < 7; col++) {
+        grid[6][col].isEmpty = true;
+        grid[6][col].type = 'empty';
       }
 
       const movements = engine.applyGravity();
@@ -263,7 +263,7 @@ describe('Match3Engine', () => {
       engine.generateGrid(defaultSpawnRules);
       const hasValidMoves = engine.hasValidMoves();
 
-      // A random 8x8 board should almost always have valid moves
+      // A random 7x7 board should almost always have valid moves
       expect(hasValidMoves).toBe(true);
     });
 
@@ -334,7 +334,7 @@ describe('Match3Engine', () => {
       const grid = engine.getGrid();
 
       // Create vertical matches that could cascade
-      for (let row = 0; row < 8; row++) {
+      for (let row = 0; row < 7; row++) {
         grid[row][0].type = 'burger';
       }
 
@@ -589,20 +589,20 @@ describe('Match3Engine', () => {
       engine.generateGrid(defaultSpawnRules);
       const grid = engine.getGrid();
 
-      // Place crate (layers: 3) at (2,3) - adjacent to match at cols 4,5,6
-      grid[2][3].obstacle = { type: 'crate', layers: 3 };
+      // Place crate (layers: 3) at (2,2) - adjacent to match at cols 3,4,5
+      grid[2][2].obstacle = { type: 'crate', layers: 3 };
 
       // Create adjacent match (horizontal)
+      grid[2][3].type = 'oil';
       grid[2][4].type = 'oil';
       grid[2][5].type = 'oil';
-      grid[2][6].type = 'oil';
 
       const matches = engine.findMatches();
       engine.damageObstacles(matches);
 
       // Assert layers: 2 after damage
-      expect(grid[2][3].obstacle?.layers).toBe(2);
-      expect(grid[2][3].obstacle?.type).toBe('crate');
+      expect(grid[2][2].obstacle?.layers).toBe(2);
+      expect(grid[2][2].obstacle?.type).toBe('crate');
     });
 
     test('blocked cell is not affected by matches', () => {
@@ -650,44 +650,44 @@ describe('Match3Engine', () => {
       engine.generateGrid(defaultSpawnRules);
       const grid = engine.getGrid();
 
-      // Place obstacle at (5,3)
-      const tileId = grid[5][3].id;
-      grid[5][3].obstacle = { type: 'ice', layers: 2 };
+      // Place obstacle at (4,3)
+      const tileId = grid[4][3].id;
+      grid[4][3].obstacle = { type: 'ice', layers: 2 };
 
-      // Create empty space below at (7,3)
-      grid[7][3].isEmpty = true;
-      grid[7][3].type = 'empty';
+      // Create empty space below at (6,3)
+      grid[6][3].isEmpty = true;
+      grid[6][3].type = 'empty';
 
       const movements = engine.applyGravity();
 
       // Obstacle tile should stay in place (not in movements)
       const obstacleMoved = movements.find(m => m.tileId === tileId);
       expect(obstacleMoved).toBeUndefined();
-      expect(grid[5][3].obstacle).toBeDefined();
+      expect(grid[4][3].obstacle).toBeDefined();
     });
 
     test('gravity skips over blocked cells', () => {
       engine.generateGrid(defaultSpawnRules);
       const grid = engine.getGrid();
 
-      // Place blocked cell at (5,3)
-      grid[5][3].obstacle = { type: 'blocked', layers: 1 };
-      grid[5][3].isEmpty = true;
-      grid[5][3].type = 'empty';
+      // Place blocked cell at (4,3)
+      grid[4][3].obstacle = { type: 'blocked', layers: 1 };
+      grid[4][3].isEmpty = true;
+      grid[4][3].type = 'empty';
 
-      // Place tile above at (3,3)
-      const tileType = grid[3][3].type;
+      // Place tile above at (2,3)
+      const tileType = grid[2][3].type;
 
-      // Create empty space at (7,3)
-      grid[7][3].isEmpty = true;
-      grid[7][3].type = 'empty';
+      // Create empty space at (6,3)
+      grid[6][3].isEmpty = true;
+      grid[6][3].type = 'empty';
 
       const movements = engine.applyGravity();
 
-      // Tile at (3,3) should fall to (4,3) only, not through blocked cell
-      const tileMovement = movements.find(m => m.fromRow === 3 && m.fromCol === 3);
+      // Tile at (2,3) should fall to (3,3) only, not through blocked cell
+      const tileMovement = movements.find(m => m.fromRow === 2 && m.fromCol === 3);
       expect(tileMovement).toBeDefined();
-      expect(tileMovement?.toRow).toBe(4);
+      expect(tileMovement?.toRow).toBe(3);
     });
 
     test('spawnNewTiles does not spawn on blocked cells', () => {
@@ -713,7 +713,7 @@ describe('Match3Engine', () => {
       engine.generateGrid(defaultSpawnRules);
       expect(engine.isCellActive(0, 0)).toBe(true);
       expect(engine.isCellActive(3, 3)).toBe(true);
-      expect(engine.isCellActive(7, 7)).toBe(true);
+      expect(engine.isCellActive(6, 6)).toBe(true);
     });
 
     test('isCellActive returns false for inactive cells in cellMap', () => {
