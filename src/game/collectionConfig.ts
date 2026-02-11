@@ -30,19 +30,19 @@ export const COLLECTION_META: Record<string, CollectionMeta> = {
   coffee: {
     id: 'coffee',
     nameUk: 'Кава',
-    rewardDescription: 'Безкоштовна кава в KLO',
+    rewardDescription: 'Збери колекцію кави та пий безкоштовну каву протягом тижня в KLO',
     multiplier: 1,
   },
   food: {
     id: 'food',
     nameUk: 'Їжа',
-    rewardDescription: 'Знижка 50% на їжу в KLO',
+    rewardDescription: 'Збери колекцію їжі та отримай знижку 50% на їжу в KLO',
     multiplier: 2,
   },
   car: {
     id: 'car',
     nameUk: 'Авто',
-    rewardDescription: 'Розіграш автомобіля',
+    rewardDescription: 'Збери колекцію авто та прийми участь у розіграші автомобіля',
     multiplier: 5,
   },
 };

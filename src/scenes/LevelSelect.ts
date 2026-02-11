@@ -54,9 +54,9 @@ export class LevelSelect extends Phaser.Scene {
     const nodeSize = cssToGame(38);
     const halfNode = nodeSize / 2;
 
-    // Original x range in LEVEL_NODES: min=260, max=650
-    const minNodeX = 260;
-    const maxNodeX = 650;
+    // Original x range in LEVEL_NODES: min=200, max=520
+    const minNodeX = 200;
+    const maxNodeX = 520;
 
     // Default: center the entire MAP_WIDTH coordinate space (1024px, center at 512) on viewport
     let offsetX = width / 2 - MAP_CONFIG.MAP_WIDTH / 2;
@@ -91,7 +91,7 @@ export class LevelSelect extends Phaser.Scene {
   private getNodeScreenX(nodeX: number): number {
     if (this.nodeXScale < 1) {
       // Scale x-positions to fit narrow viewport
-      const minNodeX = 260;
+      const minNodeX = 200;
       const scaledX = minNodeX + (nodeX - minNodeX) * this.nodeXScale;
       return scaledX + this.nodeOffsetX;
     }

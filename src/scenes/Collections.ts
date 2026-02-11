@@ -82,8 +82,8 @@ export class Collections extends Phaser.Scene {
     this.cardContainers = [];
 
     // Layout constants
-    const headerOffset = cssToGame(60); // UIScene header height
-    const bottomNavSafeArea = cssToGame(150); // UIScene bottom nav
+    const headerOffset = cssToGame(40); // UIScene header height
+    const bottomNavSafeArea = cssToGame(100); // UIScene bottom nav
     const cardWidth = cssToGame(80);
     const cardAspect = 1158 / 696; // card images are 696x1158 (portrait)
     const cardHeight = cardWidth * cardAspect;
@@ -113,7 +113,7 @@ export class Collections extends Phaser.Scene {
       // Collection name
       const nameText = this.add.text(width / 2, currentY, meta.nameUk, {
         fontFamily: 'Arial, sans-serif',
-        fontSize: `${cssToGame(22)}px`,
+        fontSize: `${cssToGame(16)}px`,
         color: '#1A1A1A',
         fontStyle: 'bold',
       });
@@ -125,13 +125,15 @@ export class Collections extends Phaser.Scene {
       // Reward description
       const rewardText = this.add.text(width / 2, currentY, meta.rewardDescription, {
         fontFamily: 'Arial, sans-serif',
-        fontSize: `${cssToGame(14)}px`,
+        fontSize: `${cssToGame(12)}px`,
         color: '#888888',
+        wordWrap: { width: width - cssToGame(20) },
+        align: 'center',
       });
       rewardText.setOrigin(0.5, 0);
       this.allElements.push(rewardText);
 
-      currentY += cssToGame(30);
+      currentY += rewardText.height + cssToGame(20);
 
       // Colored background behind card row
       const bgPadding = cssToGame(10);
@@ -163,11 +165,11 @@ export class Collections extends Phaser.Scene {
           cardContainer.add(cardImage);
 
           // Rarity badge
-          const badgeRadius = cssToGame(4);
-          const badge = this.add.graphics();
-          badge.fillStyle(RARITY_COLORS[card.rarity], 1);
-          badge.fillCircle(localX + cardWidth/2 - badgeRadius*2, cardHeight/2 - badgeRadius*2, badgeRadius);
-          cardContainer.add(badge);
+          // const badgeRadius = cssToGame(4);
+          // const badge = this.add.graphics();
+          // badge.fillStyle(RARITY_COLORS[card.rarity], 1);
+          // badge.fillCircle(localX + cardWidth/2 - badgeRadius*2, cardHeight/2 - badgeRadius*2, badgeRadius);
+          // cardContainer.add(badge);
 
           // Duplicate count
           const count = collectionsManager.getCardCount(collectionId, card.id);
@@ -209,7 +211,7 @@ export class Collections extends Phaser.Scene {
 
       this.allElements.push(cardContainer);
 
-      currentY += cardHeight + bgPadding * 2 + cssToGame(20);
+      currentY += cardHeight + bgPadding + cssToGame(20);
 
       // Progress text
       const progressText = this.add.text(
@@ -288,7 +290,7 @@ export class Collections extends Phaser.Scene {
 
       this.allElements.push(buttonContainer);
 
-      currentY += buttonHeight + cssToGame(50); // Spacing before next collection
+      currentY += buttonHeight + cssToGame(20); // Spacing before next collection
     }
   }
 

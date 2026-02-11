@@ -247,8 +247,8 @@ export class UIScene extends Phaser.Scene {
 
     // Create 3 tab buttons
     const navCenterY = navY + navHeight / 2;
-    this.createTabButton(width * 0.17, navCenterY, 'Рівні', '🗺', 'levels');
-    this.createTabButton(width * 0.5, navCenterY, 'Колекції', '🃏', 'collections');
+    this.createTabButton(width * 0.17, navCenterY, 'Колекції', '🃏', 'collections');
+    this.createTabButton(width * 0.5, navCenterY, 'Рівні', '🗺', 'levels');
     this.createTabButton(width * 0.83, navCenterY, 'Магазин', '🛒', 'shop');
   }
 
@@ -267,9 +267,9 @@ export class UIScene extends Phaser.Scene {
     if (isActive) {
       const glow = this.add.graphics();
       const rectW = cssToGame(44);
-      const rectH = cssToGame(28);
+      const rectH = cssToGame(44);
       glow.fillStyle(0xffb800, 0.15);
-      glow.fillRoundedRect(x - rectW / 2, navCenterY - cssToGame(6) - rectH / 2, rectW, rectH, cssToGame(8));
+      glow.fillRoundedRect(x - rectW / 2, navCenterY - cssToGame(6) - rectH / 2.5, rectW, rectH, cssToGame(10));
       glow.setScrollFactor(0);
       glow.setDepth(201);
       elements.push(glow);
