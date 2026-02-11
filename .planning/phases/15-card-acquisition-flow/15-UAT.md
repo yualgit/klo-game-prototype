@@ -1,9 +1,9 @@
 ---
-status: complete
+status: diagnosed
 phase: 15-card-acquisition-flow
 source: [15-01-SUMMARY.md, 15-02-SUMMARY.md, 15-03-SUMMARY.md]
 started: 2026-02-11T10:00:00Z
-updated: 2026-02-11T10:15:00Z
+updated: 2026-02-11T10:20:00Z
 ---
 
 ## Current Test
@@ -15,7 +15,7 @@ updated: 2026-02-11T10:15:00Z
 ### 1. Bonus Level Win Hint (Fixed)
 expected: Win level 3 (bonus level). Win overlay shows "Бонус: обери картку!" hint text positioned below stars with clear spacing — no text/star overlap.
 result: issue
-reported: "текст налазить на 'життя' (❤️ 4/5 lives counter from UIScene header)"
+reported: "текст налазить на 'життя' (❤️ 4/5 lives counter from WinOverlay)"
 severity: cosmetic
 
 ### 2. Card Pick Screen / Text Overlap
@@ -63,22 +63,30 @@ skipped: 1
 
 ## Gaps
 
-- truth: "Bonus hint text positioned without overlapping UIScene header elements"
+- truth: "Bonus hint text positioned without overlapping overlay lives display"
   status: failed
-  reason: "User reported: текст налазить на 'життя' (❤️ 4/5 lives counter from UIScene header)"
+  reason: "User reported: текст налазить на 'життя' (❤️ 4/5 lives counter)"
   severity: cosmetic
   test: 1
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Bonus hint at cssToGame(75) overlaps with overlay's own lives display at starY+cssToGame(25)=cssToGame(70). Only 5 CSS px gap, both use overlaySubtitleSize (16px CSS) — bounding boxes collide. When earnedStars===3, lives moves to cssToGame(85) — still only 10px gap."
+  artifacts:
+    - path: "src/scenes/Game.ts"
+      issue: "Line 374: bonus hint Y=cssToGame(75), line 421: lives Y=starY+cssToGame(25)=cssToGame(70) — 5px gap insufficient for 16px font"
+  missing:
+    - "Move bonus hint above stars (e.g., cssToGame(42) or inline with title), OR push lives display below bonus hint with adequate spacing"
+  debug_session: ".planning/debug/bonus-hint-lives-overlap.md"
 
-- truth: "Card name, rarity label, and 'Обрано' text positioned with clear spacing on revealed cards"
+- truth: "Card name, rarity label positioned with clear spacing on revealed cards"
   status: failed
-  reason: "User reported: текст все одно налазить один на одного, коли обираєш картку — Обрано!/rarity/card name all overlap on both cards"
+  reason: "User reported: текст все одно налазить один на одного — name/rarity overlap on both cards"
   severity: cosmetic
   test: 2
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Card pick UI runs in Game.ts showCardPickInOverlay() (NOT CardPickOverlay.ts). Name text at cssToGame(95) (line 558), rarity at cssToGame(98) (line 638) — only 3 CSS px gap. Previous fix (499e91a) changed CardPickOverlay.ts but that scene is never used. With picked card scale 1.08x, name shifts to cssToGame(102.6) while rarity stays at cssToGame(98) — texts swap order and overlap worse."
+  artifacts:
+    - path: "src/scenes/Game.ts"
+      issue: "Line 558: name at cssToGame(95) below card center. Line 638: rarity at cssToGame(98) — only 3px gap"
+    - path: "src/scenes/CardPickOverlay.ts"
+      issue: "Has correct spacing (106.5 vs 140) but is NOT used in actual bonus level flow"
+  missing:
+    - "Change Game.ts line 638 rarity offset from cssToGame(98) to ~cssToGame(120) for 25+ CSS px clearance"
+  debug_session: ".planning/debug/card-pick-overlay-text-overlap.md"
