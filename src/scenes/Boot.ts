@@ -4,6 +4,7 @@
  */
 
 import Phaser from 'phaser';
+import { TILE_CONFIG } from '../game/tileConfig';
 
 // Design constants from STYLE_GUIDE.md
 const KLO_YELLOW = 0xffb800;
@@ -60,13 +61,10 @@ export class Boot extends Phaser.Scene {
       this.percentText.destroy();
     });
 
-    // --- Load tile sprites ---
-    this.load.image('tile_burger', 'assets/tiles/burger.png');
-    this.load.image('tile_hotdog', 'assets/tiles/hotdog.png');
-    this.load.image('tile_oil', 'assets/tiles/oil.png');
-    this.load.image('tile_water', 'assets/tiles/water.png');
-    this.load.image('tile_snack', 'assets/tiles/snack.png');
-    this.load.image('tile_soda', 'assets/tiles/soda.png');
+    // --- Load tile sprites (from config) ---
+    for (const [, entry] of Object.entries(TILE_CONFIG)) {
+      this.load.image(entry.textureKey, entry.assetPath);
+    }
 
     // --- Load booster sprites ---
     this.load.image('booster_bomb', 'assets/boosters/bomb.png');
