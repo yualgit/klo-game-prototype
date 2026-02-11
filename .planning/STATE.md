@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 ## Current Position
 
 Phase: 17 of 22 (Header & Navigation Polish)
-Plan: Ready to plan
-Status: Ready to plan Phase 17
-Last activity: 2026-02-11 — v1.3 roadmap created (6 phases, 19 requirements)
+Plan: 01 complete
+Status: Plan 17-01 complete - Header & Navigation Polish
+Last activity: 2026-02-11 — Completed 17-01-PLAN.md (settings button container, bonus removal, rounded tab indicator)
 
 Progress: [████████████████████░░░░] 73% (16/22 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 39 (15 v1.0 + 10 v1.1 + 14 v1.2)
+- Total plans completed: 40 (15 v1.0 + 10 v1.1 + 14 v1.2 + 1 v1.3)
 - Total phases completed: 16
 - Total execution time: ~7 days across 3 milestones
 
@@ -30,7 +30,7 @@ Progress: [████████████████████░░░
 | v1.0 MVP | 1-5 | 15 | Feb 5-10, 2026 |
 | v1.1 Kyiv Journey | 6-10 | 10 | Feb 10, 2026 |
 | v1.2 Polish & Collections | 11-16 | 14 | Feb 10-11, 2026 |
-| v1.3 UI Polish | 17-22 | 0 | In progress |
+| v1.3 UI Polish | 17-22 | 1 | In progress |
 
 ## Accumulated Context
 
@@ -38,6 +38,8 @@ Progress: [████████████████████░░░
 
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions:
+- v1.3 (17-01): Settings gear font size reduced to cssToGame(16) for better fit in square button
+- v1.3 (17-01): Active tab rounded rectangle dimensions: 44x28 with 8px corner radius
 - v1.2: UIScene parallel launch pattern for persistent header/nav
 - v1.2: Collection state in user document (not subcollection)
 - v1.2: DPR via zoom: 1/dpr pattern for retina rendering
@@ -54,10 +56,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: v1.3 roadmap created
+Stopped at: Completed 17-01-PLAN.md (Header & Navigation Polish)
 Resume file: None
 
-**Next action:** `/gsd:plan-phase 17` to plan Header & Navigation Polish.
+**Next action:** Continue with Phase 17 or proceed to Phase 18.
 
 ---
-*Updated: 2026-02-11 after v1.3 roadmap creation*
+*Updated: 2026-02-11 after completing 17-01-PLAN.md*
