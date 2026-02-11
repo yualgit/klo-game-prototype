@@ -2,7 +2,9 @@
  * Core Match-3 game type definitions
  */
 
-export type TileType = 'burger' | 'hotdog' | 'oil' | 'water' | 'snack' | 'soda' | 'empty';
+import { TileTypeId } from './tileConfig';
+
+export type TileType = TileTypeId | 'empty';
 
 export type BoosterType = 'linear_horizontal' | 'linear_vertical' | 'bomb' | 'klo_sphere';
 
@@ -56,14 +58,7 @@ export interface MatchResult {
   boostersToSpawn: BoosterSpawn[];
 }
 
-export interface SpawnRules {
-  burger: number;
-  hotdog: number;
-  oil: number;
-  water: number;
-  snack: number;
-  soda: number;
-}
+export type SpawnRules = Partial<Record<TileTypeId, number>>;
 
 export interface LevelGoal {
   type: 'collect' | 'destroy_obstacle' | 'create_booster';
