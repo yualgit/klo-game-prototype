@@ -91,10 +91,11 @@ Plans:
   2. On mobile, level number and moves counter wrap to new line; goal text is smaller
   3. Game board width = screen width - 32px (16px padding), max 1024px; height adjusts for narrow viewports
   4. Resize error on LevelSelect.ts is fixed (no viewport undefined error)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 21-01: TBD
+- [ ] 21-01-PLAN.md — Mobile-adaptive HUD (two-line layout), icon-only back button, LevelSelect viewport fix
+- [ ] 21-02-PLAN.md — Board width constraint with 16px padding, 1024px max, height adjustment
 
 ### Phase 22: Collections UX Upgrade
 **Goal**: Collections screen provides horizontal swiper navigation with proper scroll bounds
