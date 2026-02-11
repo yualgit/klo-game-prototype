@@ -23,12 +23,14 @@ interface UISceneData {
   currentTab?: 'levels' | 'collections' | 'shop';
   showBottomNav?: boolean; // default true
   showHeader?: boolean; // default true
+  showBackButton?: boolean; // default false — shows back button in header (Game scene)
 }
 
 export class UIScene extends Phaser.Scene {
   private currentTab: 'levels' | 'collections' | 'shop';
   private showBottomNav: boolean;
   private showHeader: boolean;
+  private showBackButton: boolean;
 
   // Header elements
   private headerBg: Phaser.GameObjects.Graphics | null = null;
@@ -50,6 +52,9 @@ export class UIScene extends Phaser.Scene {
   // Notification dot
   private collectionsNotificationDot: Phaser.GameObjects.Arc | null = null;
 
+  // Back button elements (Game scene only)
+  private backButtonContainer: Phaser.GameObjects.Container | null = null;
+
   // Settings overlay
   private settingsOpen: boolean = false;
   private settingsOverlayElements: Phaser.GameObjects.GameObject[] = [];
@@ -62,6 +67,7 @@ export class UIScene extends Phaser.Scene {
     this.currentTab = data.currentTab || 'levels';
     this.showBottomNav = data.showBottomNav !== false; // default true
     this.showHeader = data.showHeader !== false; // default true
+    this.showBackButton = data.showBackButton === true; // default false
   }
 
   create(): void {
@@ -150,6 +156,61 @@ export class UIScene extends Phaser.Scene {
     this.settingsGear.setOrigin(0.5);
     this.settingsGear.setScrollFactor(0);
     this.settingsGear.setDepth(202);
+
+    // Back button (shown during Game scene)
+    if (this.showBackButton) {
+      this.createBackButton(width, headerHeight);
+    }
+  }
+
+  private createBackButton(width: number, headerHeight: number): void {
+    const isMobile = width / getDpr() < 600;
+
+    let buttonWidth: number;
+    let buttonHeight: number;
+    let buttonText: string;
+    let fontSize: number;
+
+    if (isMobile) {
+      buttonWidth = cssToGame(36);
+      buttonHeight = cssToGame(36);
+      buttonText = '<';
+      fontSize = cssToGame(18);
+    } else {
+      buttonWidth = cssToGame(80);
+      buttonHeight = cssToGame(30);
+      buttonText = '< Menu';
+      fontSize = cssToGame(13);
+    }
+
+    const buttonBg = this.add.image(0, 0, GUI_TEXTURE_KEYS.buttonYellow);
+    buttonBg.setDisplaySize(buttonWidth, buttonHeight);
+
+    const text = this.add.text(0, 0, buttonText, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: `${fontSize}px`,
+      color: '#1A1A1A',
+      fontStyle: isMobile ? 'bold' : 'normal',
+    });
+    text.setOrigin(0.5);
+
+    const buttonX = cssToGame(10) + buttonWidth / 2;
+    const buttonY = headerHeight / 2;
+    this.backButtonContainer = this.add.container(buttonX, buttonY, [buttonBg, text]);
+    this.backButtonContainer.setSize(buttonWidth, buttonHeight);
+    this.backButtonContainer.setInteractive({ useHandCursor: true });
+    this.backButtonContainer.setScrollFactor(0);
+    this.backButtonContainer.setDepth(202);
+
+    this.backButtonContainer.on('pointerover', () => {
+      this.backButtonContainer?.setScale(1.05);
+    });
+    this.backButtonContainer.on('pointerout', () => {
+      this.backButtonContainer?.setScale(1);
+    });
+    this.backButtonContainer.on('pointerup', () => {
+      eventsCenter.emit('game-back');
+    });
   }
 
   private createBottomNav(width: number, height: number): void {
@@ -666,6 +727,10 @@ export class UIScene extends Phaser.Scene {
     if (this.countdownText) this.countdownText.destroy();
     if (this.settingsButton) this.settingsButton.destroy();
     if (this.settingsGear) this.settingsGear.destroy();
+    if (this.backButtonContainer) {
+      this.backButtonContainer.destroy();
+      this.backButtonContainer = null;
+    }
 
     // Destroy bottom nav elements
     if (this.navBg) this.navBg.destroy();

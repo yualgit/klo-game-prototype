@@ -30,7 +30,6 @@ const MAX_LEVELS = 10;
 
 export class Game extends Phaser.Scene {
   // UI elements
-  private backButton: Phaser.GameObjects.Container;
   private hudText: Phaser.GameObjects.Text;
   private hudGoalText: Phaser.GameObjects.Text;
   private bg: Phaser.GameObjects.Graphics;
@@ -105,6 +104,7 @@ export class Game extends Phaser.Scene {
     this.events.once('shutdown', () => {
       this.sceneActive = false;
       this.scale.off('resize', this.handleResize, this);
+      eventsCenter.off('game-back', this.handleGameBack, this);
       this.scene.stop('UIScene');
     });
 
@@ -191,9 +191,6 @@ export class Game extends Phaser.Scene {
     // Create HUD at top
     this.createHUD(width);
 
-    // Create back button
-    this.createBackButton();
-
     // Draw grid background
     this.drawGridBackground();
 
@@ -203,12 +200,16 @@ export class Game extends Phaser.Scene {
     // Setup input handling
     this.setupInput();
 
-    // Launch UIScene with header only (no bottom nav during gameplay)
+    // Launch UIScene with header + back button (no bottom nav during gameplay)
     this.scene.launch('UIScene', {
-      currentTab: 'levels', // Not relevant since nav hidden
+      currentTab: 'levels',
       showBottomNav: false,
       showHeader: true,
+      showBackButton: true,
     });
+
+    // Listen for back button from UIScene header
+    eventsCenter.on('game-back', this.handleGameBack, this);
 
     // Register resize handler
     this.scale.on('resize', this.handleResize, this);
@@ -223,7 +224,6 @@ export class Game extends Phaser.Scene {
     // Clear references to destroyed game objects from previous scene run
     this.hudText = null!;
     this.hudGoalText = null!;
-    this.backButton = null!;
   }
 
   private calculateConstrainedTileSize(width: number, height: number): number {
@@ -923,63 +923,10 @@ export class Game extends Phaser.Scene {
     return container;
   }
 
-  private createBackButton(): void {
-    const width = this.cameras.main.width;
-    const isMobile = width / getDpr() < 600;
-
-    let buttonWidth: number;
-    let buttonHeight: number;
-    let buttonText: string;
-    let fontSize: number;
-
-    if (isMobile) {
-      // Mobile: square icon-only button
-      buttonWidth = cssToGame(36);
-      buttonHeight = cssToGame(36);
-      buttonText = '<';
-      fontSize = cssToGame(18);
-    } else {
-      // Desktop: existing "< Menu" button
-      buttonWidth = this.layout.backButtonWidth;
-      buttonHeight = this.layout.backButtonHeight;
-      buttonText = '< Menu';
-      fontSize = this.layout.backButtonFontSize;
-    }
-
-    // Button background using GUI sprite
-    const buttonBg = this.add.image(0, 0, GUI_TEXTURE_KEYS.buttonYellow);
-    buttonBg.setDisplaySize(buttonWidth, buttonHeight);
-
-    // Button text
-    const text = this.add.text(0, 0, buttonText, {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: `${fontSize}px`,
-      color: '#1A1A1A',
-      fontStyle: isMobile ? 'bold' : 'normal',
-    });
-    text.setOrigin(0.5);
-
-    // Create container for button (position below UIScene header)
-    const buttonX = cssToGame(35) + buttonWidth / 2;
-    const buttonY = cssToGame(50) + this.layout.hudHeight / 2;
-    this.backButton = this.add.container(buttonX, buttonY, [buttonBg, text]);
-    this.backButton.setSize(buttonWidth, buttonHeight);
-    this.backButton.setInteractive({ useHandCursor: true });
-
-    // Hover effects
-    this.backButton.on('pointerover', () => {
-      this.backButton.setScale(1.05);
-    });
-
-    this.backButton.on('pointerout', () => {
-      this.backButton.setScale(1);
-    });
-
-    this.backButton.on('pointerup', () => {
-      console.log('[Game] Back button clicked, returning to LevelSelect');
-      this.scene.start('LevelSelect');
-    });
-  }
+  private handleGameBack = (): void => {
+    console.log('[Game] Back button clicked, returning to LevelSelect');
+    this.scene.start('LevelSelect');
+  };
 
   private drawGridBackground(): void {
     const gridPixelWidth = this.gridWidth * this.layout.tileSize;
@@ -1689,13 +1636,6 @@ export class Game extends Phaser.Scene {
       this.hudGoalText = null!;
     }
     this.updateHUDText(width);
-
-    // Recreate back button for mobile/desktop switch (destroy and recreate)
-    if (this.backButton) {
-      this.backButton.destroy();
-      this.backButton = null!;
-    }
-    this.createBackButton();
 
     // Redraw grid background (board, shadow, mask)
     this.redrawGridBackground();
