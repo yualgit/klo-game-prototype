@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed AI-generated assets, 10 levels with variable board shapes and progressive obstacles, boosters with combo matrix, lives/bonus economy, settings, scrollable Kyiv map journey, and mobile-responsive rendering. Built for client presentation to demonstrate gameplay feel, progression depth, and KLO brand integration.
+Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed AI-generated assets, 10 levels with variable board shapes and progressive obstacles, boosters with combo matrix, lives/bonus economy, settings, scrollable Kyiv map journey, mobile-responsive rendering, persistent UI navigation shell, and collection cards meta-progression with card pick UX, pity system, and coupon exchange. Built for client presentation to demonstrate gameplay feel, progression depth, and KLO brand integration.
 
 ## Core Value
 
@@ -26,22 +26,15 @@ Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed 
 - ✓ LVLD-01..04: Variable board shapes, pre-placed tiles, 5 new levels (L6-L10) — v1.1
 - ✓ VISL-01..03: Scrollable Kyiv map with parallax and winding path level nodes — v1.1
 - ✓ VISL-04..05: Mobile-responsive layout with DPR-aware rendering (capped at 2x) — v1.1
+- ✓ ART-01..05: Retina art upgrade with 6 new tile types, booster sprites, inactive cell styling — v1.2
+- ✓ RESP-01..04: Responsive layout with DPR-aware scaling on all mobile viewports — v1.2
+- ✓ NAV-01..07: Bottom navigation + global header with reactive lives/bonuses display — v1.2
+- ✓ COL-01..13: Collection cards system (3 collections, card pick, pity, exchange for coupons) — v1.2
+- ✓ SYS-01..02: Collection persistence to Firestore with state restoration — v1.2
 
 ### Active
 
-## Current Milestone: v1.2 Polish & Collections
-
-**Goal:** Add collection cards meta-progression, overhaul UI with global header + bottom navigation, improve art quality, fix mobile responsiveness.
-
-**Target features:**
-- Collection cards system (3 collections, card pick flow, pity mechanic, exchange for coupons)
-- Bottom navigation bar (Levels / Collections / Shop tabs)
-- Global header with lives/bonuses/settings
-- In-level HUD rework (no bottom nav, compact level HUD)
-- Responsive layout fixes (Level Select + Game Board on all mobile screens)
-- Art upgrade: 1024px retina tiles, 6 new tile types, booster sprites, remove light tile
-- Inactive cell visual for variable board shapes
-- Collection progress persistence (Firestore)
+(No active requirements — all milestones complete)
 
 ### Out of Scope
 
@@ -52,13 +45,19 @@ Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed 
 - In-app purchases — бонуси тестові, не реальні гроші
 - Рівні L11-20 — 10 рівнів достатньо для демо
 - Progressive lives regen (30→45→60→90→120 min) — unvalidated, defer to experiment
+- Analytics events — defer to future milestone
+- Collection tutorial — defer to future milestone
+- Shop screen implementation — tab exists in nav but content deferred
+- Paid card packs / IAP — demo scope, no monetization
+- Card trading between players — requires social graph
+- Card abilities / stats — cards are visual collectibles
 
 ## Context
 
-Shipped v1.1 Kyiv Journey with 7,274 LOC TypeScript.
+Shipped v1.2 Polish & Collections with 9,892 LOC TypeScript.
 Tech stack: Phaser 3.90 + TypeScript + Vite + Firebase (Auth, Firestore).
-~112 commits across 10 phases in 6 days (v1.0 + v1.1).
-Demo is fully playable with 10 levels, all mechanics, economy system, settings, Kyiv map journey, and mobile-responsive rendering.
+~200+ commits across 16 phases in 7 days (v1.0 + v1.1 + v1.2).
+Demo is fully playable with 10 levels, all mechanics, economy system, settings, Kyiv map journey, mobile-responsive rendering, bottom navigation, global header, and collection cards meta-progression with exchange for coupons.
 
 ## Key Decisions
 
@@ -73,10 +72,16 @@ Demo is fully playable with 10 levels, all mechanics, economy system, settings, 
 | Firebase Timestamp for lives regen | Prevents multi-device desync and local time exploits | ✓ Good — server-side time accuracy |
 | EconomyManager + SettingsManager singletons | Registry pattern like ProgressManager — consistent architecture | ✓ Good — reactive subscriptions work cleanly |
 | Cell map (number[][]) for variable boards | Backward compatible, reuses gravity/spawn skip for inactive cells | ✓ Good — L6-L10 showcase shapes |
-| Procedural textures for Kyiv map | Avoids missing PNG assets, rapid iteration for demo | ✓ Good — replaced with real PNGs later |
 | Camera bounds for scrollable map | Built-in Phaser enforcement vs manual clamping | ✓ Good — clean scroll with parallax |
 | DPR via zoom: 1/dpr pattern | Avoids deprecated resolution property, crisp retina rendering | ✓ Good — works on all devices |
 | setAlpha(0.001) for invisible hit areas | Phaser skips invisible objects in hit testing | ✓ Good — documented gotcha |
+| Scale.RESIZE over Scale.FIT | Scale.FIT shrinks everything on mobile; RESIZE + responsive layout adapts | ✓ Good — all viewports work correctly |
+| cssToGame() DPR multiplier | Single conversion function for CSS→Phaser coordinates | ✓ Good — consistent sizing across devices |
+| EventsCenter singleton for cross-scene comms | Decouples scenes, avoids game.events pollution | ✓ Good — UIScene updates reactively |
+| UIScene parallel launch pattern | Persistent header/nav across scenes via scene.launch() | ✓ Good — consistent navigation shell |
+| Collection state in user document (not subcollection) | Simpler Firestore structure, fewer reads | ✓ Good — single document persistence |
+| Weighted rarity + pity system | Config-driven drop rates with guaranteed new card after streak | ✓ Good — fair card acquisition |
+| Collection exchange with animation overlay | Multi-stage fold→compress→explode→coupon for satisfying UX | ✓ Good — engaging exchange experience |
 
 ## Constraints
 
@@ -86,4 +91,4 @@ Demo is fully playable with 10 levels, all mechanics, economy system, settings, 
 - **Scope**: L1-10 з просунутими механіками та economy (демо)
 
 ---
-*Last updated: 2026-02-10 after v1.2 Polish & Collections milestone started*
+*Last updated: 2026-02-11 after v1.2 milestone*
