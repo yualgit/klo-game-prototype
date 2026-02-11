@@ -19,7 +19,7 @@
 | 19 | v1.3 UI Polish | 2/2 | ✓ Complete | 2026-02-11 |
 | 20 | v1.3 UI Polish | 3/3 | ✓ Complete | 2026-02-11 |
 | 21 | v1.3 UI Polish | 2/2 | ✓ Complete | 2026-02-11 |
-| 22 | v1.3 UI Polish | 0/? | Not started | - |
+| 22 | v1.3 UI Polish | 1/1 | ✓ Complete | 2026-02-11 |
 
 ---
 
@@ -108,7 +108,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 22-01-PLAN.md — Fix scroll bounds, horizontal card swiper with snap, colored background
+- [x] 22-01-PLAN.md — Fix scroll bounds, horizontal card swiper with snap, colored background — completed 2026-02-11
 
 ---
 
