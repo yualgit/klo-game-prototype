@@ -84,10 +84,10 @@ export class Collections extends Phaser.Scene {
     const cardHeight = cardWidth * cardAspect;
     const cardGap = cssToGame(12);
 
-    // Each collection block: title(30) + description(30) + 2 rows of cards + gap + progress(50) + spacing(50)
-    const collectionBlockHeight = cssToGame(30) + cssToGame(30) + 2 * cardHeight + cardGap + cssToGame(20) + cssToGame(50) + cssToGame(50);
-    // Calculate world height: header + 3 collections + bottom nav + viewport padding
-    const worldHeight = headerOffset + cssToGame(20) + 3 * collectionBlockHeight + bottomNavSafeArea + height;
+    // Each collection block: title(30) + description(30) + bgPadding(10) + 1 row of cards + bgPadding(10) + gap(20) + progress(50) + spacing(50)
+    const collectionBlockHeight = cssToGame(30) + cssToGame(30) + cssToGame(10) + cardHeight + cssToGame(10) + cssToGame(20) + cssToGame(50) + cssToGame(50);
+    // Calculate world height: header + 3 collections + bottom nav (no viewport padding)
+    const worldHeight = headerOffset + cssToGame(20) + 3 * collectionBlockHeight + bottomNavSafeArea;
     this.cameras.main.setBounds(0, 0, width, worldHeight);
 
     // Background - covers full world height
@@ -128,74 +128,77 @@ export class Collections extends Phaser.Scene {
 
       currentY += cssToGame(30);
 
-      // Card grid (2 rows x 3 columns)
-      const gridWidth = 3 * cardWidth + 2 * cardGap;
-      const gridStartX = (width - gridWidth) / 2;
+      // Colored background behind card row
+      const bgPadding = cssToGame(10);
+      const bgHeight = cardHeight + bgPadding * 2;
+      const bgWidth = width - cssToGame(20); // full width minus side margins
+      const bgX = cssToGame(10); // left margin
 
+      const cardBg = this.add.graphics();
+      cardBg.fillStyle(0xffb800, 0.15);
+      cardBg.fillRoundedRect(bgX, currentY - bgPadding, bgWidth, bgHeight, cssToGame(8));
+      this.allElements.push(cardBg);
+
+      // Horizontal card container (1 row x 6 cards)
+      const cardStride = cardWidth + cardGap;
+      const containerStartX = cssToGame(20); // left padding inside background
+      const containerY = currentY + cardHeight / 2; // center cards vertically
+
+      const cardContainer = this.add.container(containerStartX, containerY);
+
+      // Add 6 cards horizontally inside the container
       for (let i = 0; i < cards.length; i++) {
         const card = cards[i];
-        const col = i % 3;
-        const row = Math.floor(i / 3);
-        const cardX = gridStartX + col * (cardWidth + cardGap) + cardWidth / 2;
-        const cardY = currentY + row * (cardHeight + cardGap) + cardHeight / 2;
-
+        const localX = i * cardStride + cardWidth / 2;
         const isOwned = collectionsManager.isCardOwned(collectionId, card.id);
 
         if (isOwned) {
-          // Owned card: full color, preserve aspect ratio
-          const cardImage = this.add.image(cardX, cardY, card.textureKey);
+          const cardImage = this.add.image(localX, 0, card.textureKey);
           cardImage.setDisplaySize(cardWidth, cardHeight);
-          this.allElements.push(cardImage);
+          cardContainer.add(cardImage);
 
-          // Rarity badge (small colored dot at bottom-right)
+          // Rarity badge
           const badgeRadius = cssToGame(4);
-          const badgeX = cardX + cardWidth / 2 - badgeRadius * 2;
-          const badgeY = cardY + cardHeight / 2 - badgeRadius * 2;
           const badge = this.add.graphics();
           badge.fillStyle(RARITY_COLORS[card.rarity], 1);
-          badge.fillCircle(badgeX, badgeY, badgeRadius);
-          this.allElements.push(badge);
+          badge.fillCircle(localX + cardWidth/2 - badgeRadius*2, cardHeight/2 - badgeRadius*2, badgeRadius);
+          cardContainer.add(badge);
 
-          // Duplicate count badge
+          // Duplicate count
           const count = collectionsManager.getCardCount(collectionId, card.id);
           if (count > 1) {
-            const countText = this.add.text(
-              cardX + cardWidth / 2 - cssToGame(2),
-              cardY - cardHeight / 2 + cssToGame(2),
-              `x${count}`,
-              {
-                fontFamily: 'Arial, sans-serif',
-                fontSize: `${cssToGame(10)}px`,
-                color: '#FFFFFF',
-                fontStyle: 'bold',
-                backgroundColor: '#333333',
-                padding: { x: cssToGame(3), y: cssToGame(1) },
-              }
-            );
-            countText.setOrigin(1, 0); // Top-right alignment
-            this.allElements.push(countText);
+            const countText = this.add.text(localX + cardWidth/2 - cssToGame(2), -cardHeight/2 + cssToGame(2), `x${count}`, {
+              fontFamily: 'Arial, sans-serif',
+              fontSize: `${cssToGame(10)}px`,
+              color: '#FFFFFF',
+              fontStyle: 'bold',
+              backgroundColor: '#333333',
+              padding: { x: cssToGame(3), y: cssToGame(1) },
+            });
+            countText.setOrigin(1, 0);
+            cardContainer.add(countText);
           }
         } else {
-          // Unowned card: grayscale with "?" overlay, preserve aspect ratio
-          const cardImage = this.add.image(cardX, cardY, card.textureKey);
+          const cardImage = this.add.image(localX, 0, card.textureKey);
           cardImage.setDisplaySize(cardWidth, cardHeight);
           cardImage.setTint(0x808080);
           cardImage.setAlpha(0.4);
-          this.allElements.push(cardImage);
+          cardContainer.add(cardImage);
 
-          // "?" overlay
-          const questionMark = this.add.text(cardX, cardY, '?', {
+          const questionMark = this.add.text(localX, 0, '?', {
             fontFamily: 'Arial, sans-serif',
             fontSize: `${cssToGame(28)}px`,
             color: '#FFFFFF',
             fontStyle: 'bold',
           });
           questionMark.setOrigin(0.5);
-          this.allElements.push(questionMark);
+          cardContainer.add(questionMark);
         }
       }
 
-      currentY += 2 * (cardHeight + cardGap) + cssToGame(20);
+      this.allElements.push(cardContainer);
+
+      currentY += cardHeight + bgPadding * 2 + cssToGame(20);
 
       // Progress text
       const progressText = this.add.text(
