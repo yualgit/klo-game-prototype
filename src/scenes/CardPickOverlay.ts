@@ -11,8 +11,6 @@ import { cssToGame, getResponsiveLayout } from '../utils/responsive';
 
 // Design constants from STYLE_GUIDE.md
 const KLO_YELLOW = 0xffb800;
-const KLO_BLACK = 0x1a1a1a;
-const KLO_WHITE = 0xf9f9f9;
 
 const MAX_LEVELS = 10;
 
@@ -25,18 +23,33 @@ export class CardPickOverlay extends Phaser.Scene {
     super({ key: 'CardPickOverlay' });
   }
 
-  create(data: { levelId: number }): void {
+  create(): void {
+    // Reset state for scene restart
+    this.cards = [];
+    this.cardIds = [];
+
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
+
+    // Read levelId from scene settings (same pattern as Game.ts)
+    const sceneData = this.scene.settings.data as { levelId?: number };
+    const levelId = sceneData?.levelId || 1;
+    console.log('[CardPickOverlay] create() levelId:', levelId, 'width:', width, 'height:', height);
 
     // Compute responsive layout
     this.layout = getResponsiveLayout(width, height);
 
     // Determine collection based on level
-    const collectionId = getActiveCollectionId(data.levelId);
+    const collectionId = getActiveCollectionId(levelId);
+    console.log('[CardPickOverlay] collectionId:', collectionId);
 
     // Get CollectionsManager from registry
     const collections = this.registry.get('collections') as CollectionsManager;
+    if (!collections) {
+      console.error('[CardPickOverlay] CollectionsManager not found in registry!');
+      this.scene.start('LevelSelect');
+      return;
+    }
     const owned = collections.getOwnedCards(collectionId);
     const pity = collections.getPityStreak(collectionId);
 
@@ -50,6 +63,7 @@ export class CardPickOverlay extends Phaser.Scene {
     }
 
     this.cardIds = [card1Id, card2Id];
+    console.log('[CardPickOverlay] rolled cards:', card1Id, card2Id);
 
     // Dark backdrop with interactive blocking
     const backdrop = this.add.graphics();
@@ -83,13 +97,21 @@ export class CardPickOverlay extends Phaser.Scene {
       const cardDef = CARD_DEFINITIONS[cardId];
       const cardX = startX + i * (cardWidth + cardSpacing);
 
+      if (!cardDef) {
+        console.error('[CardPickOverlay] Card definition not found for:', cardId);
+        continue;
+      }
+
+      console.log('[CardPickOverlay] creating card', i, cardId, cardDef.nameUk, 'at', cardX, cardY);
+
       // Card container
       const container = this.add.container(cardX, cardY);
       container.setDepth(401);
       container.setData('cardId', cardId);
 
-      // Card back (procedural graphics)
-      const back = this.createCardBack(cardWidth, cardHeight);
+      // Card back (blank.png asset)
+      const back = this.add.image(0, 0, 'collection_blank');
+      back.setDisplaySize(cardWidth, cardHeight);
       container.add(back);
 
       // Card front (hidden initially)
@@ -139,29 +161,12 @@ export class CardPickOverlay extends Phaser.Scene {
       // Tap to pick
       container.on('pointerup', () => {
         if (this.input.enabled) {
-          this.onCardPicked(i, data.levelId, collections, collectionId);
+          this.onCardPicked(i, levelId, collections, collectionId);
         }
       });
 
       this.cards.push(container);
     }
-  }
-
-  /**
-   * Create procedural card back texture with KLO branding.
-   */
-  private createCardBack(width: number, height: number): Phaser.GameObjects.Graphics {
-    const back = this.add.graphics();
-
-    // Dark background
-    back.fillStyle(0x2a2a2a, 1);
-    back.fillRoundedRect(-width / 2, -height / 2, width, height, cssToGame(8));
-
-    // KLO yellow border
-    back.lineStyle(cssToGame(3), KLO_YELLOW, 1);
-    back.strokeRoundedRect(-width / 2, -height / 2, width, height, cssToGame(8));
-
-    return back;
   }
 
   /**
@@ -251,7 +256,7 @@ export class CardPickOverlay extends Phaser.Scene {
           ease: 'Quad.In',
           onComplete: () => {
             // At scaleX=0, swap content
-            const back = container.getAt(0) as Phaser.GameObjects.Graphics;
+            const back = container.getAt(0) as Phaser.GameObjects.Image;
             const front = container.getAt(1) as Phaser.GameObjects.Image;
             const nameText = container.getAt(2) as Phaser.GameObjects.Text;
 

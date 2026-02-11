@@ -17,7 +17,9 @@ import { AudioManager } from '../game/AudioManager';
 import { VFXManager } from '../game/VFXManager';
 import { getResponsiveLayout, cssToGame } from '../utils/responsive';
 import eventsCenter from '../utils/EventsCenter';
-import { getActiveCollectionId } from '../game/collectionConfig';
+import { getActiveCollectionId, CARD_DEFINITIONS, CardRarity } from '../game/collectionConfig';
+import { rollCard, DROP_CONFIG } from '../game/cardDropLogic';
+import { CollectionsManager } from '../game/CollectionsManager';
 
 // Design constants from STYLE_GUIDE.md
 const KLO_YELLOW = 0xffb800;
@@ -461,8 +463,8 @@ export class Game extends Phaser.Scene {
 
     const nextBtn = this.createOverlayButton(panelW / 2, panelH - cssToGame(80), nextLabel, () => {
       if (isBonusLevel) {
-        // Launch card pick overlay — pass levelId for collection rotation and next level logic
-        this.scene.start('CardPickOverlay', { levelId: this.currentLevel });
+        // Show card pick in-place (replace win overlay content)
+        this.showCardPickInOverlay(panelContainer, backdrop, panelW, panelH, isLastLevel);
       } else if (isLastLevel) {
         this.scene.start('LevelSelect');
       } else {
@@ -478,6 +480,217 @@ export class Game extends Phaser.Scene {
       }, true);
       panelContainer.add(levelsBtn);
     }
+  }
+
+  /**
+   * Replace win overlay content with card pick UI (2 cards, pick one, flip both).
+   */
+  private showCardPickInOverlay(
+    panelContainer: Phaser.GameObjects.Container,
+    _backdrop: Phaser.GameObjects.Graphics,
+    panelW: number,
+    panelH: number,
+    isLastLevel: boolean
+  ): void {
+    // Remove all children from panel (title, stars, buttons, etc.)
+    panelContainer.removeAll(true);
+
+    // Redraw panel background (since removeAll destroyed it)
+    const panel = this.add.graphics();
+    panel.fillStyle(KLO_WHITE, 1);
+    panel.fillRoundedRect(0, 0, panelW, panelH, cssToGame(8));
+    panelContainer.add(panel);
+
+    // Title
+    const title = this.add.text(panelW / 2, cssToGame(25), 'Обери картку!', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: `${this.layout.overlayTitleSize}px`,
+      color: '#1A1A1A',
+      fontStyle: 'bold',
+    });
+    title.setOrigin(0.5);
+    panelContainer.add(title);
+
+    // Get collection and roll cards
+    const collectionId = getActiveCollectionId(this.currentLevel);
+    const collections = this.registry.get('collections') as CollectionsManager;
+    const owned = collections.getOwnedCards(collectionId);
+    const pity = collections.getPityStreak(collectionId);
+
+    let card1Id = rollCard(collectionId, owned, pity, DROP_CONFIG);
+    let card2Id = rollCard(collectionId, owned, pity, DROP_CONFIG);
+    for (let i = 0; i < 5 && card2Id === card1Id; i++) {
+      card2Id = rollCard(collectionId, owned, pity, DROP_CONFIG);
+    }
+
+    // Card dimensions
+    const cardW = cssToGame(100);
+    const cardH = cssToGame(166); // 696:1158 ratio
+    const cardSpacing = cssToGame(16);
+    const cardY = panelH * 0.42;
+
+    const totalCardsW = cardW * 2 + cardSpacing;
+    const cardStartX = (panelW - totalCardsW) / 2 + cardW / 2;
+
+    const cardIds = [card1Id, card2Id];
+    const cardContainers: Phaser.GameObjects.Container[] = [];
+
+    for (let i = 0; i < 2; i++) {
+      const cardId = cardIds[i];
+      const cardDef = CARD_DEFINITIONS[cardId];
+      if (!cardDef) continue;
+
+      const cx = cardStartX + i * (cardW + cardSpacing);
+      const container = this.add.container(cx, cardY);
+
+      // Card back (blank.png)
+      const back = this.add.image(0, 0, 'collection_blank');
+      back.setDisplaySize(cardW, cardH);
+      container.add(back);
+
+      // Card front (hidden)
+      const front = this.add.image(0, 0, cardDef.textureKey);
+      front.setDisplaySize(cardW, cardH);
+      front.setVisible(false);
+      container.add(front);
+
+      // Card name (hidden)
+      const nameText = this.add.text(0, cardH / 2 + cssToGame(12), cardDef.nameUk, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: `${cssToGame(12)}px`,
+        color: '#1A1A1A',
+        fontStyle: 'bold',
+      });
+      nameText.setOrigin(0.5);
+      nameText.setVisible(false);
+      container.add(nameText);
+
+      container.setSize(cardW, cardH);
+      container.setInteractive({ useHandCursor: true });
+      container.setData('cardId', cardId);
+
+      // Hover
+      container.on('pointerover', () => {
+        this.tweens.add({ targets: container, scale: 1.05, duration: 150, ease: 'Quad.Out' });
+      });
+      container.on('pointerout', () => {
+        this.tweens.add({ targets: container, scale: 1.0, duration: 150, ease: 'Quad.Out' });
+      });
+
+      // Pick handler
+      container.on('pointerup', () => {
+        this.handleCardPick(i, cardIds, cardContainers, panelContainer, panelW, panelH, collectionId, collections, isLastLevel);
+      });
+
+      panelContainer.add(container);
+      cardContainers.push(container);
+    }
+  }
+
+  /**
+   * Handle card pick: flip both cards, save, show continue.
+   */
+  private async handleCardPick(
+    pickedIndex: number,
+    cardIds: string[],
+    cardContainers: Phaser.GameObjects.Container[],
+    panelContainer: Phaser.GameObjects.Container,
+    panelW: number,
+    panelH: number,
+    collectionId: string,
+    collections: CollectionsManager,
+    isLastLevel: boolean
+  ): Promise<void> {
+    // Disable input on both cards
+    cardContainers.forEach(c => c.removeInteractive());
+
+    // Flip picked card first, then other
+    await this.flipCardAnim(cardContainers[pickedIndex], 0);
+    await this.flipCardAnim(cardContainers[1 - pickedIndex], 200);
+
+    // Highlight picked, dim other
+    this.tweens.add({ targets: cardContainers[pickedIndex], scale: 1.08, duration: 300, ease: 'Quad.Out' });
+    cardContainers[1 - pickedIndex].setAlpha(0.5);
+
+    // Show "Обрано!" above picked card
+    const picked = cardContainers[pickedIndex];
+    const chosenText = this.add.text(picked.x, picked.y - cssToGame(95), 'Обрано!', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: `${cssToGame(14)}px`,
+      color: '#FFB800',
+      fontStyle: 'bold',
+    });
+    chosenText.setOrigin(0.5);
+    panelContainer.add(chosenText);
+
+    // Show rarity labels
+    const rarityLabels: Record<CardRarity, string> = {
+      common: 'Звичайна', rare: 'Рідкісна', epic: 'Епічна', legendary: 'Легендарна',
+    };
+    const rarityColors: Record<CardRarity, string> = {
+      common: '#888888', rare: '#4488FF', epic: '#AA44FF', legendary: '#FFB800',
+    };
+
+    cardContainers.forEach((card) => {
+      const cardId = card.getData('cardId') as string;
+      const cardDef = CARD_DEFINITIONS[cardId];
+      if (!cardDef) return;
+      const label = this.add.text(card.x, card.y + cssToGame(98), rarityLabels[cardDef.rarity], {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: `${cssToGame(11)}px`,
+        color: rarityColors[cardDef.rarity],
+      });
+      label.setOrigin(0.5);
+      panelContainer.add(label);
+    });
+
+    // Save picked card
+    await new Promise<void>(resolve => this.time.delayedCall(600, () => resolve()));
+    const pickedCardId = cardIds[pickedIndex];
+    collections.selectCard(collectionId, pickedCardId);
+
+    // Show continue button
+    const continueBtn = this.createOverlayButton(panelW / 2, panelH - cssToGame(40), 'Далі', () => {
+      if (isLastLevel) {
+        this.scene.start('LevelSelect');
+      } else {
+        this.scene.start('Game', { levelId: this.currentLevel + 1 });
+      }
+    });
+    panelContainer.add(continueBtn);
+  }
+
+  /**
+   * Flip card animation: scaleX 1→0 (hide back, show front) → 0→1
+   */
+  private flipCardAnim(container: Phaser.GameObjects.Container, delay: number): Promise<void> {
+    return new Promise(resolve => {
+      this.time.delayedCall(delay, () => {
+        this.tweens.add({
+          targets: container,
+          scaleX: 0,
+          duration: 200,
+          ease: 'Quad.In',
+          onComplete: () => {
+            // Swap: hide back (index 0), show front (index 1) + name (index 2)
+            const back = container.getAt(0) as Phaser.GameObjects.Image;
+            const front = container.getAt(1) as Phaser.GameObjects.Image;
+            const nameText = container.getAt(2) as Phaser.GameObjects.Text;
+            back.setVisible(false);
+            front.setVisible(true);
+            nameText.setVisible(true);
+
+            this.tweens.add({
+              targets: container,
+              scaleX: 1,
+              duration: 200,
+              ease: 'Quad.Out',
+              onComplete: () => resolve(),
+            });
+          },
+        });
+      });
+    });
   }
 
   /**
