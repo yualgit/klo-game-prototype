@@ -17,7 +17,7 @@
 | 17 | v1.3 UI Polish | 1/1 | ✓ Complete | 2026-02-11 |
 | 18 | v1.3 UI Polish | 1/1 | ✓ Complete | 2026-02-11 |
 | 19 | v1.3 UI Polish | 2/2 | ✓ Complete | 2026-02-11 |
-| 20 | v1.3 UI Polish | 1/1 | ✓ Complete | 2026-02-11 |
+| 20 | v1.3 UI Polish | 1/2 | Gap closure | - |
 | 21 | v1.3 UI Polish | 0/? | Not started | - |
 | 22 | v1.3 UI Polish | 0/? | Not started | - |
 
@@ -69,16 +69,17 @@ Plans:
 - [x] 19-02-PLAN.md — Gap closure: resize settings overlay controls for mobile (smaller title, toggles, 2-row volume layout) — completed 2026-02-11
 
 ### Phase 20: Level Select Improvements
-**Goal**: Level select displays all nodes on mobile and buttons remain interactive
+**Goal**: Level select nodes fit within mobile screen width and buttons remain interactive
 **Depends on**: Phase 19
 **Requirements**: LVLS-01, LVLS-02
 **Success Criteria** (what must be TRUE):
-  1. All level nodes fit on mobile screen without scrolling (reduced spacing)
+  1. All level nodes fit within mobile screen width (horizontal clamping); vertical scrolling remains
   2. Level buttons remain clickable after scene changes and navigation (no reload needed)
-**Plans**: 1 plan
+**Plans**: 2 plans
 
 Plans:
 - [x] 20-01-PLAN.md — Dynamic node spacing for mobile fit + container-level click handlers for reliable interactivity — completed 2026-02-11
+- [ ] 20-02-PLAN.md — Gap closure: revert vertical positioning, restore scrolling, add horizontal width clamping
 
 ### Phase 21: Game Screen Polish
 **Goal**: Game screen adapts to mobile with responsive HUD and board sizing
