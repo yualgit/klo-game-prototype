@@ -84,10 +84,10 @@ export class CardPickOverlay extends Phaser.Scene {
 
     // Card dimensions (696:1158 portrait ratio)
     const cardAspect = 1158 / 696; // card images are 696x1158 (portrait)
-    const cardWidth = cssToGame(60);
+    const cardWidth = cssToGame(80);
     const cardHeight = cardWidth * cardAspect;
     const cardSpacing = cssToGame(10);
-    const cardY = height * 0.55;
+    const cardY = height * 0.50;
 
     // Create 2 card containers side by side
     const totalWidth = cardWidth * 2 + cardSpacing;

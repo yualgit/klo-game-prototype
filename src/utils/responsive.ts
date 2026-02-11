@@ -46,7 +46,7 @@ export function getResponsiveLayout(gameWidth: number, gameHeight: number) {
   const buttonFontSize = cssToGame(18);
 
   // Title font size (overlays)
-  const overlayTitleSize = cssToGame(28);
+  const overlayTitleSize = cssToGame(20);
   const overlaySubtitleSize = cssToGame(16);
 
   // Back button

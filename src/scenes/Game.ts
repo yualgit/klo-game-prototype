@@ -589,10 +589,11 @@ export class Game extends Phaser.Scene {
     }
 
     // Card dimensions
-    const cardW = cssToGame(100);
-    const cardH = cssToGame(166); // 696:1158 ratio
-    const cardSpacing = cssToGame(16);
-    const cardY = panelH * 0.42;
+    const cardAspect = 1158 / 696; // card images are 696x1158 (portrait)
+    const cardW = cssToGame(80);
+    const cardH = cardW * cardAspect;
+    const cardSpacing = cssToGame(10);
+    const cardY = panelH * 0.50;
 
     const totalCardsW = cardW * 2 + cardSpacing;
     const cardStartX = (panelW - totalCardsW) / 2 + cardW / 2;
