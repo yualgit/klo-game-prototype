@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 16 of 16 (Collection Exchange Polish)
-Plan: 1 of TBD in progress
-Status: Phase 16-01 complete — EventEmitter foundation and notification dot
-Last activity: 2026-02-11 — Phase 16-01 complete (CollectionsManager EventEmitter + UIScene notification dot)
+Plan: 2 of 2 complete
+Status: Phase 16-02 complete — Collection exchange animation
+Last activity: 2026-02-11 — Phase 16-02 complete (Exchange button and multi-stage animation overlay)
 
-Progress: [██████████████████████████░░] 82% (15 phases complete + 1/TBD of Phase 16)
+Progress: [████████████████████████████] 100% (16 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 37 (25 from v1.0 + v1.1, 12 from v1.2)
+- Total plans completed: 38 (25 from v1.0 + v1.1, 13 from v1.2)
 - Average duration: ~3 minutes per plan
 - Total execution time: ~6 days across 16 phases
 
@@ -34,12 +34,12 @@ Progress: [███████████████████████
 | 13 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
 | 14 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
 | 15 | 4 | v1.2 Collections | ✓ Complete 2026-02-11 |
-| 16 | TBD | v1.2 Collections | In progress (1/TBD) |
+| 16 | 2 | v1.2 Collections | ✓ Complete 2026-02-11 |
 
 **Recent Trend:**
 - v1.0 completed: 5 phases, 15 plans (Feb 5-10)
 - v1.1 completed: 5 phases, 10 plans (Feb 10)
-- v1.2 progress: 6 phases, 12 plans (Feb 10-11)
+- v1.2 completed: 6 phases, 13 plans (Feb 10-11)
 - Trend: Stable velocity with increasing phase complexity
 
 *Plan metrics:*
@@ -56,6 +56,7 @@ Progress: [███████████████████████
 | Phase 15 P03 | 114 | 2 tasks | 6 files |
 | Phase 15 P04 | 38 | 1 task | 1 file |
 | Phase 16 P01 | 169 | 2 tasks | 2 files |
+| Phase 16-collection-exchange-polish P02 | 80 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,9 @@ Recent decisions affecting current work:
 - [Phase 16-01]: CollectionsManager extends EventEmitter (following EconomyManager pattern)
 - [Phase 16-01]: Notification dot uses Arc type (not Circle) for Phaser TypeScript compatibility
 - [Phase 16-01]: exchangeCollection() deducts cards via card_counts, preserves duplicates correctly
+- [Phase 16-collection-exchange-polish]: Exchange button positioned below progress text, styled based on completion state
+- [Phase 16-collection-exchange-polish]: Animation uses viewport-fixed coordinates (setScrollFactor(0)) to avoid scroll interference
+- [Phase 16-collection-exchange-polish]: Input disabled during animation, re-enabled only for claim button to prevent double-exchange
 
 ### Pending Todos
 
@@ -116,7 +120,7 @@ None yet — v1.2 milestone continuing.
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 16-01-PLAN.md - CollectionsManager EventEmitter and notification dot
+Stopped at: Completed 16-02-PLAN.md - Collection exchange animation
 Resume file: None
 
-**Next action:** Phase 16 in progress (1/TBD plans complete). Continue with next plan or complete phase.
+**Next action:** Phase 16 complete. All 16 phases of v1.2 Collections milestone complete (100%).
