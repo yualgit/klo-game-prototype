@@ -48,10 +48,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. User cannot navigate back to welcome screen after pressing PLAY
   2. "KLO Match-3" title fits mobile screen width without clipping
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 18-01: TBD
+- [ ] 18-01-PLAN.md — Remove back-to-menu button from LevelSelect + responsive Menu title sizing
 
 ### Phase 19: Settings Overlay Fixes
 **Goal**: Settings overlay works reliably across all viewports and scenes
