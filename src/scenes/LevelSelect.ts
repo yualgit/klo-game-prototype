@@ -248,47 +248,9 @@ export class LevelSelect extends Phaser.Scene {
       }
     });
 
-    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-      if (!this.isDragging && !this.overlayActive) {
-        this.handleTap(pointer);
-      }
+    this.input.on('pointerup', () => {
       this.isDragging = false;
     });
-  }
-
-  private handleTap(pointer: Phaser.Input.Pointer): void {
-    // Convert pointer screen coordinates to world coordinates
-    const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-
-    // Check each level node container to see if tap is within its bounds
-    for (let i = 0; i < this.levelNodes.length; i++) {
-      const container = this.levelNodes[i];
-      if (!container) continue;
-
-      const bounds = container.getBounds();
-
-      if (Phaser.Geom.Rectangle.Contains(bounds, worldPoint.x, worldPoint.y)) {
-        const levelId = i + 1;
-        const progress = this.registry.get('progress') as ProgressManager;
-        const economy = this.registry.get('economy') as EconomyManager;
-
-        // Check if level is unlocked
-        if (progress.isLevelUnlocked(levelId)) {
-          // Check economy gating
-          if (!economy.canStartLevel()) {
-            this.showNoLivesPrompt(economy);
-            return;
-          }
-
-          // Start level with fade out
-          this.cameras.main.fadeOut(300, 0, 0, 0);
-          this.cameras.main.once('camerafadeoutcomplete', () => {
-            this.scene.start('Game', { levelId });
-          });
-          return;
-        }
-      }
-    }
   }
 
   private scrollToCurrentLevel(): void {
@@ -526,10 +488,26 @@ export class LevelSelect extends Phaser.Scene {
     // Store container for tap detection
     this.levelNodes.push(container);
 
-    // Make interactive for hit testing, but don't add event handlers
-    // (scene-level tap handler will check bounds centrally)
+    // Add direct container event handler for unlocked levels
     if (unlocked) {
       container.setInteractive({ useHandCursor: true });
+
+      container.on('pointerup', () => {
+        // Only fire if not dragging and no overlay active
+        if (this.isDragging || this.overlayActive) return;
+
+        const economy = this.registry.get('economy') as EconomyManager;
+
+        if (!economy.canStartLevel()) {
+          this.showNoLivesPrompt(economy);
+          return;
+        }
+
+        this.cameras.main.fadeOut(300, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+          this.scene.start('Game', { levelId });
+        });
+      });
     }
   }
 
