@@ -73,11 +73,11 @@ Plans:
 4. Level select map displays all 20 level nodes with correct positioning on Kyiv map
 5. User can play through all new levels and progress is tracked correctly
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 25-01: TBD (create L11-L20 JSONs)
-- [ ] 25-02: TBD (extend level select map)
+- [ ] 25-01-PLAN.md — Create L11-L20 level JSONs with progressive difficulty and all 9 tile types
+- [ ] 25-02-PLAN.md — Extend level select map, Boot loader, and navigation for 20 levels
 
 ---
 
