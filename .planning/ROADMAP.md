@@ -85,12 +85,13 @@ Plans:
   3. Card rarity follows weighted probability (common more frequent than legendary)
   4. After 3 consecutive duplicates, next card guaranteed new if missing cards exist
   5. Pity mechanic respects config (threshold, epic/legendary multipliers)
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
 - [x] 15-01-PLAN.md — Card drop logic module + CollectionsManager extension + bonus level JSON flags
 - [x] 15-02-PLAN.md — CardPickOverlay scene with flip animation + Game.ts bonus level integration
 - [x] 15-03-PLAN.md — UAT gap closure: text overlap fixes + duplicate card count tracking
+- [ ] 15-04-PLAN.md — UAT gap closure: fix bonus hint/lives overlap and card name/rarity overlap in Game.ts
 
 ### Phase 16: Collection Exchange & Polish
 **Goal**: Exchange 6/6 collections for coupons with animation + notification dot
@@ -119,7 +120,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15 → 16
 | 12. Responsive Layout | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
 | 13. Persistent UI Navigation | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
 | 14. Collection Data Model | v1.2 | 2/2 | ✓ Complete | 2026-02-10 |
-| 15. Card Acquisition Flow | v1.2 | 3/3 | ✓ Complete | 2026-02-11 |
+| 15. Card Acquisition Flow | v1.2 | 3/4 | In Progress | - |
 | 16. Collection Exchange | v1.2 | 0/TBD | Not started | - |
 
 ---
