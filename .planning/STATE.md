@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 ## Current Position
 
 Phase: 21 of 22 (Game Screen Polish) — IN PROGRESS
-Plan: 21-01 complete (mobile HUD and back button)
-Status: Plan 21-01 executed (2/2 tasks complete, 2 commits)
-Last activity: 2026-02-11 — Phase 21-01 executed (mobile-adaptive Game UI)
+Plan: 21-02 complete (board width constraint with padding and max-width cap)
+Status: Plan 21-02 executed (1/1 tasks complete, 1 commit)
+Last activity: 2026-02-11 — Phase 21-02 executed (constrained board width)
 
 Progress: [████████████████████████░] 91% (20/22 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 47 (15 v1.0 + 10 v1.1 + 14 v1.2 + 8 v1.3)
+- Total plans completed: 48 (15 v1.0 + 10 v1.1 + 14 v1.2 + 9 v1.3)
 - Total phases completed: 20
 - Total execution time: ~7 days across 3 milestones
 
@@ -30,17 +30,17 @@ Progress: [███████████████████████
 | v1.0 MVP | 1-5 | 15 | Feb 5-10, 2026 |
 | v1.1 Kyiv Journey | 6-10 | 10 | Feb 10, 2026 |
 | v1.2 Polish & Collections | 11-16 | 14 | Feb 10-11, 2026 |
-| v1.3 UI Polish | 17-22 | 8 | In progress |
+| v1.3 UI Polish | 17-22 | 9 | In progress |
 
 **Recent Plans:**
 
 | Phase | Plan | Duration | Tasks | Files | Date |
 |-------|------|----------|-------|-------|------|
+| 21 | 02 | 71s | 1 | 1 | 2026-02-11 |
 | 21 | 01 | 90s | 2 | 2 | 2026-02-11 |
 | 20 | 03 | 47s | 1 | 1 | 2026-02-11 |
 | 20 | 02 | 152s | 1 | 2 | 2026-02-11 |
 | 20 | 01 | 176s | 2 | 2 | 2026-02-11 |
-| 19 | 02 | 118s | 1 | 1 | 2026-02-11 |
 
 ## Accumulated Context
 
@@ -68,6 +68,9 @@ Recent decisions:
 - [Phase 20-03]: Center MAP_WIDTH coordinate space (512) not node range center (455) for correct mobile centering
 - [Phase 21-01]: Mobile threshold: 600px CSS width for HUD and back button variants
 - [Phase 21-01]: Destroy-recreate pattern for viewport-dependent UI (HUD + back button on resize)
+- [Phase 21-02]: Board width constraint: min(viewport width - 32px, 1024px CSS)
+- [Phase 21-02]: Dual-constraint tile sizing: min(tileSizeByWidth, tileSizeByHeight) for square tiles
+- [Phase 21-02]: Height-aware board scaling for narrow viewports (e.g., 1366x768 laptops)
 
 ### Pending Todos
 
@@ -80,10 +83,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 21-01-PLAN.md
+Stopped at: Completed 21-02-PLAN.md
 Resume file: None
 
 **Next action:** Continue Phase 21 Game Screen Polish plans or verify phase completion.
 
 ---
-*Updated: 2026-02-11 after Phase 21-01 execution*
+*Updated: 2026-02-11 after Phase 21-02 execution*
