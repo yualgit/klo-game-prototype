@@ -28,11 +28,11 @@
 3. All 9 tile types (burger, coffee, fuel_can, hotdog, oil, snack, soda, water, wheel) render correctly with their sprites
 4. Board spawning and matching logic work with all 9 configured tile types
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 23-01: TBD (tile config system)
-- [ ] 23-02: TBD (wire up missing tiles)
+- [ ] 23-01-PLAN.md — Create tile config system and refactor types/constants/engine
+- [ ] 23-02-PLAN.md — Wire up 9 tile assets, clean Game.ts casts, update tests
 
 ---
 
@@ -92,7 +92,7 @@ Phases execute in numeric order. v1.4 continues from Phase 23.
 | 6-10 | v1.1 Kyiv Journey | 10/10 | ✓ Complete | 2026-02-10 |
 | 11-16 | v1.2 Polish & Collections | 14/14 | ✓ Complete | 2026-02-11 |
 | 17-22 | v1.3 UI Polish | 10/10 | ✓ Complete | 2026-02-11 |
-| **23. Tile System Refactor** | **v1.4** | **0/TBD** | **Not started** | **—** |
+| **23. Tile System Refactor** | **v1.4** | **0/2** | **Planned** | **—** |
 | **24. 7x7 Board Transition** | **v1.4** | **0/TBD** | **Not started** | **—** |
 | **25. New Levels** | **v1.4** | **0/TBD** | **Not started** | **—** |
 
