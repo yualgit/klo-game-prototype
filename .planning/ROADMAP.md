@@ -50,11 +50,11 @@ Plans:
 3. Retrofitted levels have adjusted goals and move counts balanced for smaller board
 4. Retrofitted levels remain winnable with similar difficulty
 
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 24-01: TBD (resize engine to 7x7)
-- [ ] 24-02: TBD (retrofit L1-L10)
+- [ ] 24-01-PLAN.md — Update engine constants and tests to 7x7
+- [ ] 24-02-PLAN.md — Retrofit L1-L10 level JSONs to 7x7
 
 ---
 
@@ -93,7 +93,7 @@ Phases execute in numeric order. v1.4 continues from Phase 23.
 | 11-16 | v1.2 Polish & Collections | 14/14 | ✓ Complete | 2026-02-11 |
 | 17-22 | v1.3 UI Polish | 10/10 | ✓ Complete | 2026-02-11 |
 | **23. Tile System Refactor** | **v1.4** | **2/2** | **✓ Complete** | **2026-02-11** |
-| **24. 7x7 Board Transition** | **v1.4** | **0/TBD** | **Not started** | **—** |
+| **24. 7x7 Board Transition** | **v1.4** | **0/2** | **Not started** | **—** |
 | **25. New Levels** | **v1.4** | **0/TBD** | **Not started** | **—** |
 
 ---
