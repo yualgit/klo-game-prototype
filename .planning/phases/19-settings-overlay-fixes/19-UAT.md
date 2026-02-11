@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 19-settings-overlay-fixes
 source: 19-01-SUMMARY.md
 started: 2026-02-11T12:00:00Z
@@ -53,7 +53,14 @@ skipped: 0
   reason: "User reported: title 'налаштування' too large; toggles overlap labels - too big for screen ratio; volume slider overlaps label - need label and slider on separate rows, reduce slider control size on mobile to match toggle size"
   severity: major
   test: 3
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Fixed cssToGame sizes in showSettingsOverlay: title 22px too large, toggles 60x30 too big, volume slider 140px on same row as label — all overflow on narrow mobile panels"
+  artifacts:
+    - path: "src/scenes/UIScene.ts"
+      issue: "showSettingsOverlay() uses fixed cssToGame sizes that overflow on narrow mobile viewports"
+  missing:
+    - "Reduce title font to ~18px CSS"
+    - "Shrink toggles to ~44x22 CSS with smaller thumb"
+    - "Split volume into 2 rows (label above, slider below)"
+    - "Reduce slider track/thumb sizes"
+    - "Increase panel height to accommodate extra row"
+  debug_session: ".planning/phases/19-settings-overlay-fixes/19-UAT-diagnosis.md"
