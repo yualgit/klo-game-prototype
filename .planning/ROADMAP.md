@@ -15,7 +15,7 @@
 | 6-10 | v1.1 Kyiv Journey | 10/10 | ✓ Complete | 2026-02-10 |
 | 11-16 | v1.2 Polish & Collections | 14/14 | ✓ Complete | 2026-02-11 |
 | 17 | v1.3 UI Polish | 1/1 | ✓ Complete | 2026-02-11 |
-| 18 | v1.3 UI Polish | 0/? | Not started | - |
+| 18 | v1.3 UI Polish | 1/1 | ✓ Complete | 2026-02-11 |
 | 19 | v1.3 UI Polish | 0/? | Not started | - |
 | 20 | v1.3 UI Polish | 0/? | Not started | - |
 | 21 | v1.3 UI Polish | 0/? | Not started | - |
@@ -51,7 +51,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 18-01-PLAN.md — Remove back-to-menu button from LevelSelect + responsive Menu title sizing
+- [x] 18-01-PLAN.md — Remove back-to-menu button from LevelSelect + responsive Menu title sizing — completed 2026-02-11
 
 ### Phase 19: Settings Overlay Fixes
 **Goal**: Settings overlay works reliably across all viewports and scenes
