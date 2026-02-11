@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Клієнт має побачити і відчути gameplay — як гра буде сприйматись реальними користувачами. Демо має передати "смак" механіки та KLO-бренд.
-**Current focus:** Phase 14 - Collection Data Model & Viewing
+**Current focus:** Phase 15 - Card Acquisition Flow
 
 ## Current Position
 
-Phase: 14 of 16 (Collection Data Model and Viewing)
-Plan: 2 of 2 complete
-Status: Phase 14 complete — Collection data model + viewing UI implemented
-Last activity: 2026-02-10 — Phase 14-02 complete (Collections scene UI with scrollable card grid)
+Phase: 15 of 16 (Card Acquisition Flow)
+Plan: 1 of 2 complete
+Status: Phase 15-01 complete — Card drop logic with weighted random and pity system
+Last activity: 2026-02-11 — Phase 15-01 complete (Card drop logic module)
 
-Progress: [██████████████████░░░░░░░░░] 62% (14 of 16 phases complete, Phase 14: 2/2 plans)
+Progress: [█████████████████████░░░░░░░] 66% (14 phases complete + 1/2 of Phase 15)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 32 (25 from v1.0 + v1.1, 7 from v1.2)
-- Average duration: ~5 minutes per plan
-- Total execution time: ~6 days across 14 phases
+- Total plans completed: 33 (25 from v1.0 + v1.1, 8 from v1.2)
+- Average duration: ~3 minutes per plan
+- Total execution time: ~6 days across 15 phases
 
 **By Phase:**
 
@@ -33,12 +33,13 @@ Progress: [██████████████████░░░░░
 | 12 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
 | 13 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
 | 14 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
-| 15-16 | TBD | v1.2 Collections | Not started |
+| 15 | 2 | v1.2 Collections | In Progress (1/2 plans) |
+| 16 | TBD | v1.2 Collections | Not started |
 
 **Recent Trend:**
 - v1.0 completed: 5 phases, 15 plans (Feb 5-10)
 - v1.1 completed: 5 phases, 10 plans (Feb 10)
-- v1.2 progress: 4 phases, 7 plans (Feb 10)
+- v1.2 progress: 4 phases, 8 plans (Feb 10-11)
 - Trend: Stable velocity with increasing phase complexity
 
 *Plan metrics:*
@@ -50,6 +51,7 @@ Progress: [██████████████████░░░░░
 | Phase 13 P02 | 250 | 3 tasks | 6 files |
 | Phase 14 P01 | 156 | 2 tasks | 4 files |
 | Phase 14 P02 | ~180 | 2 tasks | 3 files |
+| Phase 15 P01 | 142 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -81,6 +83,10 @@ Recent decisions affecting current work:
 - [Phase 14-02]: Card images preserve natural aspect ratio (696:1158 portrait) instead of forced square
 - [Phase 14-02]: scene.bringToTop('UIScene') needed after launch to ensure header/nav render above content
 - [Phase 14-02]: Camera scroll for collections — no Rex UI plugins needed
+- [Phase 15-01]: Pity threshold check happens BEFORE rolling card (avoids off-by-one error)
+- [Phase 15-01]: selectCard() differs from addCard() — selectCard handles pity tracking for acquisition flow
+- [Phase 15-01]: Collection rotation formula: Math.floor((levelId - 1) / 3) % 3 maps L3→coffee, L6→food, L9→car
+- [Phase 15-01]: Bonus levels at 3, 6, 9 for balanced progression across 10-level journey
 
 ### Pending Todos
 
@@ -98,8 +104,8 @@ None yet — v1.2 milestone continuing.
 
 ## Session Continuity
 
-Last session: 2026-02-10
-Stopped at: Phase 14 complete — Collection data model & viewing UI
+Last session: 2026-02-11
+Stopped at: Phase 15-01 complete — Card drop logic with weighted random and pity system
 Resume file: None
 
-**Next action:** Verify Phase 14 goal achievement, then `/gsd:plan-phase 15`
+**Next action:** Execute Phase 15-02 (Card Reveal UX overlay)
