@@ -15,7 +15,7 @@ import { ProgressManager } from '../game/ProgressManager';
 import { EconomyManager } from '../game/EconomyManager';
 import { AudioManager } from '../game/AudioManager';
 import { VFXManager } from '../game/VFXManager';
-import { getResponsiveLayout, cssToGame } from '../utils/responsive';
+import { getResponsiveLayout, cssToGame, getDpr } from '../utils/responsive';
 import eventsCenter from '../utils/EventsCenter';
 import { getActiveCollectionId, CARD_DEFINITIONS, CardRarity } from '../game/collectionConfig';
 import { rollCard, DROP_CONFIG } from '../game/cardDropLogic';
@@ -32,6 +32,7 @@ export class Game extends Phaser.Scene {
   // UI elements
   private backButton: Phaser.GameObjects.Container;
   private hudText: Phaser.GameObjects.Text;
+  private hudGoalText: Phaser.GameObjects.Text;
   private bg: Phaser.GameObjects.Graphics;
   private hudBg: Phaser.GameObjects.Graphics;
   private gridBoardGraphics: Phaser.GameObjects.Graphics;
@@ -220,6 +221,7 @@ export class Game extends Phaser.Scene {
     this.selectedTile = null;
     // Clear references to destroyed game objects from previous scene run
     this.hudText = null!;
+    this.hudGoalText = null!;
     this.backButton = null!;
   }
 
@@ -248,8 +250,9 @@ export class Game extends Phaser.Scene {
   private updateHUDText(width: number): void {
     const moves = this.levelManager.getMovesRemaining();
     const goals = this.levelManager.getGoals();
+    const isMobile = width / getDpr() < 600;
 
-    // Format goals for display with mini tile icons
+    // Format goals for display
     const goalText = goals
       .map((g) => {
         const item = g.item || g.obstacleType || g.boosterType || '';
@@ -257,19 +260,58 @@ export class Game extends Phaser.Scene {
       })
       .join(' | ');
 
-    const text = `Рівень ${this.currentLevel}  •  Ходи: ${moves}  •  ${goalText}`;
     const hudY = cssToGame(50) + this.layout.hudHeight / 2; // Below UIScene header
 
-    if (!this.hudText) {
-      this.hudText = this.add.text(width / 2, hudY, text, {
+    if (isMobile) {
+      // Mobile: two-line layout
+      // Destroy existing texts if they exist
+      if (this.hudText) {
+        this.hudText.destroy();
+      }
+      if (this.hudGoalText) {
+        this.hudGoalText.destroy();
+      }
+
+      // Line 1: Level and moves
+      const line1Text = `Рівень ${this.currentLevel}  •  Ходи: ${moves}`;
+      this.hudText = this.add.text(width / 2, hudY - cssToGame(8), line1Text, {
         fontFamily: 'Arial, sans-serif',
-        fontSize: `${this.layout.hudFontSize}px`,
+        fontSize: `${cssToGame(14)}px`,
         color: '#1A1A1A',
         fontStyle: 'bold',
       });
       this.hudText.setOrigin(0.5);
+
+      // Line 2: Goals (smaller font, gray)
+      this.hudGoalText = this.add.text(width / 2, hudY + cssToGame(10), goalText, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: `${cssToGame(11)}px`,
+        color: '#666666',
+      });
+      this.hudGoalText.setOrigin(0.5);
     } else {
-      this.hudText.setText(text);
+      // Desktop: single-line layout
+      const text = `Рівень ${this.currentLevel}  •  Ходи: ${moves}  •  ${goalText}`;
+
+      // Destroy goal text if it exists (viewport changed from mobile to desktop)
+      if (this.hudGoalText) {
+        this.hudGoalText.destroy();
+        this.hudGoalText = null!;
+      }
+
+      if (!this.hudText) {
+        this.hudText = this.add.text(width / 2, hudY, text, {
+          fontFamily: 'Arial, sans-serif',
+          fontSize: `${this.layout.hudFontSize}px`,
+          color: '#1A1A1A',
+          fontStyle: 'bold',
+        });
+        this.hudText.setOrigin(0.5);
+      } else {
+        this.hudText.setText(text);
+        this.hudText.setPosition(width / 2, hudY);
+        this.hudText.setFontSize(this.layout.hudFontSize);
+      }
     }
   }
 
@@ -860,25 +902,45 @@ export class Game extends Phaser.Scene {
   }
 
   private createBackButton(): void {
-    const buttonWidth = this.layout.backButtonWidth;
-    const buttonHeight = this.layout.backButtonHeight;
+    const width = this.cameras.main.width;
+    const isMobile = width / getDpr() < 600;
+
+    let buttonWidth: number;
+    let buttonHeight: number;
+    let buttonText: string;
+    let fontSize: number;
+
+    if (isMobile) {
+      // Mobile: square icon-only button
+      buttonWidth = cssToGame(36);
+      buttonHeight = cssToGame(36);
+      buttonText = '<';
+      fontSize = cssToGame(18);
+    } else {
+      // Desktop: existing "< Menu" button
+      buttonWidth = this.layout.backButtonWidth;
+      buttonHeight = this.layout.backButtonHeight;
+      buttonText = '< Menu';
+      fontSize = this.layout.backButtonFontSize;
+    }
 
     // Button background using GUI sprite
     const buttonBg = this.add.image(0, 0, GUI_TEXTURE_KEYS.buttonYellow);
     buttonBg.setDisplaySize(buttonWidth, buttonHeight);
 
     // Button text
-    const buttonText = this.add.text(0, 0, '< Menu', {
+    const text = this.add.text(0, 0, buttonText, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${this.layout.backButtonFontSize}px`,
+      fontSize: `${fontSize}px`,
       color: '#1A1A1A',
+      fontStyle: isMobile ? 'bold' : 'normal',
     });
-    buttonText.setOrigin(0.5);
+    text.setOrigin(0.5);
 
     // Create container for button (position below UIScene header)
     const buttonX = cssToGame(35) + buttonWidth / 2;
     const buttonY = cssToGame(50) + this.layout.hudHeight / 2;
-    this.backButton = this.add.container(buttonX, buttonY, [buttonBg, buttonText]);
+    this.backButton = this.add.container(buttonX, buttonY, [buttonBg, text]);
     this.backButton.setSize(buttonWidth, buttonHeight);
     this.backButton.setInteractive({ useHandCursor: true });
 
@@ -1593,19 +1655,23 @@ export class Game extends Phaser.Scene {
       this.hudBg.fillRoundedRect(padding * 3, hudY + padding * 3, stripeWidth, stripeHeight, cssToGame(1));
     }
 
-    // Reposition HUD text with new font size (below UIScene header)
+    // Recreate HUD text for mobile/desktop switch (destroy and recreate via updateHUDText)
     if (this.hudText) {
-      const hudY = cssToGame(50) + this.layout.hudHeight / 2;
-      this.hudText.setPosition(width / 2, hudY);
-      this.hudText.setFontSize(this.layout.hudFontSize);
+      this.hudText.destroy();
+      this.hudText = null!;
     }
+    if (this.hudGoalText) {
+      this.hudGoalText.destroy();
+      this.hudGoalText = null!;
+    }
+    this.updateHUDText(width);
 
-    // Reposition back button (below UIScene header)
+    // Recreate back button for mobile/desktop switch (destroy and recreate)
     if (this.backButton) {
-      const buttonX = cssToGame(35) + this.layout.backButtonWidth / 2;
-      const buttonY = cssToGame(50) + this.layout.hudHeight / 2;
-      this.backButton.setPosition(buttonX, buttonY);
+      this.backButton.destroy();
+      this.backButton = null!;
     }
+    this.createBackButton();
 
     // Redraw grid background (board, shadow, mask)
     this.redrawGridBackground();
