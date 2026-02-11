@@ -1,25 +1,24 @@
 {
   "level_id": 10,
   "name": "Фінальний виклик",
-  "moves": 28,
+  "moves": 22,
   "grid": {
-    "width": 8,
-    "height": 8,
+    "width": 7,
+    "height": 7,
     "cell_map": [
-      [1, 1, 1, 1, 0, 0, 0, 0],
-      [1, 1, 1, 1, 0, 0, 0, 0],
-      [1, 1, 1, 1, 1, 1, 0, 0],
-      [1, 1, 1, 1, 1, 1, 0, 0],
-      [0, 0, 1, 1, 1, 1, 1, 1],
-      [0, 0, 1, 1, 1, 1, 1, 1],
-      [0, 0, 0, 0, 1, 1, 1, 1],
-      [0, 0, 0, 0, 1, 1, 1, 1]
+      [1, 1, 1, 1, 0, 0, 0],
+      [1, 1, 1, 1, 0, 0, 0],
+      [1, 1, 1, 1, 1, 0, 0],
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 0, 1, 1, 1, 1, 1],
+      [0, 0, 0, 0, 1, 1, 1],
+      [0, 0, 0, 0, 1, 1, 1]
     ],
     "blocked_cells": [],
     "inactive_cell_style": "block"
   },
   "goals": [
-    { "type": "collect", "item": "burger", "count": 30, "current": 0, "description": "Зібрати 30 бургерів" },
+    { "type": "collect", "item": "burger", "count": 22, "current": 0, "description": "Зібрати 22 бургерів" },
     { "type": "destroy_obstacle", "obstacleType": "ice", "count": 6, "current": 0, "description": "Знищити 6 шарів льоду" },
     { "type": "destroy_obstacle", "obstacleType": "grass", "count": 6, "current": 0, "description": "Знищити 6 шарів трави" }
   ],
@@ -33,7 +32,7 @@
   },
   "obstacles": [
     { "type": "ice", "layers": 3, "positions": [[1, 1], [2, 4]], "description": "3-шаровий лід" },
-    { "type": "grass", "layers": 3, "positions": [[5, 5], [6, 6]], "description": "3-шарова трава" }
+    { "type": "grass", "layers": 3, "positions": [[4, 5], [6, 5]], "description": "3-шарова трава" }
   ],
   "pre_placed_tiles": [
     { "row": 3, "col": 3, "type": "snack", "booster": "bomb" }

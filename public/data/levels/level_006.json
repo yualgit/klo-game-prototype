@@ -2,25 +2,24 @@
   "level_id": 6,
   "bonus_level": true,
   "name": "Діамантове поле",
-  "moves": 20,
+  "moves": 18,
   "grid": {
-    "width": 8,
-    "height": 8,
+    "width": 7,
+    "height": 7,
     "cell_map": [
-      [0, 0, 0, 1, 1, 0, 0, 0],
-      [0, 0, 1, 1, 1, 1, 0, 0],
-      [0, 1, 1, 1, 1, 1, 1, 0],
-      [1, 1, 1, 1, 1, 1, 1, 1],
-      [1, 1, 1, 1, 1, 1, 1, 1],
-      [0, 1, 1, 1, 1, 1, 1, 0],
-      [0, 0, 1, 1, 1, 1, 0, 0],
-      [0, 0, 0, 1, 1, 0, 0, 0]
+      [0, 0, 0, 1, 0, 0, 0],
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 1, 1, 1, 1, 1, 0],
+      [1, 1, 1, 1, 1, 1, 1],
+      [0, 1, 1, 1, 1, 1, 0],
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 0, 0, 1, 0, 0, 0]
     ],
     "blocked_cells": [],
     "inactive_cell_style": "block"
   },
   "goals": [
-    { "type": "collect", "item": "burger", "count": 25, "current": 0, "description": "Зібрати 25 бургерів" },
+    { "type": "collect", "item": "burger", "count": 20, "current": 0, "description": "Зібрати 20 бургерів" },
     { "type": "destroy_obstacle", "obstacleType": "ice", "count": 9, "current": 0, "description": "Знищити 9 шарів льоду" }
   ],
   "spawn_rules": {
@@ -32,7 +31,7 @@
     "soda": 0.20
   },
   "obstacles": [
-    { "type": "ice", "layers": 3, "positions": [[3, 3], [3, 4], [4, 3]], "description": "3-шаровий лід" }
+    { "type": "ice", "layers": 3, "positions": [[3, 2], [3, 3], [3, 4]], "description": "3-шаровий лід" }
   ],
   "difficulty": "medium",
   "target_fail_rate": 0.20

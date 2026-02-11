@@ -1,25 +1,24 @@
 {
   "level_id": 8,
   "name": "Подарунок на старті",
-  "moves": 18,
+  "moves": 15,
   "grid": {
-    "width": 8,
-    "height": 8,
+    "width": 7,
+    "height": 7,
     "cell_map": [
-      [0, 0, 1, 1, 1, 1, 0, 0],
-      [0, 0, 1, 1, 1, 1, 0, 0],
-      [1, 1, 1, 1, 1, 1, 1, 1],
-      [1, 1, 1, 1, 1, 1, 1, 1],
-      [1, 1, 1, 1, 1, 1, 1, 1],
-      [1, 1, 1, 1, 1, 1, 1, 1],
-      [0, 0, 1, 1, 1, 1, 0, 0],
-      [0, 0, 1, 1, 1, 1, 0, 0]
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 0, 1, 1, 1, 0, 0],
+      [1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1],
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 0, 1, 1, 1, 0, 0]
     ],
     "blocked_cells": [],
     "inactive_cell_style": "block"
   },
   "goals": [
-    { "type": "collect", "item": "snack", "count": 30, "current": 0, "description": "Зібрати 30 снеки" },
+    { "type": "collect", "item": "snack", "count": 22, "current": 0, "description": "Зібрати 22 снеки" },
     { "type": "create_booster", "boosterType": "bomb", "count": 2, "current": 0, "description": "Створити 2 бомби" }
   ],
   "spawn_rules": {

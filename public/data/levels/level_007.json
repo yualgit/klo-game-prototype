@@ -1,26 +1,25 @@
 {
   "level_id": 7,
   "name": "Трав'яне поле",
-  "moves": 22,
+  "moves": 18,
   "grid": {
-    "width": 8,
-    "height": 8,
+    "width": 7,
+    "height": 7,
     "cell_map": [
-      [1, 1, 1, 1, 1, 1, 1, 1],
-      [0, 1, 1, 1, 1, 1, 1, 0],
-      [0, 0, 1, 1, 1, 1, 0, 0],
-      [0, 0, 0, 1, 1, 0, 0, 0],
-      [0, 0, 0, 1, 1, 0, 0, 0],
-      [0, 0, 1, 1, 1, 1, 0, 0],
-      [0, 1, 1, 1, 1, 1, 1, 0],
-      [1, 1, 1, 1, 1, 1, 1, 1]
+      [1, 1, 1, 1, 1, 1, 1],
+      [0, 1, 1, 1, 1, 1, 0],
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 0, 0, 1, 0, 0, 0],
+      [0, 0, 1, 1, 1, 0, 0],
+      [0, 1, 1, 1, 1, 1, 0],
+      [1, 1, 1, 1, 1, 1, 1]
     ],
     "blocked_cells": [],
     "inactive_cell_style": "block"
   },
   "goals": [
-    { "type": "destroy_obstacle", "obstacleType": "grass", "count": 12, "current": 0, "description": "Знищити 12 шарів трави" },
-    { "type": "collect", "item": "hotdog", "count": 15, "current": 0, "description": "Зібрати 15 хот-догів" }
+    { "type": "destroy_obstacle", "obstacleType": "grass", "count": 9, "current": 0, "description": "Знищити 9 шарів трави" },
+    { "type": "collect", "item": "hotdog", "count": 12, "current": 0, "description": "Зібрати 12 хот-догів" }
   ],
   "spawn_rules": {
     "burger": 0.15,
@@ -31,7 +30,7 @@
     "soda": 0.15
   },
   "obstacles": [
-    { "type": "grass", "layers": 3, "positions": [[0, 3], [0, 4], [7, 3], [7, 4]], "description": "3-шарова трава" }
+    { "type": "grass", "layers": 3, "positions": [[0, 2], [0, 3], [6, 3], [6, 4]], "description": "3-шарова трава" }
   ],
   "difficulty": "medium",
   "target_fail_rate": 0.25
