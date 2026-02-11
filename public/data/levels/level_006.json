@@ -1,5 +1,6 @@
 {
   "level_id": 6,
+  "bonus_level": true,
   "name": "Діамантове поле",
   "moves": 20,
   "grid": {

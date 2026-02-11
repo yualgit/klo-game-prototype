@@ -1,5 +1,6 @@
 {
   "level_id": 9,
+  "bonus_level": true,
   "name": "Льодяна фортеця",
   "moves": 25,
   "grid": {
