@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Клієнт має побачити і відчути gameplay — як гра буде сприйматись реальними користувачами. Демо має передати "смак" механіки та KLO-бренд.
-**Current focus:** Phase 15 - Card Acquisition Flow
+**Current focus:** Phase 16 - Collection Exchange Polish
 
 ## Current Position
 
-Phase: 15 of 16 (Card Acquisition Flow)
-Plan: 4 of 4 complete
-Status: Phase 15-04 complete — Final UAT text overlap coordinate fixes
-Last activity: 2026-02-11 — Phase 15-04 complete (bonus hint + rarity label positioning)
+Phase: 16 of 16 (Collection Exchange Polish)
+Plan: 1 of TBD in progress
+Status: Phase 16-01 complete — EventEmitter foundation and notification dot
+Last activity: 2026-02-11 — Phase 16-01 complete (CollectionsManager EventEmitter + UIScene notification dot)
 
-Progress: [█████████████████████████░░░] 79% (14 phases complete + 4/4 of Phase 15)
+Progress: [██████████████████████████░░] 82% (15 phases complete + 1/TBD of Phase 16)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 36 (25 from v1.0 + v1.1, 11 from v1.2)
+- Total plans completed: 37 (25 from v1.0 + v1.1, 12 from v1.2)
 - Average duration: ~3 minutes per plan
-- Total execution time: ~6 days across 15 phases
+- Total execution time: ~6 days across 16 phases
 
 **By Phase:**
 
@@ -34,12 +34,12 @@ Progress: [███████████████████████
 | 13 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
 | 14 | 2 | v1.2 Collections | ✓ Complete 2026-02-10 |
 | 15 | 4 | v1.2 Collections | ✓ Complete 2026-02-11 |
-| 16 | TBD | v1.2 Collections | Not started |
+| 16 | TBD | v1.2 Collections | In progress (1/TBD) |
 
 **Recent Trend:**
 - v1.0 completed: 5 phases, 15 plans (Feb 5-10)
 - v1.1 completed: 5 phases, 10 plans (Feb 10)
-- v1.2 progress: 5 phases, 11 plans (Feb 10-11)
+- v1.2 progress: 6 phases, 12 plans (Feb 10-11)
 - Trend: Stable velocity with increasing phase complexity
 
 *Plan metrics:*
@@ -55,6 +55,7 @@ Progress: [███████████████████████
 | Phase 15 P02 | 166 | 2 tasks | 4 files |
 | Phase 15 P03 | 114 | 2 tasks | 6 files |
 | Phase 15 P04 | 38 | 1 task | 1 file |
+| Phase 16 P01 | 169 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -79,7 +80,6 @@ Recent decisions affecting current work:
 - [Phase 13]: EventsCenter singleton pattern (not game.events) for cross-scene communication
 - [Phase 13]: Interactive graphics backgrounds required to block click-through (Phaser gotcha)
 - [Phase 13-02]: UIScene integrated across all scenes with conditional nav visibility (full nav on LevelSelect/Collections/Shop, header-only on Game)
-- [Phase 14-01]: CollectionsManager does NOT extend EventEmitter yet (Phase 16 will add notification dot events)
 - [Phase 14-01]: Collection state stored as nested map in existing user document (not subcollection)
 - [Phase 14-01]: Default state uses empty owned_cards arrays with pity_streak: 0
 - [Phase 14-01]: Card rarity distribution: 2 common + 2 rare + 1 epic + 1 legendary per collection
@@ -95,6 +95,9 @@ Recent decisions affecting current work:
 - [Phase 15-02]: Flip animation uses scaleX tween (scale to 0, swap content, scale to 1) for card reveal
 - [Phase 15-03]: Bonus hint Y=75 places text below stars; rarity label Y offset=140 gives proper spacing
 - [Phase 15-03]: card_counts field tracks per-card acquisition count with backward-compatible migration
+- [Phase 16-01]: CollectionsManager extends EventEmitter (following EconomyManager pattern)
+- [Phase 16-01]: Notification dot uses Arc type (not Circle) for Phaser TypeScript compatibility
+- [Phase 16-01]: exchangeCollection() deducts cards via card_counts, preserves duplicates correctly
 
 ### Pending Todos
 
@@ -113,7 +116,7 @@ None yet — v1.2 milestone continuing.
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 15-04-PLAN.md - Final UAT text overlap fixes
+Stopped at: Completed 16-01-PLAN.md - CollectionsManager EventEmitter and notification dot
 Resume file: None
 
-**Next action:** Phase 15 complete (4/4 plans). Ready for Phase 16 (if planned) or v1.2 milestone completion.
+**Next action:** Phase 16 in progress (1/TBD plans complete). Continue with next plan or complete phase.
