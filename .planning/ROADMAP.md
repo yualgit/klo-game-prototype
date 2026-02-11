@@ -16,7 +16,7 @@
 | 11-16 | v1.2 Polish & Collections | 14/14 | ✓ Complete | 2026-02-11 |
 | 17 | v1.3 UI Polish | 1/1 | ✓ Complete | 2026-02-11 |
 | 18 | v1.3 UI Polish | 1/1 | ✓ Complete | 2026-02-11 |
-| 19 | v1.3 UI Polish | 1/2 | Gap closure | 2026-02-11 |
+| 19 | v1.3 UI Polish | 2/2 | ✓ Complete | 2026-02-11 |
 | 20 | v1.3 UI Polish | 0/? | Not started | - |
 | 21 | v1.3 UI Polish | 0/? | Not started | - |
 | 22 | v1.3 UI Polish | 0/? | Not started | - |
@@ -66,7 +66,7 @@ Plans:
 
 Plans:
 - [x] 19-01-PLAN.md — Move settings overlay to UIScene with mobile scaling, z-order fix, singleton guard, and cleanup of per-scene handlers — completed 2026-02-11
-- [ ] 19-02-PLAN.md — Gap closure: resize settings overlay controls for mobile (smaller title, toggles, 2-row volume layout)
+- [x] 19-02-PLAN.md — Gap closure: resize settings overlay controls for mobile (smaller title, toggles, 2-row volume layout) — completed 2026-02-11
 
 ### Phase 20: Level Select Improvements
 **Goal**: Level select displays all nodes on mobile and buttons remain interactive
