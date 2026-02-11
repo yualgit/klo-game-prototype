@@ -375,19 +375,41 @@ export class Collections extends Phaser.Scene {
     this.cameras.main.flash(150, 255, 184, 0);
     this.cameras.main.shake(200, 0.008);
 
-    // Create particle emitter
-    const emitter = this.add.particles(centerX, centerY, 'particle_white', {
-      speed: { min: 100, max: 300 },
-      scale: { start: 0.8, end: 0 },
-      lifespan: { min: 400, max: 800 },
-      tint: [0xffb800, 0xffffff, 0xff6600],
-      maxParticles: 50,
-      emitting: false,
-    });
-    emitter.setScrollFactor(0);
-    emitter.setDepth(502);
-    emitter.explode(50);
-    this.overlayElements.push(emitter);
+    // Create confetti particle textures if not already created
+    const confettiColors = [
+      { key: 'confetti_blue', color: 0x4a90d9 },
+      { key: 'confetti_orange', color: 0xff8c00 },
+      { key: 'confetti_purple', color: 0x9b59b6 },
+      { key: 'confetti_green', color: 0x2ecc71 },
+    ];
+    const gfx = this.add.graphics();
+    for (const c of confettiColors) {
+      if (!this.textures.exists(c.key)) {
+        gfx.clear();
+        gfx.fillStyle(c.color, 1);
+        gfx.fillRect(0, 0, 10, 6);
+        gfx.generateTexture(c.key, 10, 6);
+      }
+    }
+    gfx.destroy();
+
+    // Create confetti emitters (one per color for varied look)
+    for (const c of confettiColors) {
+      const emitter = this.add.particles(centerX, centerY, c.key, {
+        speed: { min: 120, max: 350 },
+        scale: { start: 1.2, end: 0.3 },
+        lifespan: { min: 600, max: 1200 },
+        angle: { min: 0, max: 360 },
+        rotate: { min: -180, max: 180 },
+        gravityY: 150,
+        maxParticles: 15,
+        emitting: false,
+      });
+      emitter.setScrollFactor(0);
+      emitter.setDepth(502);
+      emitter.explode(15);
+      this.overlayElements.push(emitter);
+    }
 
     // Wait 600ms
     await new Promise<void>((resolve) => {
