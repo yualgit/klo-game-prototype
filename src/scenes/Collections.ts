@@ -25,8 +25,12 @@ const RARITY_COLORS: Record<CardRarity, number> = {
 export class Collections extends Phaser.Scene {
   private isDragging: boolean = false;
   private dragStartY: number = 0;
+  private dragStartX: number = 0;
   private allElements: Phaser.GameObjects.GameObject[] = [];
   private overlayElements: Phaser.GameObjects.GameObject[] = [];
+  private cardContainers: { container: Phaser.GameObjects.Container; cardCount: number }[] = [];
+  private activeHorizontalDrag: Phaser.GameObjects.Container | null = null;
+  private dragDirection: 'none' | 'horizontal' | 'vertical' = 'none';
 
   constructor() {
     super({ key: 'Collections' });
@@ -75,6 +79,7 @@ export class Collections extends Phaser.Scene {
     // Clear previous elements if any
     this.allElements.forEach((el) => el.destroy());
     this.allElements = [];
+    this.cardContainers = [];
 
     // Layout constants
     const headerOffset = cssToGame(60); // UIScene header height
@@ -195,6 +200,12 @@ export class Collections extends Phaser.Scene {
           cardContainer.add(questionMark);
         }
       }
+
+      // Make container interactive and store reference
+      cardContainer.setSize(bgWidth - cssToGame(20), cardHeight);
+      cardContainer.setInteractive();
+      cardContainer.setData('startX', containerStartX);
+      this.cardContainers.push({ container: cardContainer, cardCount: cards.length });
 
       this.allElements.push(cardContainer);
 
@@ -548,26 +559,81 @@ export class Collections extends Phaser.Scene {
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       this.isDragging = false;
       this.dragStartY = pointer.y;
+      this.dragStartX = pointer.x;
+      this.dragDirection = 'none';
+      this.activeHorizontalDrag = null;
     });
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.isDown) {
-        const deltaY = pointer.y - pointer.prevPosition.y;
+      if (!pointer.isDown) return;
 
-        // Check if drag threshold exceeded
-        if (Math.abs(pointer.y - this.dragStartY) > 10) {
+      const deltaX = pointer.x - pointer.prevPosition.x;
+      const deltaY = pointer.y - pointer.prevPosition.y;
+      const totalDeltaX = Math.abs(pointer.x - this.dragStartX);
+      const totalDeltaY = Math.abs(pointer.y - this.dragStartY);
+
+      // Determine drag direction once past threshold (10px)
+      if (this.dragDirection === 'none' && (totalDeltaX > 10 || totalDeltaY > 10)) {
+        if (totalDeltaX > totalDeltaY) {
+          this.dragDirection = 'horizontal';
+          // Find which card container is being dragged
+          for (const entry of this.cardContainers) {
+            const bounds = entry.container.getBounds();
+            if (bounds.contains(pointer.x, pointer.y + this.cameras.main.scrollY)) {
+              this.activeHorizontalDrag = entry.container;
+              break;
+            }
+          }
+        } else {
+          this.dragDirection = 'vertical';
           this.isDragging = true;
         }
+      }
 
-        // Scroll camera if dragging
-        if (this.isDragging) {
-          this.cameras.main.scrollY -= deltaY;
+      // Apply scroll based on determined direction
+      if (this.dragDirection === 'vertical' && this.isDragging) {
+        this.cameras.main.scrollY -= deltaY;
+      } else if (this.dragDirection === 'horizontal' && this.activeHorizontalDrag) {
+        const container = this.activeHorizontalDrag;
+        const entry = this.cardContainers.find(e => e.container === container);
+        if (entry) {
+          const cardStride = cssToGame(80) + cssToGame(12);
+          const containerStartX = container.getData('startX') as number;
+          const maxScroll = (entry.cardCount - 1) * cardStride;
+          const minX = containerStartX - maxScroll;
+          const maxX = containerStartX;
+
+          container.x += deltaX;
+          container.x = Phaser.Math.Clamp(container.x, minX, maxX);
         }
       }
     });
 
     this.input.on('pointerup', () => {
+      // Snap to nearest card if horizontal drag was active
+      if (this.dragDirection === 'horizontal' && this.activeHorizontalDrag) {
+        const container = this.activeHorizontalDrag;
+        const entry = this.cardContainers.find(e => e.container === container);
+        if (entry) {
+          const cardStride = cssToGame(80) + cssToGame(12);
+          const containerStartX = container.getData('startX') as number;
+          const offset = containerStartX - container.x;
+          const nearestIndex = Math.round(offset / cardStride);
+          const clampedIndex = Phaser.Math.Clamp(nearestIndex, 0, entry.cardCount - 1);
+          const targetX = containerStartX - clampedIndex * cardStride;
+
+          this.tweens.add({
+            targets: container,
+            x: targetX,
+            duration: 300,
+            ease: 'Cubic.Out',
+          });
+        }
+      }
+
       this.isDragging = false;
+      this.dragDirection = 'none';
+      this.activeHorizontalDrag = null;
     });
   }
 
