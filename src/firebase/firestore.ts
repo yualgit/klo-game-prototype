@@ -38,6 +38,7 @@ export interface EconomyState {
 export interface CollectionProgress {
   owned_cards: string[];
   pity_streak: number;  // For Phase 15
+  card_counts: Record<string, number>;  // Per-card acquisition count
 }
 
 /**
@@ -199,15 +200,23 @@ export class FirestoreService {
       console.log(`[FirestoreService] No collections field found for ${uid}, returning default state`);
       return {
         collections: {
-          coffee: { owned_cards: [], pity_streak: 0 },
-          food: { owned_cards: [], pity_streak: 0 },
-          car: { owned_cards: [], pity_streak: 0 },
+          coffee: { owned_cards: [], pity_streak: 0, card_counts: {} },
+          food: { owned_cards: [], pity_streak: 0, card_counts: {} },
+          car: { owned_cards: [], pity_streak: 0, card_counts: {} },
         },
       };
     }
 
+    // Build collection state with backward-compatible card_counts
     const collectionState: CollectionState = {
-      collections: data.collections,
+      collections: Object.entries(data.collections).reduce((acc, [id, collData]: [string, any]) => {
+        acc[id] = {
+          owned_cards: collData.owned_cards || [],
+          pity_streak: collData.pity_streak ?? 0,
+          card_counts: collData.card_counts || {},
+        };
+        return acc;
+      }, {} as CollectionState['collections']),
     };
 
     console.log(`[FirestoreService] Loaded collections for ${uid}:`, collectionState);

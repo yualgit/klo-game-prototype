@@ -59,6 +59,15 @@ export class CollectionsManager {
   }
 
   /**
+   * Get the number of times a specific card has been acquired.
+   */
+  getCardCount(collectionId: string, cardId: string): number {
+    const collection = this.state.collections[collectionId];
+    if (!collection?.card_counts) return 0;
+    return collection.card_counts[cardId] ?? 0;
+  }
+
+  /**
    * Check if collection is complete (all 6 cards owned).
    */
   isCollectionComplete(collectionId: string): boolean {
@@ -100,6 +109,10 @@ export class CollectionsManager {
     collection.owned_cards.push(cardId);
     console.log(`[CollectionsManager] Added card ${cardId} to ${collectionId}. Progress: ${collection.owned_cards.length}/6`);
 
+    // Track card count
+    if (!collection.card_counts) collection.card_counts = {};
+    collection.card_counts[cardId] = (collection.card_counts[cardId] ?? 0) + 1;
+
     // Save to Firestore
     await this.save();
 
@@ -138,6 +151,10 @@ export class CollectionsManager {
       collection.pity_streak++;
       console.log(`[CollectionsManager] Duplicate ${cardId} in ${collectionId}. Pity: ${collection.pity_streak}`);
     }
+
+    // Track card count (both new and duplicate)
+    if (!collection.card_counts) collection.card_counts = {};
+    collection.card_counts[cardId] = (collection.card_counts[cardId] ?? 0) + 1;
 
     await this.save();
     return isNew;

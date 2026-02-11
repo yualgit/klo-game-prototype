@@ -156,6 +156,26 @@ export class Collections extends Phaser.Scene {
           badge.fillStyle(RARITY_COLORS[card.rarity], 1);
           badge.fillCircle(badgeX, badgeY, badgeRadius);
           this.allElements.push(badge);
+
+          // Duplicate count badge
+          const count = collectionsManager.getCardCount(collectionId, card.id);
+          if (count > 1) {
+            const countText = this.add.text(
+              cardX + cardWidth / 2 - cssToGame(2),
+              cardY - cardHeight / 2 + cssToGame(2),
+              `x${count}`,
+              {
+                fontFamily: 'Arial, sans-serif',
+                fontSize: `${cssToGame(10)}px`,
+                color: '#FFFFFF',
+                fontStyle: 'bold',
+                backgroundColor: '#333333',
+                padding: { x: cssToGame(3), y: cssToGame(1) },
+              }
+            );
+            countText.setOrigin(1, 0); // Top-right alignment
+            this.allElements.push(countText);
+          }
         } else {
           // Unowned card: grayscale with "?" overlay, preserve aspect ratio
           const cardImage = this.add.image(cardX, cardY, card.textureKey);

@@ -89,9 +89,9 @@ async function main() {
       // New user: set defaults (empty collections)
       await firestoreService.saveCollections(uid, {
         collections: {
-          coffee: { owned_cards: [], pity_streak: 0 },
-          food: { owned_cards: [], pity_streak: 0 },
-          car: { owned_cards: [], pity_streak: 0 },
+          coffee: { owned_cards: [], pity_streak: 0, card_counts: {} },
+          food: { owned_cards: [], pity_streak: 0, card_counts: {} },
+          car: { owned_cards: [], pity_streak: 0, card_counts: {} },
         },
       });
       collectionState = await firestoreService.loadCollections(uid);
