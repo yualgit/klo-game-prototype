@@ -391,7 +391,7 @@ export class UIScene extends Phaser.Scene {
 
     // White panel (responsive width, centered)
     const panelW = Math.min(cssToGame(340), width * 0.85);
-    const panelH = cssToGame(340);
+    const panelH = cssToGame(360);
     const panelX = (width - panelW) / 2;
     const panelY = (height - panelH) / 2;
 
@@ -406,7 +406,7 @@ export class UIScene extends Phaser.Scene {
     // Title
     const title = this.add.text(width / 2, panelY + cssToGame(50), 'Налаштування', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(22)}px`,
+      fontSize: `${cssToGame(18)}px`,
       color: '#1A1A1A',
       fontStyle: 'bold',
     });
@@ -416,7 +416,7 @@ export class UIScene extends Phaser.Scene {
     this.settingsOverlayElements.push(title);
 
     // ---- SFX Toggle ----
-    const sfxRowY = panelY + cssToGame(80);
+    const sfxRowY = panelY + cssToGame(85);
 
     const sfxLabel = this.add.text(panelX + cssToGame(30), sfxRowY, 'Звукові ефекти', {
       fontFamily: 'Arial, sans-serif',
@@ -434,12 +434,12 @@ export class UIScene extends Phaser.Scene {
     const sfxToggleBg = this.add.graphics();
     sfxToggleBg.setScrollFactor(0);
     sfxToggleBg.setDepth(302);
-    const sfxToggleThumb = this.add.circle(0, 0, cssToGame(12), 0xFFFFFF);
+    const sfxToggleThumb = this.add.circle(0, 0, cssToGame(9), 0xFFFFFF);
     sfxToggleThumb.setScrollFactor(0);
     sfxToggleThumb.setDepth(303);
     const sfxToggleX = panelX + panelW - cssToGame(80);
-    const toggleWidth = cssToGame(60);
-    const toggleHeight = cssToGame(30);
+    const toggleWidth = cssToGame(44);
+    const toggleHeight = cssToGame(22);
 
     const updateSfxToggle = () => {
       sfxToggleBg.clear();
@@ -447,7 +447,7 @@ export class UIScene extends Phaser.Scene {
       sfxToggleBg.fillRoundedRect(sfxToggleX, sfxRowY - toggleHeight/2, toggleWidth, toggleHeight, toggleHeight/2);
 
       // Position thumb: left when off, right when on
-      const thumbX = sfxEnabled ? sfxToggleX + toggleWidth - cssToGame(16) : sfxToggleX + cssToGame(16);
+      const thumbX = sfxEnabled ? sfxToggleX + toggleWidth - cssToGame(11) : sfxToggleX + cssToGame(11);
       sfxToggleThumb.setPosition(thumbX, sfxRowY);
     };
 
@@ -467,7 +467,7 @@ export class UIScene extends Phaser.Scene {
       settings.set('sfxEnabled', sfxEnabled);
 
       // Animate thumb position
-      const thumbX = sfxEnabled ? sfxToggleX + toggleWidth - cssToGame(16) : sfxToggleX + cssToGame(16);
+      const thumbX = sfxEnabled ? sfxToggleX + toggleWidth - cssToGame(11) : sfxToggleX + cssToGame(11);
       this.tweens.add({
         targets: sfxToggleThumb,
         x: thumbX,
@@ -480,7 +480,8 @@ export class UIScene extends Phaser.Scene {
     });
 
     // ---- Volume Slider ----
-    const volumeRowY = panelY + cssToGame(145);
+    const volumeRowY = panelY + cssToGame(140);
+    const volumeSliderY = panelY + cssToGame(170);
 
     const volumeLabel = this.add.text(panelX + cssToGame(30), volumeRowY, 'Гучність', {
       fontFamily: 'Arial, sans-serif',
@@ -492,19 +493,19 @@ export class UIScene extends Phaser.Scene {
     volumeLabel.setDepth(302);
     this.settingsOverlayElements.push(volumeLabel);
 
-    const sliderTrackX = panelX + panelW - cssToGame(160);
-    const sliderTrackW = cssToGame(140);
+    const sliderTrackX = panelX + cssToGame(30);
+    const sliderTrackW = panelW - cssToGame(60);
     const sliderTrackH = cssToGame(6);
 
     // Track background
-    const sliderTrack = this.add.rectangle(sliderTrackX, volumeRowY, sliderTrackW, sliderTrackH, 0xDDDDDD);
+    const sliderTrack = this.add.rectangle(sliderTrackX, volumeSliderY, sliderTrackW, sliderTrackH, 0xDDDDDD);
     sliderTrack.setOrigin(0, 0.5);
     sliderTrack.setScrollFactor(0);
     sliderTrack.setDepth(302);
     this.settingsOverlayElements.push(sliderTrack);
 
     // Fill (shows current volume)
-    const sliderFill = this.add.rectangle(sliderTrackX, volumeRowY, 0, sliderTrackH, 0xFFB800);
+    const sliderFill = this.add.rectangle(sliderTrackX, volumeSliderY, 0, sliderTrackH, 0xFFB800);
     sliderFill.setOrigin(0, 0.5);
     sliderFill.setScrollFactor(0);
     sliderFill.setDepth(302);
@@ -513,8 +514,8 @@ export class UIScene extends Phaser.Scene {
     // Thumb
     const volume = settings.get('sfxVolume');
     const thumbX = sliderTrackX + volume * sliderTrackW;
-    const sliderThumb = this.add.circle(thumbX, volumeRowY, cssToGame(10), 0xFFFFFF);
-    sliderThumb.setStrokeStyle(cssToGame(2), 0xFFB800);
+    const sliderThumb = this.add.circle(thumbX, volumeSliderY, cssToGame(8), 0xFFFFFF);
+    sliderThumb.setStrokeStyle(cssToGame(1.5), 0xFFB800);
     sliderThumb.setScrollFactor(0);
     sliderThumb.setDepth(303);
     this.settingsOverlayElements.push(sliderThumb);
@@ -541,7 +542,7 @@ export class UIScene extends Phaser.Scene {
     });
 
     // ---- Animation Toggle ----
-    const animRowY = panelY + cssToGame(210);
+    const animRowY = panelY + cssToGame(225);
 
     const animLabel = this.add.text(panelX + cssToGame(30), animRowY, 'Анімації бустерів', {
       fontFamily: 'Arial, sans-serif',
@@ -559,7 +560,7 @@ export class UIScene extends Phaser.Scene {
     const animToggleBg = this.add.graphics();
     animToggleBg.setScrollFactor(0);
     animToggleBg.setDepth(302);
-    const animToggleThumb = this.add.circle(0, 0, cssToGame(12), 0xFFFFFF);
+    const animToggleThumb = this.add.circle(0, 0, cssToGame(9), 0xFFFFFF);
     animToggleThumb.setScrollFactor(0);
     animToggleThumb.setDepth(303);
     const animToggleX = panelX + panelW - cssToGame(80);
@@ -570,7 +571,7 @@ export class UIScene extends Phaser.Scene {
       animToggleBg.fillRoundedRect(animToggleX, animRowY - toggleHeight/2, toggleWidth, toggleHeight, toggleHeight/2);
 
       // Position thumb: left when off, right when on
-      const thumbX = animEnabled ? animToggleX + toggleWidth - cssToGame(16) : animToggleX + cssToGame(16);
+      const thumbX = animEnabled ? animToggleX + toggleWidth - cssToGame(11) : animToggleX + cssToGame(11);
       animToggleThumb.setPosition(thumbX, animRowY);
     };
 
@@ -590,7 +591,7 @@ export class UIScene extends Phaser.Scene {
       settings.set('animationsEnabled', animEnabled);
 
       // Animate thumb position
-      const thumbX = animEnabled ? animToggleX + toggleWidth - cssToGame(16) : animToggleX + cssToGame(16);
+      const thumbX = animEnabled ? animToggleX + toggleWidth - cssToGame(11) : animToggleX + cssToGame(11);
       this.tweens.add({
         targets: animToggleThumb,
         x: thumbX,
@@ -603,7 +604,7 @@ export class UIScene extends Phaser.Scene {
     });
 
     // ---- Close Button ----
-    const closeBtnY = panelY + cssToGame(280);
+    const closeBtnY = panelY + cssToGame(290);
 
     const closeBtnBg = this.add.image(width / 2, closeBtnY, GUI_TEXTURE_KEYS.buttonYellow);
     closeBtnBg.setDisplaySize(cssToGame(140), cssToGame(36));
