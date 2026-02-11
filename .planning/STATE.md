@@ -6,22 +6,22 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Клієнт має побачити і відчути gameplay — як гра буде сприйматись реальними користувачами. Демо має передати "смак" механіки та KLO-бренд.
 
-**Current focus:** Phase 23 - Tile System Refactor (v1.4 Content Expansion)
+**Current focus:** Phase 24 - 7x7 Board Transition (v1.4 Content Expansion)
 
 ## Current Position
 
-Phase: 23 of 25 (Tile System Refactor)
-Plan: 2 of 2 in current phase
-Status: Complete
-Last activity: 2026-02-11 — Completed 23-02-PLAN.md (Add New Tile Assets)
+Phase: 24 of 25 (7x7 Board Transition)
+Plan: 1 of 2 in current phase
+Status: In Progress
+Last activity: 2026-02-11 — Completed 24-01-PLAN.md (Update Engine Constants to 7x7)
 
 Progress: [████████████████████░] 92% (23 of 25 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 52 (15 v1.0 + 10 v1.1 + 14 v1.2 + 10 v1.3 + 2 v1.4)
-- Total phases completed: 23 (Phase 24 next)
+- Total plans completed: 53 (15 v1.0 + 10 v1.1 + 14 v1.2 + 10 v1.3 + 3 v1.4)
+- Total phases completed: 23 (Phase 24 in progress)
 - Total execution time: ~7 days across 4 milestones
 
 **By Milestone:**
@@ -32,7 +32,7 @@ Progress: [████████████████████░] 92% 
 | v1.1 Kyiv Journey | 6-10 | 10 | Feb 10, 2026 |
 | v1.2 Polish & Collections | 11-16 | 14 | Feb 10-11, 2026 |
 | v1.3 UI Polish | 17-22 | 10 | Feb 11, 2026 |
-| v1.4 Content Expansion | 23-25 | 2/TBD | Feb 11, 2026 |
+| v1.4 Content Expansion | 23-25 | 3/TBD | Feb 11, 2026 |
 
 **Recent Plan Metrics:**
 
@@ -40,12 +40,18 @@ Progress: [████████████████████░] 92% 
 |------|----------|-------|-------|-----------|
 | 23-01 | 4 min | 2 | 6 | 2026-02-11 |
 | 23-02 | 1 min | 2 | 2 | 2026-02-11 |
+| 24-01 | 2 min | 1 | 2 | 2026-02-11 |
 
 *Performance tracking continues with v1.4*
 
 ## Accumulated Context
 
 ### Decisions
+
+Recent decisions from Phase 24:
+
+- [Phase 24]: Keep Match3Engine dimension-agnostic (constructor-driven) - constants reflect new standard but engine accepts any rows/cols from level JSON
+- [Phase 24]: Preserve custom-sized engine tests unchanged - 3x3, 5x5 tests are intentional edge cases, not dependent on default size
 
 Recent decisions from Phase 23:
 
@@ -81,11 +87,11 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-11 (Phase 23-02 execution)
-Stopped at: Completed Phase 23 - Tile System Refactor (both plans complete)
-Resume file: .planning/phases/23-tile-system-refactor/23-02-SUMMARY.md
+Last session: 2026-02-11 (Phase 24-01 execution)
+Stopped at: Completed 24-01-PLAN.md
+Resume file: .planning/phases/24-7x7-board-transition/24-01-SUMMARY.md
 
-**Next action:** Create Phase 24 plans for board size transition (8x8 → 7x7) and enabling new tiles in levels
+**Next action:** Execute 24-02-PLAN.md to update level JSON files to 7x7 dimensions
 
 ---
 *Updated: 2026-02-11 after v1.4 roadmap creation*
