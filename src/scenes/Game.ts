@@ -371,7 +371,7 @@ export class Game extends Phaser.Scene {
 
     // Bonus level hint
     if (isBonusLevel) {
-      const bonusHint = this.add.text(panelW / 2, cssToGame(42), 'Бонус: обери картку!', {
+      const bonusHint = this.add.text(panelW / 2, cssToGame(75), 'Бонус: обери картку!', {
         fontFamily: 'Arial, sans-serif',
         fontSize: `${this.layout.overlaySubtitleSize}px`,
         color: '#FFB800',

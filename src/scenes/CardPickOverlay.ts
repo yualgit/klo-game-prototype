@@ -219,7 +219,7 @@ export class CardPickOverlay extends Phaser.Scene {
       const rarityText = this.getRarityLabel(cardDef.rarity);
       const rarityColor = this.getRarityColor(cardDef.rarity);
 
-      const label = this.add.text(card.x, card.y + cssToGame(110), rarityText, {
+      const label = this.add.text(card.x, card.y + cssToGame(140), rarityText, {
         fontFamily: 'Arial, sans-serif',
         fontSize: `${cssToGame(13)}px`,
         color: rarityColor,
