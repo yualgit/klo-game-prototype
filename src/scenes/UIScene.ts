@@ -32,8 +32,7 @@ export class UIScene extends Phaser.Scene {
   private headerBg: Phaser.GameObjects.Graphics | null = null;
   private heartIcons: Phaser.GameObjects.Image[] = [];
   private countdownText: Phaser.GameObjects.Text | null = null;
-  private bonusIcon: Phaser.GameObjects.Text | null = null;
-  private bonusText: Phaser.GameObjects.Text | null = null;
+  private settingsButton: Phaser.GameObjects.Image | null = null;
   private settingsGear: Phaser.GameObjects.Text | null = null;
 
   // Bottom nav elements
@@ -94,26 +93,6 @@ export class UIScene extends Phaser.Scene {
       Phaser.Geom.Rectangle.Contains
     );
 
-    // Bonus icon (left side of header)
-    this.bonusIcon = this.add.text(cssToGame(20), headerHeight / 2 - cssToGame(2), '💵', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(14)}px`,
-    });
-    this.bonusIcon.setOrigin(0, 0.5);
-    this.bonusIcon.setScrollFactor(0);
-    this.bonusIcon.setDepth(201);
-
-    // Bonus text
-    this.bonusText = this.add.text(cssToGame(38), headerHeight / 2 - cssToGame(2), '500', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(13)}px`,
-      color: '#FFB800',
-      fontStyle: 'bold',
-    });
-    this.bonusText.setOrigin(0, 0.5);
-    this.bonusText.setScrollFactor(0);
-    this.bonusText.setDepth(201);
-
     // Heart icons (5 hearts, centered in header)
     const heartSize = cssToGame(16);
     const heartSpacing = cssToGame(18);
@@ -145,19 +124,26 @@ export class UIScene extends Phaser.Scene {
     this.countdownText.setDepth(201);
     this.countdownText.setVisible(false);
 
-    // Settings gear icon
+    // Settings button with blue square container
+    this.settingsButton = this.add.image(width - cssToGame(25), headerHeight / 2, 'gui_small_square_button_blue');
+    this.settingsButton.setDisplaySize(cssToGame(32), cssToGame(32));
+    this.settingsButton.setOrigin(0.5);
+    this.settingsButton.setScrollFactor(0);
+    this.settingsButton.setDepth(201);
+    this.settingsButton.setInteractive({ useHandCursor: true });
+    this.settingsButton.on('pointerup', () => {
+      eventsCenter.emit('open-settings');
+    });
+
+    // Settings gear icon on top of button
     this.settingsGear = this.add.text(width - cssToGame(25), headerHeight / 2, '⚙', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: `${cssToGame(20)}px`,
+      fontSize: `${cssToGame(16)}px`,
       color: '#1A1A1A',
     });
     this.settingsGear.setOrigin(0.5);
     this.settingsGear.setScrollFactor(0);
-    this.settingsGear.setDepth(201);
-    this.settingsGear.setInteractive({ useHandCursor: true });
-    this.settingsGear.on('pointerup', () => {
-      eventsCenter.emit('open-settings');
-    });
+    this.settingsGear.setDepth(202);
   }
 
   private createBottomNav(width: number, height: number): void {
@@ -210,9 +196,13 @@ export class UIScene extends Phaser.Scene {
 
     const isActive = tabId === this.currentTab;
 
-    // Active tab gets a subtle glow behind icon
+    // Active tab gets a subtle glow behind icon (rounded rectangle)
     if (isActive) {
-      const glow = this.add.circle(x, navCenterY - cssToGame(6), cssToGame(20), 0xffb800, 0.15);
+      const glow = this.add.graphics();
+      const rectW = cssToGame(44);
+      const rectH = cssToGame(28);
+      glow.fillStyle(0xffb800, 0.15);
+      glow.fillRoundedRect(x - rectW / 2, navCenterY - cssToGame(6) - rectH / 2, rectW, rectH, cssToGame(8));
       glow.setScrollFactor(0);
       glow.setDepth(201);
       elements.push(glow);
@@ -287,7 +277,6 @@ export class UIScene extends Phaser.Scene {
 
     // Subscribe to economy events
     this.economy.on('lives-changed', this.onLivesChanged, this);
-    this.economy.on('bonuses-changed', this.onBonusesChanged, this);
 
     // Setup 1-second timer for countdown updates
     this.countdownTimer = this.time.addEvent({
@@ -299,7 +288,6 @@ export class UIScene extends Phaser.Scene {
 
     // Initial update
     this.onLivesChanged();
-    this.onBonusesChanged();
 
     // Subscribe to collections events
     this.collections = this.registry.get('collections') as CollectionsManager;
@@ -329,13 +317,6 @@ export class UIScene extends Phaser.Scene {
     }
 
     this.updateCountdown();
-  };
-
-  private onBonusesChanged = (): void => {
-    if (!this.economy || !this.bonusText) return;
-
-    const bonuses = this.economy.getBonuses();
-    this.bonusText.setText(`${bonuses}`);
   };
 
   private updateCountdown = (): void => {
@@ -399,8 +380,7 @@ export class UIScene extends Phaser.Scene {
     this.heartIcons.forEach((heart) => heart.destroy());
     this.heartIcons = [];
     if (this.countdownText) this.countdownText.destroy();
-    if (this.bonusIcon) this.bonusIcon.destroy();
-    if (this.bonusText) this.bonusText.destroy();
+    if (this.settingsButton) this.settingsButton.destroy();
     if (this.settingsGear) this.settingsGear.destroy();
 
     // Destroy bottom nav elements
@@ -426,7 +406,6 @@ export class UIScene extends Phaser.Scene {
     // Remove economy listeners
     if (this.economy) {
       this.economy.off('lives-changed', this.onLivesChanged);
-      this.economy.off('bonuses-changed', this.onBonusesChanged);
     }
 
     // Remove collection event listeners
@@ -444,7 +423,6 @@ export class UIScene extends Phaser.Scene {
     // Remove economy event listeners
     if (this.economy) {
       this.economy.off('lives-changed', this.onLivesChanged);
-      this.economy.off('bonuses-changed', this.onBonusesChanged);
     }
 
     // Remove collection event listeners
