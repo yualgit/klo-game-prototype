@@ -44,21 +44,23 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TSYS-01 | — | Pending |
-| TSYS-02 | — | Pending |
-| TSYS-03 | — | Pending |
-| BOARD-01 | — | Pending |
-| BOARD-02 | — | Pending |
-| LVL-01 | — | Pending |
-| LVL-02 | — | Pending |
-| LVL-03 | — | Pending |
-| LVL-04 | — | Pending |
+| TSYS-01 | Phase 23 | Pending |
+| TSYS-02 | Phase 23 | Pending |
+| TSYS-03 | Phase 23 | Pending |
+| BOARD-01 | Phase 24 | Pending |
+| BOARD-02 | Phase 24 | Pending |
+| LVL-01 | Phase 25 | Pending |
+| LVL-02 | Phase 25 | Pending |
+| LVL-03 | Phase 25 | Pending |
+| LVL-04 | Phase 25 | Pending |
 
 **Coverage:**
 - v1.4 requirements: 9 total
-- Mapped to phases: 0
-- Unmapped: 9 (pending roadmap)
+- Mapped to phases: 9 (100% coverage)
+- Phase 23: 3 requirements (TSYS-01, TSYS-02, TSYS-03)
+- Phase 24: 2 requirements (BOARD-01, BOARD-02)
+- Phase 25: 4 requirements (LVL-01, LVL-02, LVL-03, LVL-04)
 
 ---
 *Requirements defined: 2026-02-11*
-*Last updated: 2026-02-11 after initial definition*
+*Last updated: 2026-02-11 after v1.4 roadmap creation*
