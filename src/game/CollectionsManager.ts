@@ -107,6 +107,43 @@ export class CollectionsManager {
   }
 
   /**
+   * Get current pity streak for a collection.
+   */
+  getPityStreak(collectionId: string): number {
+    const collection = this.state.collections[collectionId];
+    return collection?.pity_streak ?? 0;
+  }
+
+  /**
+   * Add a selected card to collection and update pity streak.
+   * New card: push to owned_cards, reset pity_streak to 0.
+   * Duplicate: increment pity_streak (card NOT added again).
+   * Saves to Firestore after updating.
+   * Returns true if card is new, false if duplicate.
+   */
+  async selectCard(collectionId: string, cardId: string): Promise<boolean> {
+    const collection = this.state.collections[collectionId];
+    if (!collection) {
+      console.error(`[CollectionsManager] Invalid collection: ${collectionId}`);
+      return false;
+    }
+
+    const isNew = !collection.owned_cards.includes(cardId);
+
+    if (isNew) {
+      collection.owned_cards.push(cardId);
+      collection.pity_streak = 0;
+      console.log(`[CollectionsManager] New card ${cardId} added to ${collectionId}. Pity reset.`);
+    } else {
+      collection.pity_streak++;
+      console.log(`[CollectionsManager] Duplicate ${cardId} in ${collectionId}. Pity: ${collection.pity_streak}`);
+    }
+
+    await this.save();
+    return isNew;
+  }
+
+  /**
    * Save current collection state to Firestore.
    */
   private async save(): Promise<void> {

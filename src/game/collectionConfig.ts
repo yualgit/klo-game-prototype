@@ -207,3 +207,17 @@ export function getCollectionIds(): string[] {
 export function getCollectionMeta(collectionId: string): CollectionMeta {
   return COLLECTION_META[collectionId];
 }
+
+/**
+ * Get which collection is active for a given level ID.
+ * Rotates: coffee (L3) -> food (L6) -> car (L9) -> coffee (L12) -> ...
+ *
+ * @param levelId Level number (1-based)
+ * @returns Collection ID ('coffee', 'food', or 'car')
+ */
+export function getActiveCollectionId(levelId: number): string {
+  const collectionIds = getCollectionIds(); // ['coffee', 'food', 'car']
+  // Bonus levels are at 3, 6, 9 — map level to 0-indexed rotation
+  const bonusIndex = Math.floor((levelId - 1) / 3); // L3=0, L6=1, L9=2
+  return collectionIds[bonusIndex % collectionIds.length];
+}
