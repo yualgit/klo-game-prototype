@@ -26,6 +26,7 @@ export class Collections extends Phaser.Scene {
   private isDragging: boolean = false;
   private dragStartY: number = 0;
   private allElements: Phaser.GameObjects.GameObject[] = [];
+  private overlayElements: Phaser.GameObjects.GameObject[] = [];
 
   constructor() {
     super({ key: 'Collections' });
@@ -212,8 +213,312 @@ export class Collections extends Phaser.Scene {
       progressText.setOrigin(0.5, 0);
       this.allElements.push(progressText);
 
-      currentY += cssToGame(50); // Spacing before next collection
+      currentY += cssToGame(50); // Spacing after progress text
+
+      // Exchange button
+      const isComplete = collectionsManager.isCollectionComplete(collectionId);
+      const buttonWidth = cssToGame(200);
+      const buttonHeight = cssToGame(40);
+      const buttonX = width / 2;
+      const buttonY = currentY;
+
+      // Button container
+      const buttonContainer = this.add.container(buttonX, buttonY);
+
+      // Button background
+      const buttonBg = this.add.graphics();
+      const bgColor = isComplete ? 0xffb800 : 0xaaaaaa;
+      buttonBg.fillStyle(bgColor, 1);
+      buttonBg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, cssToGame(8));
+      buttonContainer.add(buttonBg);
+
+      // Button text
+      const textColor = isComplete ? '#1A1A1A' : '#666666';
+      const buttonText = this.add.text(0, 0, 'Обміняти на купон', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: `${cssToGame(14)}px`,
+        color: textColor,
+        fontStyle: 'bold',
+      });
+      buttonText.setOrigin(0.5);
+      buttonContainer.add(buttonText);
+
+      // Make interactive if complete
+      if (isComplete) {
+        buttonContainer.setSize(buttonWidth, buttonHeight);
+        buttonContainer.setInteractive({ useHandCursor: true });
+
+        buttonContainer.on('pointerup', () => {
+          this.startExchangeAnimation(collectionId);
+        });
+
+        // Hover scale effect
+        buttonContainer.on('pointerover', () => {
+          this.tweens.add({
+            targets: buttonContainer,
+            scaleX: 1.05,
+            scaleY: 1.05,
+            duration: 150,
+            ease: 'Quad.Out',
+          });
+        });
+
+        buttonContainer.on('pointerout', () => {
+          this.tweens.add({
+            targets: buttonContainer,
+            scaleX: 1.0,
+            scaleY: 1.0,
+            duration: 150,
+            ease: 'Quad.Out',
+          });
+        });
+      }
+
+      this.allElements.push(buttonContainer);
+
+      currentY += buttonHeight + cssToGame(50); // Spacing before next collection
     }
+  }
+
+  private async startExchangeAnimation(collectionId: string): Promise<void> {
+    // Disable scene input
+    this.input.enabled = false;
+
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    // Create dark backdrop
+    const backdrop = this.add.graphics();
+    backdrop.fillStyle(0x000000, 0.75);
+    backdrop.fillRect(0, 0, width, height);
+    backdrop.setScrollFactor(0);
+    backdrop.setDepth(500);
+    backdrop.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
+    this.overlayElements.push(backdrop);
+
+    // Get all 6 cards
+    const cards = getCardsForCollection(collectionId);
+    const cardWidth = cssToGame(80);
+    const cardAspect = 1158 / 696;
+    const cardHeight = cardWidth * cardAspect;
+    const cardGap = cssToGame(12);
+
+    // Create 6 card containers in 3x2 grid
+    const gridWidth = 3 * cardWidth + 2 * cardGap;
+    const gridHeight = 2 * cardHeight + cardGap;
+    const gridStartX = centerX - gridWidth / 2;
+    const gridStartY = centerY - gridHeight / 2;
+
+    const cardContainers: Phaser.GameObjects.Container[] = [];
+
+    for (let i = 0; i < cards.length; i++) {
+      const card = cards[i];
+      const col = i % 3;
+      const row = Math.floor(i / 3);
+      const cardX = gridStartX + col * (cardWidth + cardGap) + cardWidth / 2;
+      const cardY = gridStartY + row * (cardHeight + cardGap) + cardHeight / 2;
+
+      const cardImage = this.add.image(0, 0, card.textureKey);
+      cardImage.setDisplaySize(cardWidth, cardHeight);
+
+      const cardContainer = this.add.container(cardX, cardY);
+      cardContainer.add(cardImage);
+      cardContainer.setScrollFactor(0);
+      cardContainer.setDepth(501);
+
+      cardContainers.push(cardContainer);
+      this.overlayElements.push(cardContainer);
+    }
+
+    // Wait 300ms
+    await new Promise<void>((resolve) => {
+      this.time.delayedCall(300, () => resolve());
+    });
+
+    // Stage 2 - Fold (400ms duration)
+    await Promise.all(
+      cardContainers.map((container, i) => {
+        return new Promise<void>((resolve) => {
+          this.tweens.add({
+            targets: container,
+            scaleX: 0.2,
+            scaleY: 0.8,
+            angle: i % 2 === 0 ? -15 : 15,
+            duration: 400,
+            ease: 'Quad.In',
+            onComplete: () => resolve(),
+          });
+        });
+      })
+    );
+
+    // Stage 3 - Compress to center (500ms duration)
+    await Promise.all(
+      cardContainers.map((container) => {
+        return new Promise<void>((resolve) => {
+          this.tweens.add({
+            targets: container,
+            x: centerX,
+            y: centerY,
+            scale: 0,
+            duration: 500,
+            ease: 'Cubic.In',
+            onComplete: () => resolve(),
+          });
+        });
+      })
+    );
+
+    // Stage 4 - Explode
+    this.cameras.main.flash(150, 255, 184, 0);
+    this.cameras.main.shake(200, 0.008);
+
+    // Create particle emitter
+    const emitter = this.add.particles(centerX, centerY, 'particle_white', {
+      speed: { min: 100, max: 300 },
+      scale: { start: 0.8, end: 0 },
+      lifespan: { min: 400, max: 800 },
+      tint: [0xffb800, 0xffffff, 0xff6600],
+      maxParticles: 50,
+      emitting: false,
+    });
+    emitter.setScrollFactor(0);
+    emitter.setDepth(502);
+    emitter.explode(50);
+    this.overlayElements.push(emitter);
+
+    // Wait 600ms
+    await new Promise<void>((resolve) => {
+      this.time.delayedCall(600, () => resolve());
+    });
+
+    // Stage 5 - Coupon reveal (500ms duration)
+    const meta = getCollectionMeta(collectionId);
+
+    const titleText = this.add.text(centerX, centerY - cssToGame(40), `${meta.nameUk} -- Купон`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: `${cssToGame(24)}px`,
+      color: '#FFB800',
+      fontStyle: 'bold',
+    });
+    titleText.setOrigin(0.5);
+    titleText.setScrollFactor(0);
+    titleText.setDepth(501);
+    titleText.setAlpha(0);
+    titleText.setScale(0.5);
+    this.overlayElements.push(titleText);
+
+    const rewardText = this.add.text(centerX, centerY + cssToGame(10), meta.rewardDescription, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: `${cssToGame(16)}px`,
+      color: '#F9F9F9',
+    });
+    rewardText.setOrigin(0.5);
+    rewardText.setScrollFactor(0);
+    rewardText.setDepth(501);
+    rewardText.setAlpha(0);
+    rewardText.setScale(0.5);
+    this.overlayElements.push(rewardText);
+
+    await Promise.all([
+      new Promise<void>((resolve) => {
+        this.tweens.add({
+          targets: titleText,
+          alpha: 1,
+          scale: 1,
+          duration: 500,
+          ease: 'Back.Out',
+          onComplete: () => resolve(),
+        });
+      }),
+      new Promise<void>((resolve) => {
+        this.tweens.add({
+          targets: rewardText,
+          alpha: 1,
+          scale: 1,
+          duration: 500,
+          ease: 'Back.Out',
+          onComplete: () => resolve(),
+        });
+      }),
+    ]);
+
+    // Wait 600ms
+    await new Promise<void>((resolve) => {
+      this.time.delayedCall(600, () => resolve());
+    });
+
+    // Stage 6 - Claim button
+    const claimButtonWidth = cssToGame(180);
+    const claimButtonHeight = cssToGame(44);
+    const claimButtonY = centerY + cssToGame(80);
+
+    const claimButtonContainer = this.add.container(centerX, claimButtonY);
+
+    const claimButtonBg = this.add.graphics();
+    claimButtonBg.fillStyle(0xffb800, 1);
+    claimButtonBg.fillRoundedRect(-claimButtonWidth / 2, -claimButtonHeight / 2, claimButtonWidth, claimButtonHeight, cssToGame(8));
+    claimButtonContainer.add(claimButtonBg);
+
+    const claimButtonText = this.add.text(0, 0, 'Забрати купон', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: `${cssToGame(16)}px`,
+      color: '#1A1A1A',
+      fontStyle: 'bold',
+    });
+    claimButtonText.setOrigin(0.5);
+    claimButtonContainer.add(claimButtonText);
+
+    claimButtonContainer.setScrollFactor(0);
+    claimButtonContainer.setDepth(501);
+    claimButtonContainer.setSize(claimButtonWidth, claimButtonHeight);
+    claimButtonContainer.setInteractive({ useHandCursor: true });
+
+    claimButtonContainer.on('pointerup', async () => {
+      const collectionsManager = this.registry.get('collections') as CollectionsManager;
+      await collectionsManager.exchangeCollection(collectionId);
+
+      // Destroy all overlay elements
+      this.overlayElements.forEach((el) => el.destroy());
+      this.overlayElements = [];
+
+      // Re-enable input
+      this.input.enabled = true;
+
+      // Rebuild UI
+      this.buildCollectionsUI();
+
+      // Reset camera scroll to top
+      this.cameras.main.scrollY = 0;
+    });
+
+    // Hover scale effect
+    claimButtonContainer.on('pointerover', () => {
+      this.tweens.add({
+        targets: claimButtonContainer,
+        scaleX: 1.05,
+        scaleY: 1.05,
+        duration: 150,
+        ease: 'Quad.Out',
+      });
+    });
+
+    claimButtonContainer.on('pointerout', () => {
+      this.tweens.add({
+        targets: claimButtonContainer,
+        scaleX: 1.0,
+        scaleY: 1.0,
+        duration: 150,
+        ease: 'Quad.Out',
+      });
+    });
+
+    this.overlayElements.push(claimButtonContainer);
+
+    // Re-enable input ONLY for the claim button
+    this.input.enabled = true;
   }
 
   private setupDragScrolling(): void {
