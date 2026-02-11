@@ -57,10 +57,9 @@ export class LevelSelect extends Phaser.Scene {
     // Original x range in LEVEL_NODES: min=260, max=650
     const minNodeX = 260;
     const maxNodeX = 650;
-    const nodeRangeCenter = (minNodeX + maxNodeX) / 2; // 455
 
-    // Default: center the node range on screen
-    let offsetX = width / 2 - nodeRangeCenter;
+    // Default: center the entire MAP_WIDTH coordinate space (1024px, center at 512) on viewport
+    let offsetX = width / 2 - MAP_CONFIG.MAP_WIDTH / 2;
 
     // Clamp: ensure leftmost node center - halfNode >= padding
     const leftEdge = minNodeX + offsetX - halfNode;
