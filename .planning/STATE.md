@@ -5,15 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Клієнт має побачити і відчути gameplay — як гра буде сприйматись реальними користувачами. Демо має передати "смак" механіки та KLO-бренд.
-**Current focus:** v1.2 milestone complete — planning next milestone
+**Current focus:** v1.3 UI Polish
 
 ## Current Position
 
-Phase: 16 of 16 (all complete)
-Status: v1.2 Polish & Collections shipped
-Last activity: 2026-02-11 — v1.2 milestone archived
-
-Progress: [████████████████████████████] 100% (3 milestones shipped)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-11 — Milestone v1.3 started
 
 ## Performance Metrics
 
@@ -43,12 +42,12 @@ None.
 
 ### Blockers/Concerns
 
-None — all milestones shipped.
+None.
 
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: v1.2 milestone archived
+Stopped at: Milestone v1.3 requirements definition
 Resume file: None
 
-**Next action:** `/gsd:new-milestone` to start next milestone cycle, or project complete.
+**Next action:** Define requirements, then create roadmap.

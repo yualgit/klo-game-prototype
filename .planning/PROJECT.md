@@ -34,7 +34,15 @@ Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed 
 
 ### Active
 
-(No active requirements — all milestones complete)
+**Current Milestone: v1.3 UI Polish**
+
+- [ ] Welcome screen: block return after PLAY, scale title on mobile
+- [ ] Header: settings in square button, remove bonus display
+- [ ] Settings overlay: mobile sizing, z-order above header/nav, singleton fix, level page crash fix
+- [ ] Bottom nav: swap Levels/Collections, rounded-rect active indicator
+- [ ] Level select: reduce spacing on mobile, fix unclickable buttons after navigation
+- [ ] Game: mobile header back button, mobile HUD layout, responsive board sizing, resize error fix
+- [ ] Collections: fix infinite scroll, horizontal card swiper with snap, colored card container
 
 ### Out of Scope
 
@@ -91,4 +99,4 @@ Demo is fully playable with 10 levels, all mechanics, economy system, settings, 
 - **Scope**: L1-10 з просунутими механіками та economy (демо)
 
 ---
-*Last updated: 2026-02-11 after v1.2 milestone*
+*Last updated: 2026-02-11 after v1.3 milestone start*
