@@ -566,6 +566,9 @@ export class LevelSelect extends Phaser.Scene {
   private handleResize(gameSize: Phaser.Structs.Size): void {
     const { width, height } = gameSize;
 
+    // Guard: skip if scene is shutting down or camera not ready
+    if (!this.scene.isActive() || !this.cameras?.main) return;
+
     // Recompute layout for new viewport
     this.layout = getResponsiveLayout(width, height);
 
