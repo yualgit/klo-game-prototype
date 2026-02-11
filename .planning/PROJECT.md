@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed AI-generated assets, 10 levels with variable board shapes and progressive obstacles, boosters with combo matrix, lives/bonus economy, settings, scrollable Kyiv map journey, mobile-responsive rendering, persistent UI navigation shell, and collection cards meta-progression with card pick UX, pity system, and coupon exchange. Built for client presentation to demonstrate gameplay feel, progression depth, and KLO brand integration.
+Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed AI-generated assets, 10 levels with variable board shapes and progressive obstacles, boosters with combo matrix, lives/bonus economy, settings, scrollable Kyiv map journey, mobile-responsive rendering, persistent UI navigation shell, collection cards meta-progression with card pick UX, pity system and coupon exchange, and production-ready mobile UI polish across all screens. Built for client presentation to demonstrate gameplay feel, progression depth, and KLO brand integration.
 
 ## Core Value
 
@@ -31,18 +31,17 @@ Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed 
 - ✓ NAV-01..07: Bottom navigation + global header with reactive lives/bonuses display — v1.2
 - ✓ COL-01..13: Collection cards system (3 collections, card pick, pity, exchange for coupons) — v1.2
 - ✓ SYS-01..02: Collection persistence to Firestore with state restoration — v1.2
+- ✓ WELC-01..02: Welcome screen one-way flow + responsive title — v1.3
+- ✓ HDR-01..02: Header settings button container + bonus display removed — v1.3
+- ✓ SETT-01..04: Settings overlay mobile sizing, z-order, singleton, crash fix — v1.3
+- ✓ NAV-01..02: Navigation tab order + rounded-rect indicator — v1.3
+- ✓ LVLS-01..02: Level select mobile fit + reliable click handlers — v1.3
+- ✓ GAME-01..04: Mobile HUD, back button, board sizing, resize fix — v1.3
+- ✓ COLL-01..03: Collections scroll bounds, horizontal swiper, golden background — v1.3
 
 ### Active
 
-**Current Milestone: v1.3 UI Polish**
-
-- [ ] Welcome screen: block return after PLAY, scale title on mobile
-- [ ] Header: settings in square button, remove bonus display
-- [ ] Settings overlay: mobile sizing, z-order above header/nav, singleton fix, level page crash fix
-- [ ] Bottom nav: swap Levels/Collections, rounded-rect active indicator
-- [ ] Level select: reduce spacing on mobile, fix unclickable buttons after navigation
-- [ ] Game: mobile header back button, mobile HUD layout, responsive board sizing, resize error fix
-- [ ] Collections: fix infinite scroll, horizontal card swiper with snap, colored card container
+(None — planning next milestone)
 
 ### Out of Scope
 
@@ -62,10 +61,11 @@ Playable match-3 demo for KLO gas stations with full game mechanics, KLO-themed 
 
 ## Context
 
-Shipped v1.2 Polish & Collections with 9,892 LOC TypeScript.
+Shipped v1.3 UI Polish with 10,057 LOC TypeScript.
 Tech stack: Phaser 3.90 + TypeScript + Vite + Firebase (Auth, Firestore).
-~200+ commits across 16 phases in 7 days (v1.0 + v1.1 + v1.2).
-Demo is fully playable with 10 levels, all mechanics, economy system, settings, Kyiv map journey, mobile-responsive rendering, bottom navigation, global header, and collection cards meta-progression with exchange for coupons.
+~250+ commits across 22 phases in 7 days (v1.0 + v1.1 + v1.2 + v1.3).
+Demo is fully playable with 10 levels, all mechanics, economy system, settings, Kyiv map journey, mobile-responsive rendering, bottom navigation, global header, collection cards meta-progression, and production-ready mobile UI across all screens.
+Known tech debt: console.log statements in Game.ts, GUI_TEXTURE_KEYS constant unused in UIScene.
 
 ## Key Decisions
 
@@ -90,6 +90,12 @@ Demo is fully playable with 10 levels, all mechanics, economy system, settings, 
 | Collection state in user document (not subcollection) | Simpler Firestore structure, fewer reads | ✓ Good — single document persistence |
 | Weighted rarity + pity system | Config-driven drop rates with guaranteed new card after streak | ✓ Good — fair card acquisition |
 | Collection exchange with animation overlay | Multi-stage fold→compress→explode→coupon for satisfying UX | ✓ Good — engaging exchange experience |
+| Settings overlay in UIScene (v1.3) | Universal access from all scenes, z-order 300+ | ✓ Good — singleton guard prevents duplicates |
+| Container-level click handlers (v1.3) | Scene-level input unreliable across scene changes | ✓ Good — reliable cross-scene interaction |
+| MAP_WIDTH coordinate centering (v1.3) | Node range center (455) caused 57px offset on mobile | ✓ Good — correct centering at 512 |
+| Destroy-recreate for viewport UI (v1.3) | Mobile HUD/back button need different layout than desktop | ✓ Good — responsive on resize |
+| Dual-constraint tile sizing (v1.3) | min(width, height) constraint for square tiles on all viewports | ✓ Good — works on 1366x768 laptops |
+| Horizontal card swiper with snap (v1.3) | Direction detection with 10px threshold for swipe vs scroll | ✓ Good — smooth 300ms Cubic.Out snap |
 
 ## Constraints
 
@@ -99,4 +105,4 @@ Demo is fully playable with 10 levels, all mechanics, economy system, settings, 
 - **Scope**: L1-10 з просунутими механіками та economy (демо)
 
 ---
-*Last updated: 2026-02-11 after v1.3 milestone start*
+*Last updated: 2026-02-11 after v1.3 milestone*

@@ -83,7 +83,7 @@ export class Collections extends Phaser.Scene {
 
     // Layout constants
     const headerOffset = cssToGame(60); // UIScene header height
-    const bottomNavSafeArea = cssToGame(70); // UIScene bottom nav
+    const bottomNavSafeArea = cssToGame(150); // UIScene bottom nav
     const cardWidth = cssToGame(80);
     const cardAspect = 1158 / 696; // card images are 696x1158 (portrait)
     const cardHeight = cardWidth * cardAspect;

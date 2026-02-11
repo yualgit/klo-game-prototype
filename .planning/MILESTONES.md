@@ -47,3 +47,23 @@
 
 ---
 
+
+## v1.3 UI Polish (Shipped: 2026-02-11)
+
+**Phases completed:** 6 phases (17-22), 10 plans, 54 commits
+**Timeline:** 1 day (Feb 11, 2026)
+**Codebase:** 10,057 LOC TypeScript, 8 source files changed, +732/-567 lines
+**Git range:** feat(17-01)..docs(phase-22)
+
+**Key accomplishments:**
+- Header polished with settings button in square container; navigation tabs reordered with rounded-rect active indicator
+- Welcome screen blocks return after PLAY; title scales responsively on mobile viewports
+- Settings overlay centralized in UIScene with mobile sizing, z-order fix, and singleton guard
+- Level select nodes horizontally clamped for mobile with correct MAP_WIDTH centering and reliable click handlers
+- Game screen adapts to mobile with responsive two-line HUD, icon-only back button, and board width constraints (16px padding, 1024px max)
+- Collections upgraded with horizontal card swiper, snap-to-card navigation, and golden background
+
+**Archives:** [Roadmap](milestones/v1.3-ROADMAP.md) | [Requirements](milestones/v1.3-REQUIREMENTS.md)
+
+---
+
