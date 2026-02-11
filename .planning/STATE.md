@@ -9,18 +9,18 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 
 ## Current Position
 
-Phase: 18 of 22 (Welcome Screen Refinement) — COMPLETE
-Plan: All plans complete
-Status: Phase 18 verified and complete
-Last activity: 2026-02-11 — Phase 18 executed and verified (2/2 must-haves passed)
+Phase: 19 of 22 (Settings Overlay Fixes) — IN PROGRESS
+Plan: 1 of 1 complete
+Status: Phase 19 plan 01 complete
+Last activity: 2026-02-11 — Phase 19-01 executed (settings overlay centralized to UIScene)
 
-Progress: [██████████████████████░░] 82% (18/22 phases complete)
+Progress: [██████████████████████░░] 86% (19/22 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 41 (15 v1.0 + 10 v1.1 + 14 v1.2 + 2 v1.3)
-- Total phases completed: 18
+- Total plans completed: 42 (15 v1.0 + 10 v1.1 + 14 v1.2 + 3 v1.3)
+- Total phases completed: 19
 - Total execution time: ~7 days across 3 milestones
 
 **By Milestone:**
@@ -30,12 +30,13 @@ Progress: [██████████████████████░
 | v1.0 MVP | 1-5 | 15 | Feb 5-10, 2026 |
 | v1.1 Kyiv Journey | 6-10 | 10 | Feb 10, 2026 |
 | v1.2 Polish & Collections | 11-16 | 14 | Feb 10-11, 2026 |
-| v1.3 UI Polish | 17-22 | 2 | In progress |
+| v1.3 UI Polish | 17-22 | 3 | In progress |
 
 **Recent Plans:**
 
 | Phase | Plan | Duration | Tasks | Files | Date |
 |-------|------|----------|-------|-------|------|
+| 19 | 01 | 291s | 2 | 4 | 2026-02-11 |
 | 18 | 01 | 88s | 2 | 2 | 2026-02-11 |
 
 ## Accumulated Context
@@ -52,6 +53,8 @@ Recent decisions:
 - v1.2: Scale.RESIZE over Scale.FIT for mobile adaptation
 - [Phase 18-01]: Removed back-to-menu button from LevelSelect to enforce one-way flow
 - [Phase 18-01]: Title font size capped at 18% viewport width for mobile responsiveness
+- [Phase 19]: Settings overlay moved to UIScene for universal access with depth 300+ z-ordering
+- [Phase 19]: Singleton guard pattern (settingsOpen flag) prevents duplicate overlays
 
 ### Pending Todos
 
@@ -64,10 +67,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Phase 18 complete and verified
+Stopped at: Completed 19-01-PLAN.md
 Resume file: None
 
-**Next action:** `/gsd:plan-phase 19` to plan Settings Overlay Fixes.
+**Next action:** `/gsd:plan-phase 20` to plan next phase, or continue with remaining v1.3 phases.
 
 ---
-*Updated: 2026-02-11 after Phase 18 execution and verification*
+*Updated: 2026-02-11 after Phase 19-01 execution*
