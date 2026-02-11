@@ -17,7 +17,7 @@
 | 17 | v1.3 UI Polish | 1/1 | ✓ Complete | 2026-02-11 |
 | 18 | v1.3 UI Polish | 1/1 | ✓ Complete | 2026-02-11 |
 | 19 | v1.3 UI Polish | 2/2 | ✓ Complete | 2026-02-11 |
-| 20 | v1.3 UI Polish | 1/2 | Gap closure | - |
+| 20 | v1.3 UI Polish | 2/2 | ✓ Complete | 2026-02-11 |
 | 21 | v1.3 UI Polish | 0/? | Not started | - |
 | 22 | v1.3 UI Polish | 0/? | Not started | - |
 
@@ -79,7 +79,7 @@ Plans:
 
 Plans:
 - [x] 20-01-PLAN.md — Dynamic node spacing for mobile fit + container-level click handlers for reliable interactivity — completed 2026-02-11
-- [ ] 20-02-PLAN.md — Gap closure: revert vertical positioning, restore scrolling, add horizontal width clamping
+- [x] 20-02-PLAN.md — Gap closure: revert vertical positioning, restore scrolling, add horizontal width clamping — completed 2026-02-11
 
 ### Phase 21: Game Screen Polish
 **Goal**: Game screen adapts to mobile with responsive HUD and board sizing
