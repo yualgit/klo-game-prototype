@@ -85,12 +85,11 @@ Plans:
   3. Card rarity follows weighted probability (common more frequent than legendary)
   4. After 3 consecutive duplicates, next card guaranteed new if missing cards exist
   5. Pity mechanic respects config (threshold, epic/legendary multipliers)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 15-01: TBD
-- [ ] 15-02: TBD
-- [ ] 15-03: TBD
+- [ ] 15-01-PLAN.md — Card drop logic module + CollectionsManager extension + bonus level JSON flags
+- [ ] 15-02-PLAN.md — CardPickOverlay scene with flip animation + Game.ts bonus level integration
 
 ### Phase 16: Collection Exchange & Polish
 **Goal**: Exchange 6/6 collections for coupons with animation + notification dot
