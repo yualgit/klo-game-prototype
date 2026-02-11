@@ -126,8 +126,9 @@ export class Game extends Phaser.Scene {
 
     // Calculate grid offsets using responsive tile size
     // Account for UIScene header + Game HUD
+    // NEW: Apply board width constraint (GAME-03)
+    this.layout.tileSize = this.calculateConstrainedTileSize(width, height);
     const gridPixelWidth = this.gridWidth * this.layout.tileSize;
-    const gridPixelHeight = this.gridHeight * this.layout.tileSize;
     this.gridOffsetX = (width - gridPixelWidth) / 2;
     this.gridOffsetY = cssToGame(50) + this.layout.hudHeight + cssToGame(10); // UIScene header + game HUD + padding
 
@@ -223,6 +224,27 @@ export class Game extends Phaser.Scene {
     this.hudText = null!;
     this.hudGoalText = null!;
     this.backButton = null!;
+  }
+
+  private calculateConstrainedTileSize(width: number, height: number): number {
+    // GAME-03: Board width = screen width - 32px padding (16px each side), max 1024px CSS
+    const SIDE_PADDING = cssToGame(16); // 16px CSS each side
+    const MAX_BOARD_CSS_WIDTH = 1024;
+    const MAX_BOARD_WIDTH = cssToGame(MAX_BOARD_CSS_WIDTH);
+
+    // Width constraint
+    const availableWidth = width - (SIDE_PADDING * 2);
+    const boardWidth = Math.min(availableWidth, MAX_BOARD_WIDTH);
+    const tileSizeByWidth = Math.floor(boardWidth / this.gridWidth);
+
+    // Height constraint: board must fit below header + HUD + padding
+    const topSpace = cssToGame(50) + this.layout.hudHeight + cssToGame(10);
+    const bottomPadding = cssToGame(20);
+    const availableHeight = height - topSpace - bottomPadding;
+    const tileSizeByHeight = Math.floor(availableHeight / this.gridHeight);
+
+    // Use the more restrictive constraint (keeps tiles square)
+    return Math.min(tileSizeByWidth, tileSizeByHeight);
   }
 
   private createHUD(width: number): void {
@@ -1631,6 +1653,8 @@ export class Game extends Phaser.Scene {
     this.cameras.main.setViewport(0, 0, width, height);
 
     // Recalculate grid offset with new layout (account for UIScene header)
+    // NEW: Reapply board width constraint
+    this.layout.tileSize = this.calculateConstrainedTileSize(width, height);
     const gridPixelWidth = this.gridWidth * this.layout.tileSize;
     this.gridOffsetX = (width - gridPixelWidth) / 2;
     this.gridOffsetY = cssToGame(50) + this.layout.hudHeight + cssToGame(10);
