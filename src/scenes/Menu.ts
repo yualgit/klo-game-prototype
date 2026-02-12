@@ -69,7 +69,7 @@ export class Menu extends Phaser.Scene {
     });
 
     // Subtitle: "Demo"
-    this.subtitle = this.add.text(width / 2, height / 3 + cssToGame(45), 'Demo', {
+    this.subtitle = this.add.text(width / 2, height / 3 + cssToGame(60), 'Demo', {
       fontFamily: 'Arial, sans-serif',
       fontSize: `${cssToGame(18)}px`,
       color: '#666666',
@@ -86,7 +86,7 @@ export class Menu extends Phaser.Scene {
     });
 
     // Create Play button
-    this.createPlayButton(width / 2, height / 2 + 50);
+    this.createPlayButton(width / 2, height / 2 + 120);
 
     // Register resize listener
     this.scale.on('resize', this.handleResize, this);
