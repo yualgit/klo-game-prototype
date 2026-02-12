@@ -6,8 +6,10 @@ import { EconomyManager } from './game/EconomyManager';
 import { SettingsManager } from './game/SettingsManager';
 import { CollectionsManager } from './game/CollectionsManager';
 
-// Compute DPR capped at 2x for crisp retina rendering without performance issues
-const dpr = Math.min(window.devicePixelRatio || 1, 2);
+// Use actual device pixel ratio, capped at 3 for crisp retina rendering without performance issues
+const dpr = Math.min(window.devicePixelRatio || 2, 3);
+
+console.log('DPR', dpr);
 
 // Phaser game configuration
 const config: Phaser.Types.Core.GameConfig = {
@@ -23,6 +25,7 @@ const config: Phaser.Types.Core.GameConfig = {
   },
   render: {
     pixelArt: false,
+    antialias: true,
     roundPixels: true,
   },
   scene: [Boot, Menu, LevelSelect, Game, UIScene, Collections, Shop, CardPickOverlay],
@@ -112,6 +115,17 @@ async function main() {
 
     // Start Phaser
     const game = new Phaser.Game(config);
+
+    // Override text factory to auto-set resolution for crisp text on high-DPI displays.
+    // Phaser Text objects render to an internal canvas at resolution=1 by default,
+    // which can appear slightly blurry on retina displays even with correct font sizes.
+    const originalTextFactory = Phaser.GameObjects.GameObjectFactory.prototype.text;
+    Phaser.GameObjects.GameObjectFactory.prototype.text = function(
+      x: number, y: number, text: string | string[], style?: Phaser.Types.GameObjects.Text.TextStyle
+    ) {
+      const enhancedStyle = { ...style, resolution: dpr };
+      return originalTextFactory.call(this, x, y, text, enhancedStyle);
+    };
 
     // Store managers in registry for scene access
     game.registry.set('progress', progressManager);
