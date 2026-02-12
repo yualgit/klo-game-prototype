@@ -7,9 +7,9 @@
  * Example: 16px CSS font → 16 * dpr = 32px in Phaser coords on 2x device.
  */
 
-// Get DPR (same logic as main.ts, capped at 2)
+// Get DPR (same logic as main.ts, capped at 3 for retina without perf issues)
 export function getDpr(): number {
-  return Math.min(window.devicePixelRatio || 1, 2);
+  return Math.min(window.devicePixelRatio || 2, 3);
 }
 
 // Scale a CSS pixel value to Phaser coordinates
