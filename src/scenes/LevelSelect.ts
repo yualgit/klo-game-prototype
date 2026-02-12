@@ -7,7 +7,7 @@ import Phaser from 'phaser';
 import { ProgressManager } from '../game/ProgressManager';
 import { EconomyManager } from '../game/EconomyManager';
 import { GUI_TEXTURE_KEYS, MAP_CONFIG } from '../game/constants';
-import { getResponsiveLayout, cssToGame, getDpr } from '../utils/responsive';
+import { getResponsiveLayout, cssToGame, mapToGame, getDpr } from '../utils/responsive';
 import eventsCenter from '../utils/EventsCenter';
 
 const KLO_YELLOW = 0xffb800;
@@ -64,12 +64,12 @@ export class LevelSelect extends Phaser.Scene {
     const nodeSize = cssToGame(38);
     const halfNode = nodeSize / 2;
 
-    // Original x range in LEVEL_NODES: min=200, max=480
-    const minNodeX = 200;
-    const maxNodeX = 480;
+    // Original x range in LEVEL_NODES (scaled to device pixels)
+    const minNodeX = mapToGame(200);
+    const maxNodeX = mapToGame(480);
 
-    // Default: center the entire MAP_WIDTH coordinate space (1024px, center at 512) on viewport
-    let offsetX = width / 2 - MAP_CONFIG.MAP_WIDTH / 2;
+    // Default: center the entire MAP_WIDTH coordinate space on viewport
+    let offsetX = width / 2 - mapToGame(MAP_CONFIG.MAP_WIDTH) / 2;
 
     // Clamp: ensure leftmost node center - halfNode >= padding
     const leftEdge = minNodeX + offsetX - halfNode;
@@ -101,7 +101,7 @@ export class LevelSelect extends Phaser.Scene {
   private getNodeScreenX(nodeX: number): number {
     if (this.nodeXScale < 1) {
       // Scale x-positions to fit narrow viewport
-      const minNodeX = 200;
+      const minNodeX = mapToGame(40);
       const scaledX = minNodeX + (nodeX - minNodeX) * this.nodeXScale;
       return scaledX + this.nodeOffsetX;
     }
@@ -124,9 +124,9 @@ export class LevelSelect extends Phaser.Scene {
     this.cameras.main.fadeIn(300, 0, 0, 0);
 
     // Camera setup - restore original vertical scrolling
-    const firstLevelY = MAP_CONFIG.LEVEL_NODES[0].y;
+    const firstLevelY = mapToGame(MAP_CONFIG.LEVEL_NODES[0].y);
     const worldBottom = firstLevelY + Math.round(height * 0.3);
-    const worldHeight = Math.max(MAP_CONFIG.MAP_HEIGHT, worldBottom);
+    const worldHeight = Math.max(mapToGame(MAP_CONFIG.MAP_HEIGHT), worldBottom);
     this.cameras.main.setBounds(0, 0, width, worldHeight);
 
     // No horizontal scroll needed - nodes are centered on screen
@@ -138,18 +138,18 @@ export class LevelSelect extends Phaser.Scene {
     // Draw the road path connecting level nodes
     this.drawRoadPath();
 
-    // Create level checkpoint buttons using MAP_CONFIG positions
+    // Create level checkpoint buttons using MAP_CONFIG positions (scaled to device pixels)
     for (let i = 0; i < MAP_CONFIG.LEVEL_NODES.length; i++) {
       const levelId = i + 1;
       const node = MAP_CONFIG.LEVEL_NODES[i];
-      this.createLevelCheckpoint(this.getNodeScreenX(node.x), node.y, levelId, progress);
+      this.createLevelCheckpoint(this.getNodeScreenX(mapToGame(node.x)), mapToGame(node.y), levelId, progress);
     }
 
     // Map pointer at current unlocked level
     const currentLevelId = this.getCurrentLevel(progress);
     if (currentLevelId > 0 && currentLevelId <= 20) {
       const pointerNode = MAP_CONFIG.LEVEL_NODES[currentLevelId - 1];
-      this.createMapPointer(this.getNodeScreenX(pointerNode.x), pointerNode.y - 60);
+      this.createMapPointer(this.getNodeScreenX(mapToGame(pointerNode.x)), mapToGame(pointerNode.y) - cssToGame(20));
     }
 
     // Setup drag scrolling
@@ -191,7 +191,7 @@ export class LevelSelect extends Phaser.Scene {
   private createParallaxBackground(): void {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
-    const maxScroll = MAP_CONFIG.MAP_HEIGHT - height;
+    const maxScroll = mapToGame(MAP_CONFIG.MAP_HEIGHT) - height;
 
     // Sky layer - static, covers entire viewport (scrollFactor=0 = screen coords)
     const sky = this.add.image(width / 2, height / 2, 'kyiv_sky');
@@ -204,11 +204,17 @@ export class LevelSelect extends Phaser.Scene {
     // Far layer - 3 segments, slow parallax (scrollFactor 0.25)
     const farEffectiveRange = Math.max(maxScroll, 0) * MAP_CONFIG.PARALLAX_FAR + height;
     // Source: 1536x1024, scale to fill at least viewport width (aspect-fill)
-    const farScale = Math.max(width / 1536, MAP_CONFIG.MAP_WIDTH / 1536);
-    const farSpacing = farEffectiveRange / 3;
-    const farParts = ['kyiv_far_top', 'kyiv_far_mid', 'kyiv_far_bottom'];
+    // Increase scale to make far-layer silhouettes more prominent
+    const farScale = Math.max(width / 1536, mapToGame(MAP_CONFIG.MAP_WIDTH) / 1536) * 1.4;
+    // Position far images for harmonious distribution: bottom/middle/top
+    const farPositions = [
+      farEffectiveRange * 0.85,   // kyiv_far_bottom: near bottom of map (bridge scene)
+      farEffectiveRange * 0.50,   // kyiv_far_mid: middle (Motherland monument)
+      farEffectiveRange * 0.15,   // kyiv_far_top: near top (Pecherska Lavra)
+    ];
+    const farParts = ['kyiv_far_bottom', 'kyiv_far_mid', 'kyiv_far_top'];
     farParts.forEach((key, i) => {
-      const part = this.add.image(width / 2, farSpacing * i + farSpacing / 2, key);
+      const part = this.add.image(width / 2, farPositions[i], key);
       part.setScale(farScale);
       part.setScrollFactor(MAP_CONFIG.PARALLAX_FAR);
       part.setDepth(1);
@@ -216,12 +222,21 @@ export class LevelSelect extends Phaser.Scene {
 
     // Mid layer - 2 images, medium parallax (scrollFactor 0.6)
     const midEffectiveRange = Math.max(maxScroll, 0) * MAP_CONFIG.PARALLAX_MID + height;
-    // Source: 1024x1536, scale to fill at least viewport width
-    const midScale = Math.max(width / 1024, 1);
+    // Source: 1024x1536 portrait images
+    // Increase scale to make mid-layer landmarks larger (~1.5x)
+    const midScale = Math.max(width / 1024, mapToGame(MAP_CONFIG.MAP_WIDTH) / 1024) * 1.5;
     const midParts = ['kyiv_mid', 'kyiv_mid_0'];
-    const midSpacing = midEffectiveRange / 2;
+
+    // Position in parallax-adjusted coordinates:
+    // kyiv_mid (index 0) should be visible at bottom of map (near level 1)
+    // kyiv_mid_0 (index 1) should be visible at top of map (near level 20)
+    const midPositions = [
+      midEffectiveRange * 0.75,  // kyiv_mid: bottom portion (visible when scrolled to bottom)
+      midEffectiveRange * 0.25,  // kyiv_mid_0: top portion (visible when scrolled to top)
+    ];
+
     midParts.forEach((key, i) => {
-      const part = this.add.image(width / 2, midSpacing * i + midSpacing / 2, key);
+      const part = this.add.image(width / 2, midPositions[i], key);
       part.setScale(midScale);
       part.setScrollFactor(MAP_CONFIG.PARALLAX_MID);
       part.setDepth(2);
@@ -234,21 +249,21 @@ export class LevelSelect extends Phaser.Scene {
     const nodes = MAP_CONFIG.LEVEL_NODES;
 
     // Draw base path (light gray)
-    path.lineStyle(10, 0xdddddd, 1);
+    path.lineStyle(mapToGame(10), 0xdddddd, 1);
     path.beginPath();
-    path.moveTo(this.getNodeScreenX(nodes[0].x), nodes[0].y);
+    path.moveTo(this.getNodeScreenX(mapToGame(nodes[0].x)), mapToGame(nodes[0].y));
     for (let i = 1; i < nodes.length; i++) {
-      path.lineTo(this.getNodeScreenX(nodes[i].x), nodes[i].y);
+      path.lineTo(this.getNodeScreenX(mapToGame(nodes[i].x)), mapToGame(nodes[i].y));
     }
     path.strokePath();
 
     // Draw colored progress line (partial)
     // For now, just draw the full path in a lighter color overlay
-    path.lineStyle(6, 0xffb800, 0.4);
+    path.lineStyle(mapToGame(6), 0xffb800, 0.4);
     path.beginPath();
-    path.moveTo(this.getNodeScreenX(nodes[0].x), nodes[0].y);
+    path.moveTo(this.getNodeScreenX(mapToGame(nodes[0].x)), mapToGame(nodes[0].y));
     for (let i = 1; i < nodes.length; i++) {
-      path.lineTo(this.getNodeScreenX(nodes[i].x), nodes[i].y);
+      path.lineTo(this.getNodeScreenX(mapToGame(nodes[i].x)), mapToGame(nodes[i].y));
     }
     path.strokePath();
 
@@ -267,7 +282,7 @@ export class LevelSelect extends Phaser.Scene {
         const deltaY = pointer.y - pointer.prevPosition.y;
 
         // Check if drag threshold exceeded
-        if (Math.abs(pointer.y - this.dragStartY) > MAP_CONFIG.DRAG_THRESHOLD) {
+        if (Math.abs(pointer.y - this.dragStartY) > mapToGame(MAP_CONFIG.DRAG_THRESHOLD)) {
           this.isDragging = true;
         }
 
@@ -290,7 +305,7 @@ export class LevelSelect extends Phaser.Scene {
 
     if (currentLevelId > 0 && currentLevelId <= 20) {
       const targetNode = MAP_CONFIG.LEVEL_NODES[currentLevelId - 1];
-      this.cameras.main.pan(width / 2, targetNode.y, 800, 'Sine.easeInOut', true);
+      this.cameras.main.pan(width / 2, mapToGame(targetNode.y), 800, 'Sine.easeInOut', true);
     }
   }
 
@@ -599,20 +614,20 @@ export class LevelSelect extends Phaser.Scene {
     this.nodeOffsetX = this.calculateNodeOffsetX(width);
 
     // Restore original camera bounds calculation
-    const firstLevelY = MAP_CONFIG.LEVEL_NODES[0].y;
+    const firstLevelY = mapToGame(MAP_CONFIG.LEVEL_NODES[0].y);
     const worldBottom = firstLevelY + Math.round(height * 0.3);
-    const worldHeight = Math.max(MAP_CONFIG.MAP_HEIGHT, worldBottom);
+    const worldHeight = Math.max(mapToGame(MAP_CONFIG.MAP_HEIGHT), worldBottom);
     this.cameras.main.setBounds(0, 0, width, worldHeight);
 
     // Redraw road path with new positions
     this.drawRoadPath();
 
-    // Recreate level checkpoints with MAP_CONFIG positions
+    // Recreate level checkpoints with MAP_CONFIG positions (scaled to device pixels)
     const progress = this.registry.get('progress') as ProgressManager;
     for (let i = 0; i < MAP_CONFIG.LEVEL_NODES.length; i++) {
       const levelId = i + 1;
       const node = MAP_CONFIG.LEVEL_NODES[i];
-      this.createLevelCheckpoint(this.getNodeScreenX(node.x), node.y, levelId, progress);
+      this.createLevelCheckpoint(this.getNodeScreenX(mapToGame(node.x)), mapToGame(node.y), levelId, progress);
     }
 
     // No horizontal scroll needed - nodes are centered on screen
