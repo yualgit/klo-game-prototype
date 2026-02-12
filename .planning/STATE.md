@@ -13,7 +13,7 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 Phase: 25 of 25 (New Levels)
 Plan: 2 of 2 in current phase
 Status: Complete
-Last activity: 2026-02-12 - Completed quick task 1: Fix low quality graphics and blurry text on mobile devices (DPR handling)
+Last activity: 2026-02-12 - Completed quick task 2: Fix level select parallax rebalance (mid/far layer positioning and sizing)
 
 Progress: [█████████████████████] 100% (25 of 25 phases complete)
 
@@ -91,6 +91,7 @@ None.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 1 | Fix low quality graphics and blurry text on mobile devices (DPR handling) | 2026-02-12 | 32ee06b | [1-fix-low-quality-graphics-and-blurry-text](./quick/1-fix-low-quality-graphics-and-blurry-text/) |
+| 2 | Fix level select parallax rebalance - mid/far layer positioning and sizing | 2026-02-12 | ef069b5 | [2-fix-level-select-parallax-rebalance-midp](./quick/2-fix-level-select-parallax-rebalance-midp/) |
 
 ### Blockers/Concerns
 
@@ -106,11 +107,11 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-11 (Phase 25-02 execution)
-Stopped at: Completed 25-02-PLAN.md (Wire 20-Level Support)
-Resume file: .planning/phases/25-new-levels/25-02-SUMMARY.md
+Last session: 2026-02-12 (Quick task 2 execution)
+Stopped at: Completed quick-2 (Fix level select parallax rebalance) - awaiting user verification
+Resume file: .planning/quick/2-fix-level-select-parallax-rebalance-midp/2-SUMMARY.md
 
-**Next action:** All phases complete. v1.4 Content Expansion milestone achieved.
+**Next action:** User should verify parallax visual quality per Task 2 checkpoint. All planned phases complete (v1.4 Content Expansion milestone achieved).
 
 ---
-*Updated: 2026-02-11 after v1.4 roadmap creation*
+*Updated: 2026-02-12 after quick task 2 completion*
