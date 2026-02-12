@@ -65,8 +65,8 @@ export class LevelSelect extends Phaser.Scene {
     const halfNode = nodeSize / 2;
 
     // Original x range in LEVEL_NODES (scaled to device pixels)
-    const minNodeX = mapToGame(200);
-    const maxNodeX = mapToGame(480);
+    const minNodeX = mapToGame(180);
+    const maxNodeX = mapToGame(380);
 
     // Default: center the entire MAP_WIDTH coordinate space on viewport
     let offsetX = width / 2 - mapToGame(MAP_CONFIG.MAP_WIDTH) / 2;
@@ -225,14 +225,14 @@ export class LevelSelect extends Phaser.Scene {
     // Source: 1024x1536 portrait images
     // Increase scale to make mid-layer landmarks larger (~1.5x)
     const midScale = Math.max(width / 1024, mapToGame(MAP_CONFIG.MAP_WIDTH) / 1024) * 1.5;
-    const midParts = ['kyiv_mid', 'kyiv_mid_0'];
+    const midParts = ['kyiv_mid_0', 'kyiv_mid'];
 
     // Position in parallax-adjusted coordinates:
     // kyiv_mid (index 0) should be visible at bottom of map (near level 1)
     // kyiv_mid_0 (index 1) should be visible at top of map (near level 20)
     const midPositions = [
-      midEffectiveRange * 0.75,  // kyiv_mid: bottom portion (visible when scrolled to bottom)
-      midEffectiveRange * 0.25,  // kyiv_mid_0: top portion (visible when scrolled to top)
+      midEffectiveRange * 0.80,  // kyiv_mid: bottom portion (visible when scrolled to bottom)
+      midEffectiveRange * 0.45,  // kyiv_mid_0: top portion (visible when scrolled to top)
     ];
 
     midParts.forEach((key, i) => {

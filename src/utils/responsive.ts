@@ -1,7 +1,7 @@
 /**
  * Responsive layout utilities for DPR-aware UI sizing.
  *
- * With Scale.RESIZE + zoom: 1/dpr, Phaser coords are in device pixels.
+ * With Scale.NONE + zoom: 1/dpr, Phaser coords are in device pixels.
  * CSS pixels = Phaser pixels / dpr. To get desired CSS sizes, multiply by dpr.
  *
  * Example: 16px CSS font → 16 * dpr = 32px in Phaser coords on 2x device.
@@ -12,9 +12,20 @@ export function getDpr(): number {
   return Math.min(window.devicePixelRatio || 2, 3);
 }
 
-// Scale a CSS pixel value to Phaser coordinates
+// UI scale factor: with correct DPR rendering (Scale.NONE + device pixel canvas),
+// UI elements render at true CSS sizes which feel small on mobile.
+// Scale up by 1.5x for comfortable mobile readability.
+const UI_SCALE = 1.5;
+
+// Scale a CSS pixel value to Phaser coordinates (with UI_SCALE for readability)
 export function cssToGame(cssPx: number): number {
-  return cssPx * getDpr();
+  return cssPx * getDpr() * UI_SCALE;
+}
+
+// Scale a map/world coordinate to game coordinates (DPR only, no UI_SCALE).
+// Used for positions designed in the old CSS-pixel coordinate space (MAP_CONFIG etc.)
+export function mapToGame(px: number): number {
+  return px * getDpr();
 }
 
 // Calculate responsive game layout based on current viewport

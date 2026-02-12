@@ -19,8 +19,7 @@ const config: Phaser.Types.Core.GameConfig = {
   parent: 'game-container',
   backgroundColor: '#F9F9F9',
   scale: {
-    mode: Phaser.Scale.RESIZE,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
+    mode: Phaser.Scale.NONE,
     zoom: 1 / dpr,
   },
   render: {
@@ -116,16 +115,13 @@ async function main() {
     // Start Phaser
     const game = new Phaser.Game(config);
 
-    // Override text factory to auto-set resolution for crisp text on high-DPI displays.
-    // Phaser Text objects render to an internal canvas at resolution=1 by default,
-    // which can appear slightly blurry on retina displays even with correct font sizes.
-    const originalTextFactory = Phaser.GameObjects.GameObjectFactory.prototype.text;
-    Phaser.GameObjects.GameObjectFactory.prototype.text = function(
-      x: number, y: number, text: string | string[], style?: Phaser.Types.GameObjects.Text.TextStyle
-    ) {
-      const enhancedStyle = { ...style, resolution: dpr };
-      return originalTextFactory.call(this, x, y, text, enhancedStyle);
+    // Handle viewport resize (Scale.NONE doesn't auto-resize like RESIZE mode)
+    const handleResize = () => {
+      game.scale.resize(window.innerWidth * dpr, window.innerHeight * dpr);
+      game.canvas.style.width = window.innerWidth + 'px';
+      game.canvas.style.height = window.innerHeight + 'px';
     };
+    window.addEventListener('resize', handleResize);
 
     // Store managers in registry for scene access
     game.registry.set('progress', progressManager);
